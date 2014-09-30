@@ -1,0 +1,110 @@
+{
+    "menumain": [
+        {
+            "exit": [
+                "this"
+            ]
+        },
+        {
+            "user": [
+                "this",
+                "client",
+                "group",
+                "access",
+                "list_details",
+                "schedule_analytics",
+                "schedule_game",
+                "player_manage",
+                "restrict_player",
+                "add_account",
+                "audit_log"
+            ]
+        },
+        {
+            "finance": [
+                "this",
+                "balance",
+                "payment",
+                "poses",
+                "currences"
+            ]
+        },
+        {
+            "line": [
+                "this",
+                "event",
+                "event_line_manage",
+                "result",
+                "liability",
+                "maximal",
+                "scanning",
+                "scanner_manage",
+                "tournament",
+                "competitor",
+                "live_event",
+                "interval_event",
+                "line_history",
+                "video_broadcast"
+            ]
+        },
+        {
+            "bet": [
+                "this",
+                "list_bet",
+                "hedging",
+                "scoreboard",
+                "import_bet"
+            ]
+        },
+        {
+            "report": [
+                "this",
+                "profit",
+                "ndfl",
+                "payout",
+                "player_ndfl",
+                "per_club",
+                "session",
+                "poses_rep",
+                "lif_reg",
+                "off_cash_move",
+                "cur_bal_player",
+                "player_result",
+                "daily_rep_player",
+                "daily_rep_poses",
+                "game_field",
+                "player_act",
+                "player_bet"
+            ]
+        },
+        {
+            "setting": [
+                "this",
+                "margin",
+                "sys_flag",
+                "sys_setting",
+                "user_setting",
+                "panel_setting",
+                "partner_list",
+                "protocol_upload",
+                "marquee",
+                "news",
+                "upload_image",
+                "download_doc"
+            ]
+        },
+        {
+            "help": [
+                "this",
+                "about_system"
+            ]
+        },
+        {
+            "language": [
+                "this",
+                "russian",
+                "english"
+            ]
+        }
+    ]
+}

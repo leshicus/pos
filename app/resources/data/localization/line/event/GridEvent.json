@@ -1,0 +1,26 @@
+{
+    "grid": {
+        "name":"gridevent",
+        "columns": [
+            "num",
+            "datecom",
+            "client",
+            "gambler",
+            "datecalc",
+            "bettype",
+            "host",
+            "guest",
+            "outcome",
+            "sum",
+            "coeff",
+            "statid",
+            "total",
+            "datepay"
+        ],
+        "tools":[
+            "refresh",
+            "gear",
+            "close"
+        ]
+    }
+}

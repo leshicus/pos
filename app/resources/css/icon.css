@@ -1,0 +1,18 @@
+/*@import 'fontello/css/fontello.css';*/
+.icon-settings {
+    /*width:15px;*/
+    /*height:15px;*/
+    background-image:url(/resources/image/settings.png) !important;
+}
+
+/*
+.x-tree-icon {
+    width: 24px;
+}*/
+
+.icon-express {
+  background-image:url(/resources/image/menu19.png) !important;
+}
+.icon-odinar {
+  background-image:url(/resources/image/dot1.png) !important;
+}

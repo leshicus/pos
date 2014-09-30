@@ -1,0 +1,66 @@
+[
+/*    {
+        "statid": "0",
+        "statname": ""
+    },*/
+    {
+        "statid": "1",
+        "statname": "нет",
+        "cls":"bg-red"
+    },
+    {
+        "statid": "2",
+        "statname": "возврат",
+        "cls":"bg-purple"
+    },
+    {
+        "statid": "3",
+        "statname": "фикс.возврат",
+        "cls":"bg-purple-lt"
+    },
+    {
+        "statid": "4",
+        "statname": "да",
+        "cls":"bg-green"
+    },
+    {
+        "statid": "5",
+        "statname": "в игре",
+        "cls":"bg-gray"
+    },
+    {
+        "statid": "6",
+        "statname": "полупроигрыш",
+        "cls":"bg-red-lt"
+    },
+    {
+        "statid": "7",
+        "statname": "полувыигрыш",
+        "cls":"bg-green-lt"
+    },
+    {
+        "statid": "8",
+        "statname": "ожидает подтверждения",
+        "cls":"bg-"
+    },
+    {
+        "statid": "9",
+        "statname": "отклонена",
+        "cls":"bg-"
+    },
+    {
+        "statid": "10",
+        "statname": "удалена в кассе",
+        "cls":"bg-"
+    },
+    {
+        "statid": "11",
+        "statname": "просрочен срок выплаты",
+        "cls":"bg-"
+    },
+    {
+        "statid": "12",
+        "statname": "выкуплена",
+        "cls":"bg-violet"
+    }
+]
