@@ -32,6 +32,7 @@
      *      ]
      */
     "requires": [
+        "ext-locale" // * нужно для локализации приложения
     ],
 
     /**
@@ -107,6 +108,9 @@
      *      }
      */
     "js": [
+/*        {
+            "path": "${ext.dir}/build/ext-all-rtl-debug.js"  // new default for generated apps
+        },*/
         {
             "path": "app.js",
             "bundle": true
@@ -147,6 +151,15 @@
             "path": "resources/css/style.css"
         },
         {
+            "path": "resources/css/crisp_aqua.css"
+        },
+        {
+            "path": "resources/css/color.css"
+        },
+        {
+            "path": "resources/css/glyph.css"
+        },
+        {
             "path": "resources/css/icon.css"
         },
         {
@@ -182,8 +195,7 @@
     /**
      * Extra resources to be copied along when build
      */
-    "resources": [
-    ],
+    "resources": [],
 
     /**
      * File / directory name matchers to ignore when copying to the builds, must be valid regular expressions
@@ -203,5 +215,18 @@
      * Uniquely generated id for this application, used as prefix for localStorage keys.
      * Normally you should never change this value.
      */
-    "id": "15710cee-3b27-4a93-b9e1-0a7fde957fc0"
+    "id": "15710cee-3b27-4a93-b9e1-0a7fde957fc0",
+
+    "locale": "ru",
+    "development": {
+        "loader": {
+            "cache": true
+        }
+    },
+    "production": {
+        "loader": {
+            "cache": "${build.timestamp}"
+        }
+    }
+
 }

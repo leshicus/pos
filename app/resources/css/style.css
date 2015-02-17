@@ -6,26 +6,6 @@
     opacity: .5;
 }*/
 
-/* чтобы цвет label ckeckfield был таким же как и у других элементов */
-.x-form-cb-label-default.x-form-cb-label-after {
-    color: #666 !important;
-}
-
-/* цвет фона в текстовых полях */
-.x-form-text-default {
-    background-color: #F5F5F5 !important;
-}
-
-/* заголовок fieldset */
-.x-fieldset-header-default > .x-fieldset-header-text {
-    color: rgb(39, 127, 204) !important;
-}
-
-/* заголовки grid */
-.x-column-header {
-    color: rgb(39, 127, 204) !important;
-}
-
 /*отступ сверху названий полей грида*/
 .x-column-header-inner {
     line-height: 17px !important;
@@ -34,31 +14,21 @@
 
 /* перенос строки в гриде*/
 .wrapText .x-grid-cell-inner {
-    white-space: normal;
+    white-space: normal !important;
 }
 
-/* цвета ячеек status */
-.bg-red {
-    background: red;
-    color: black;
-}
-
-.bg-black {
-    background: black;
-    color: white;
-}
-
+/* TRIAL */
 /* убираем надпись Trial из заголовка панелей */
 .x-panel-header-title-default-framed > .x-title-text-default-framed:after {
-    content: '';
+    content: '' !important;
 }
 
 .x-panel-header-title-default > .x-title-text-default:after {
-    content: '';
+    content: '' !important;
 }
 
 .x-window-header-title-default > .x-title-text-default:after {
-    content: '';
+    content: '' !important;
 }
 
 /*.x-grid-row-alt {
@@ -69,85 +39,50 @@
     background-color: #bbffbb !important; // red
 }*/
 
-/* глифы */
-/* menumain */
-.x-btn-glyph, .x-title-glyph, .x-menu-item-glyph {
-    opacity: 1 !important;
-}
-
-.exit .x-btn-glyph {
-    color: rgb(245, 59, 59) !important;
-}
-
-.user .x-btn-glyph {
-    color: #687CE2 !important;
-}
-
-.finance .x-btn-glyph {
-    color: #5EA72D !important;
-}
-
-.line .x-btn-glyph {
-    color: #E56C33 !important;
-}
-
-.bet .x-btn-glyph {
-    color: #FFB800 !important;
-}
-
-.report .x-btn-glyph {
-    color: #00B6FD !important;
-}
-
-.setting .x-btn-glyph {
-    color: #FF9900 !important;
-}
-
-.help .x-btn-glyph {
-    color: #31B947 !important;
-}
-
-.language .x-btn-glyph {
-    color: #005CFF !important;
-}
-
-/* гриды и панели */
-.gridbet .x-title-glyph {
-    color: #FFB800 !important;
-}
-
-/* пункты меню */
-.list_bet .x-menu-item-glyph {
-    color: #00ADFF !important;
-}
-
-.group .x-menu-item-glyph {
-    color: #00ADFF !important;
-}
-
 /* замочек заблокированной карты */
-.icon-lock-4{
+/*.icon-lock-4 {
     font-family: FontAwesome;
     color: crimson;
     margin-left: 14px;
     font-size: 120%;
-}
+}*/
 
-.text-align-right{
+/*.text-align-right {
     text-align: right !important;
-}
+}*/
 
 /* для комбика, чтобы не переносился текст в ячейке */
-.nowrap{
+.nowrap {
     white-space: nowrap !important;
 }
 
-/* цвета ячеек таблицы Принятые */
-.bg-red { background:rgb(255, 200, 200); }
-.bg-red-lt { background:rgb(255, 225, 225); }
-.bg-green { background:rgb(200, 255, 200); }
-.bg-green-lt { background:rgb(225, 255, 225); }
-.bg-gray { background:rgb(200, 200, 200); }
-.bg-purple-lt { background:rgb(216, 216, 255); }
-.bg-purple { background:rgb(200, 200, 255); }
-.bg-violet { background:rgb(176, 0, 176); }
+.checkfield-align {
+    vertical-align: -2px;
+}
+
+/* замена иконок дерева */
+/* закрытая */
+.x-tree-icon-parent {
+    background-image: url(../image/folder.png) !important;
+}
+
+/* открытая */
+.x-grid-tree-node-expanded .x-tree-icon-parent {
+    background-image: url(../image/folder.png);
+}
+
+.x-tree-icon-leaf {
+    background-image: url(../image/dot1.png) !important;
+}
+
+/* ячейки заблокированных Клубных карт */
+.blocked-card-row {
+    opacity: 0.5 !important;
+}
+
+@import url(http://fonts.googleapis.com/css?family=Roboto+Condensed&subset=cyrillic-ext,latin);
+
+.newfont .x-tree-node-text {
+    font-family: 'Roboto Condensed', sans-serif !important;
+    font-size: 15px !important;
+}

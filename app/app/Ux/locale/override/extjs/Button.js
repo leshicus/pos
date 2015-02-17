@@ -2,7 +2,7 @@ Ext.define('Ux.locale.override.extjs.Button', {
     override : 'Ext.button.Button',
 
     requires : [
-        'Ux.locale.override.extjs.Component'
+        'Ux.locale.override.extjs.Component1'
     ],
 
     setLocale : function(locale) {

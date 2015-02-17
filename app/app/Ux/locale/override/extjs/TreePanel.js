@@ -2,7 +2,7 @@ Ext.define('Ux.locale.override.extjs.TreePanel', {
     override : 'Ext.tree.TreePanel',
 
     requires : [
-        'Ux.locale.override.extjs.Component'
+        'Ux.locale.override.extjs.Component1'
     ],
 
     initComponent : function() {

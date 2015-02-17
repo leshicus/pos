@@ -2,30 +2,28 @@ Ext.define('Office.view.rat.GridRatM', {
     extend: 'Ext.app.ViewModel',
     alias: 'viewmodel.gridrat',
     stores: {
-        gridrat: {
-            fields: [
-                'id',
-                'daterun',
-                'numrun',
-                'result',
-                'firstplace',
-                'secondplace',
-                'thirdplace',
-                'firstcolor'
-            ],
-            idProperty:'id',
+        rat: {
+            fields: [], // * без этой строчки ругается на стор без модели и на schema
+            idProperty: 'id',
             proxy: {
                 type: 'ajax',
-                url: 'resources/data/rat/getGridRat.json',
-                reader: {type: 'json'}
+                url: Server.getUrl({
+                    class: 'Pos_Rats_Read',
+                    token: '{token}',
+                    params:{
+                        min_date:'{filters.min_date}',
+                        max_date:'{filters.max_date}',
+                        race_number:'{filters.race_number}'
+                    }
+                }),
+                reader: {
+                    type: 'json',
+                    rootProperty: 'rows',
+                    totalProperty: 'results'
+                }
             },
-            pageSize: Office.util.Utilities.pageSize,
-            remoteSort: true,
-            sorters: [{
-                property: 'numrun',
-                direction: 'DESC'
-            }],
-            autoLoad: true
+            storeId: 'rat',
+            autoLoad: false
         }
     }
 });

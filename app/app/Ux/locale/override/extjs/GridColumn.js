@@ -2,7 +2,7 @@ Ext.define('Ux.locale.override.extjs.GridColumn', {
     override: 'Ext.grid.column.Column',
 
     requires: [
-        'Ux.locale.override.extjs.Component'
+        'Ux.locale.override.extjs.Component1'
     ],
 
     initComponent: function () {

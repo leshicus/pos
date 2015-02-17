@@ -1,23 +1,31 @@
 {
-    "region": {
-        "center": {
-            "title": "Center Region"
+    "windowlogin": {
+        "title": "Авторизация",
+        "formfield": {
+            "language": "Язык/Language",
+            "username": "Имя пользователя",
+            "password": "Пароль"
         },
-        "east": {
-            "title": "East Region - Form"
+        "button": {
+            "login": "Войти"
         }
     },
-    "buttons": {
-        "save": "Save"
+    "menumain": {
+        "session": "Смены",
+        "fill": "Заполнение",
+        "timeline": "Таймлайн",
+        "accept": "Принятые",
+        "card": "Клубные карты",
+        "pay": "Выплаты",
+        "rat": "Крысы",
+        "gameacc": "Игровые счета",
+        "panels": "Панели",
+        "virtual": "Виртуальные заявки",
+        "chat": "Чат",
+        "info": "Информация",
+        "exit": "Выход"
     },
-    "fields": {
-        "labels": {
-            "firstName": "First Name",
-            "lastName": "Last Name",
-            "chooseLocale": "Choose Your Locale"
-        }
-    },
-    "gridevent":{
+    "gridevent": {
         "columns": {
             "num": "№",
             "datecom": "Совершена",
@@ -34,100 +42,10 @@
             "total": "Итог",
             "datepay": "Выплачена"
         },
-        "tools":{
+        "tools": {
             "refresh": "Обновить",
             "gear": "Настройка",
             "close": "Удалить фильтры"
-        }
-    },
-    "menumain": {
-        "exit": {
-            "this": "Выход"
-        },
-        "user": {
-            "this": "Пользователи",
-            "client": "Клиенты",
-            "group": "Группы",
-            "access": "Доступ",
-            "list_details": "Список реквизитов",
-            "schedule_analytics": "График работы дежурного аналитика",
-            "schedule_game": "График для игры на поле",
-            "player_manage": "Управление игроками",
-            "restrict_player": "Ограничение для игроков",
-            "add_account": "Доп. аккаунты",
-            "audit_log": "Журнал аудита"
-        },
-        "finance": {
-            "this": "Финансы",
-            "balance": "Балансы",
-            "payment": "Платежи",
-            "poses": "Кассы",
-            "currences": "Валюты"
-        },
-        "line": {
-            "this": "Линия",
-            "event": "События",
-            "event_line_manage": "Ведение",
-            "result": "Результаты",
-            "liability": "Нагрузки",
-            "maximal": "Максималы",
-            "scanning": "Сканирование",
-            "scanner_manage": "Управление сканерами",
-            "tournament": "Турниры",
-            "competitor": "Участники",
-            "live_event": "Ведение-лайв",
-            "interval_event": "Интервальные события",
-            "line_history": "История линии",
-            "video_broadcast": "Видео-трансляции"
-        },
-        "bet": {
-            "this": "Ставки",
-            "list_bet": "Список",
-            "hedging": "Хеджирование",
-            "scoreboard": "Табло",
-            "import_bet": "Импорт ставок"
-        },
-        "report": {
-            "this": "Отчеты",
-            "profit": "Прибыль",
-            "ndfl": "НДФЛ",
-            "payout": "Выплаты",
-            "player_ndfl": "НДФЛ по игрокам",
-            "per_club": "По клубам",
-            "session": "Смены",
-            "poses_rep": "Кассы",
-            "lif_reg": "Реестр БСО",
-            "off_cash_move": "Движение ден. средств",
-            "cur_bal_player": "Текущий баланс игроков",
-            "player_result": "Результаты игроков",
-            "daily_rep_player": "Ежедневные отчеты по игрокам",
-            "daily_rep_poses": "Ежедневные отчеты по кассам",
-            "game_field": "Протокол интервальных матчей",
-            "player_act": "Активность игроков",
-            "player_bet": "Ставки игроков"
-        },
-        "setting": {
-            "this": "Настройки",
-            "margin": "Маржа",
-            "sys_flag": "Системные флаги",
-            "sys_setting": "Настройки системы",
-            "user_setting": "Настройки пользователей",
-            "panel_setting": "Настройки панелей",
-            "partner_list": "Список партнеров",
-            "protocol_upload": "Выгрузка протокола",
-            "marquee": "Бегущая строка",
-            "news": "Новости",
-            "upload_image": "Загрузка изображений",
-            "download_doc": "Загрузка документов"
-        },
-        "help": {
-            "this": "Справка",
-            "about_system": "О системе"
-        },
-        "language": {
-            "this": "Язык",
-            "russian": "Русский",
-            "english": "English"
         }
     }
 }

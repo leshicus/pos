@@ -1,10 +1,9 @@
-Ext.define('Ux.locale.override.extjs.Component', {
+Ext.define('Ux.locale.override.extjs.Component1', { //todo почему-то ругается на Component
     override : 'Ext.Component',
 
     requires : [
         'Ux.locale.Manager'
     ],
-
     enableLocale : false,
     locale       : null,
     locales      : null,

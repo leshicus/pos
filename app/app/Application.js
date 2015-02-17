@@ -1,95 +1,80 @@
 Ext.define('Office.Application', {
     extend: 'Ext.app.Application',
     requires: [
-        'Ext.tip.*',
+        // 'Ext.tip.*',
         /* 'Ext.state.CookieProvider',
          'Ext.state.LocalStorageProvider'*/
+
         'Office.util.Utilities',
+        'Office.util.Server',
         'Office.util.Filters',
         'Office.util.Setup',
-        //'Office.view.login.WindowLoginV',
+        'Office.util.Debug',
+        'Office.util.Gui',
+
         //'Office.util.JsonPStorageProvider',
         //  'Office.util.AjaxStorageProvider',
-        // * блок для локализации компонентов
-        'Ux.locale.Manager',
+
+        'Ux.locale.Manager', // * блок для динамической локализации компонентов
         'Ux.locale.override.extjs.Button',
-        'Ux.locale.override.extjs.Component',
+        'Ux.locale.override.extjs.Component1',
         'Ux.locale.override.extjs.FieldContainer',
         'Ux.locale.override.extjs.MenuItem',
         'Ux.locale.override.extjs.Panel',
         'Ux.locale.override.extjs.GridColumn',
         'Ux.locale.override.extjs.Text',
         'Ux.locale.override.extjs.TreePanel',
-        'Office.overrides.Table',
-        'Office.overrides.ActionGlyphs'
+        'Office.overrides.NavigationModel', // * исправление комбо, нельзя нажать первую запись
+        'Office.overrides.Table', // * мой багфикс, какая-то ошибка выскакивала в гриде
+        'Office.overrides.ActionGlyphs', // * возможность размещать глифы в tools
+        'Office.overrides.TreeView', // * возможность размещать глифы в tools
+        'Office.overrides.Combo', // лечение пропадание значения из комбика при forceSelection
+        //'Office.overrides.TreeStore', // * отправлять номер страницы на сервер и др. параметры для пэйджинга
+        // 'Office.overrides.Panel'
     ],
     name: 'Office',
 
     views: [
-        'Office.view.login.WindowLoginV',
-        'Office.view.menumain.MenuMainV'
+        'Office.view.menumain.MenuMainV',
+        'Office.view.login.WindowLoginV'
     ],
-
     controllers: [
         'Main'
     ],
-    models:[
-    ],
-
+    models: [],
     stores: [],
 
     launch: function () {
+        // * какого шрифта у нас будут глифы
         Ext.setGlyphFontFamily('FontAwesome');
-        Ext.tip.QuickTipManager.init();
 
+        Office.util.Setup.clearCookies();
         Ext.util.Cookies.set('locale', Ux.locale.Manager.getLanguage());
 
-        var me = this,
-            Setup = Office.util.Setup;
-        // * install listeners
-        Setup.on({
-            scope: me,
-            setupready: me.startApp,
-            setupfail: me.failApp
-        });
-        Setup.init();
-    },
+        // * очищаю хэш в url
+        parent.location.hash = "";
 
-    startApp: function () {
-        console.info('startApp');
+        // * инициализация локализации
+        Ux.locale.Manager.setConfig({
+            ajaxConfig: {
+                method: 'GET'
+            },
+            language: 'Русский',
+            tpl: Office.util.Server.getLocalization(),
+            type: 'ajax'
+        });
         var me = this,
-            login = Office.getLogin();
-        if (!login) {
-            me.failApp({error: 'login'});
-            return;
-        }
-        var menumain = Ext.create('Office.view.menumain.MenuMainV');
-    },
-    failApp: function (o) {
-        console.info('failApp');
-        var me = this,
-            E = Ext.Error;
-        if (Ext.isObject(o)) {
-            if (o.errors) {
-                Ext.Msg.show({
-                    title: 'Error',
-                    msg: o.errors.reason,
-                    icon: Ext.Msg.ERROR,
-                    buttons: Ext.Msg.OK,
-                    fn: function () {
-                        Ext.create({
-                            xtype: 'windowlogin'
-                        });
-                    }
-                });
-            } else {
-                // * пользователь еще не зарегистрирован, нужно показать ему окно регистрации
-                Ext.create({
-                    xtype: 'windowlogin'
-                });
-            }
-        } else {
-            E.raise('Сервер вернул не объект');
-        }
+            callbackLocale = function () {
+                console.info('callbackLocale');
+                var Setup = Office.util.Setup;
+                Setup.init();
+            };
+        // * применяю Русскую локализацию, после этого запускаю интерфейс ввода имент-пароля
+        Ux.locale.Manager.init(callbackLocale);
+
+        // * указываю явно как отображать разделитель тысячных, и дробной части.
+        // * В противном случае они меняются в зависимости от языка
+        Ext.util.Format.thousandSeparator  = " ";
+        Ext.util.Format.decimalSeparator  = ".";
     }
 });

@@ -1,0 +1,70 @@
+/* заголовок fieldset */
+.x-fieldset-header-default > .x-fieldset-header-text {
+    color: rgb(39, 127, 204) !important;
+}
+
+/* заголовки grid */
+.x-column-header {
+    color: rgb(39, 127, 204) !important;
+}
+
+/* чтобы цвет label ckeckfield был таким же как и у других элементов */
+.x-form-cb-label-default.x-form-cb-label-after {
+    color: #666 !important;
+}
+
+/* цвета ячеек таблицы Принятые */
+.bg-red {
+    background: rgb(255, 200, 200);
+}
+
+.bg-red-lt {
+    background: rgb(255, 225, 225);
+}
+
+.bg-green {
+    background: rgb(200, 255, 200);
+}
+
+.bg-green-lt {
+    background: rgb(225, 255, 225);
+}
+
+.bg-gray {
+    background: rgb(200, 200, 200);
+}
+
+.bg-purple-lt {
+    background: rgb(216, 216, 255);
+}
+
+.bg-purple {
+    background: rgb(200, 200, 255);
+}
+
+.bg-violet {
+    background: rgb(176, 0, 176);
+}
+
+.bg-violet-dark {
+    background: rgb(200, 200, 255);
+}
+
+/* цвета ячеек крыс */
+.bg-rat-red {
+    /*background: red;*/
+    background: rgb(255, 158, 158);
+    color: black;
+}
+
+.bg-rat-black {
+    background: rgb(136, 136, 136);
+    /*background: black;*/
+    color: white;
+}
+
+/* цвет кнопки редактировать */
+.button_edit{
+    border-color: #cecece;
+    background-color: #F5F5F5 !important;
+}

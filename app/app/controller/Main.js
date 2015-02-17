@@ -1,18 +1,22 @@
 Ext.define('Office.controller.Main', {
     extend: 'Ext.app.Controller',
+    requires: [
+        //'Office.util.Utilities'
+    ],
     stores: [],
     init: function () {
         this.listen({
             controller: {
                 '*': {
                     // * для всего проекта
-                    //onHeaderFilter : 'onHeaderFilter',
-                    //onClearHeaderFilter:'onClearHeaderFilter'
+                    /*onHeaderFilter : 'onAddFilter',
+                     onClearHeaderFilter:'onClearFilter'*/
+
                 }
             },
             component: {
                 // * очистка полей по нажатию Delete
-                'combobox, textfield, datefield, tagfield': {
+                'combobox, textfield, datefield, timefield, tagfield': {
                     specialkey: function (field, e) {
                         if (e.getKey() == e.DELETE) {
                             field.reset();
@@ -20,20 +24,79 @@ Ext.define('Office.controller.Main', {
                     }
                 }
             },
-            store: {}
+            store: {
+                '*': {
+                    load: function (store, recs, result) {
+                        // * если сбой авторизации, то предложить перезайти в систему
+                        /*if (!result){
+                         console.info(arguments);
+                         var responseText = store.proxy.reader.rawData,
+                         str = 'Раздел не загружен.<br>Вероятно кто-то еще зашел в систему под вашим пользователем.<br>Авторизоваться заново?';
+                         if(responseText.message.indexOf('Access denied') != -1){
+                         Ext.Msg.confirm('Ошибка авторизации', str, function (button) {
+                         if (button == 'yes') {
+                         Office.util.Setup.logout();
+                         }
+                         }, this);
+                         }else{
+                         Utilities.toast('Неизвестная ошибка','Раздел не загружен.');
+                         }
+                         }*/
+                        this.askLogoutIfAccessDenied(store);
+                    }
+                }
+            }
         })
     },
-    onAddFilter: function (field, n, o, e, isEnter, store) {
+    askLogoutIfAccessDenied: function (store, recs, result) {
+        var responseText = store.proxy.reader.rawData;
+        return this.confirmLogoutMessage(responseText);
+    },
+    confirmLogoutMessage: function (responseText) {
+        if(responseText){
+            if (responseText.success == false || responseText.status == false) {
+                var str = 'Раздел не загружен.<br>Вероятно кто-то еще зашел в систему под вашим пользователем.<br>Авторизоваться заново?';
+                if (responseText.message.indexOf(Utilities.arrAuthFail[0]) != -1
+                    || responseText.message.indexOf(Utilities.arrAuthFail[1]) != -1) {
+                    Ext.Msg.confirm('Ошибка авторизации', str, function (button) {
+                        if (button == 'yes') {
+                            Office.util.Setup.logout();
+                        }
+                    }, this);
+                } else {
+                    Utilities.toast('Неизвестная ошибка', 'Раздел не загружен.');
+                }
+                return false;
+            } else /*if (responseText.success == true)*/ {
+                return true;
+            } /*else {
+             Utilities.toast('Неизвестная ошибка', 'Нет ответа от сервера.');
+             return false;
+             }*/
+        }/*else{
+         Utilities.toast('Неизвестная ошибка', 'Нет ответа от сервера.');
+         return false;
+         }*/
+    },
+
+    onClearFilterVm: function (field, e, store, grid) {
+        if (e.getKey() == e.ENTER) {
+            this.onAddFilterVm(field, null, null, null, true, store, grid);
+        }
+    },
+
+    onAddFilterVm: function (field, n, o, e, isEnter, store, grid) {
         // * для времени Совершения и Рассчета функция ведет себя так :
         // * если сначала проставить дату и время Совершения, а потом Рассчета, то
         // * когда меняем дату, то дата передается правильно, а время- нет, старая (Совершения, а не Рассчета)
         // * и наоборот, т.е. время всегда передается не то.
-        // * ну и хрен с ним.
-         //console.info(arguments);
+        // * ну и хрен с ним. пока.
+
+        // * ФУНКЦИЯ срабатывает и на DELETE, тогд нужно, чтобы обновился грид
         var filterValue = '';
         switch (field.getXType(field)) {
             case 'combobox':
-                filterValue = field.getValue();
+                filterValue = n || field.getValue();
                 break;
             case 'tagfield':
                 filterValue = field.getValue();
@@ -55,14 +118,24 @@ Ext.define('Office.controller.Main', {
                     filterValue = '';
                 break;
         }
-        //console.info(field, filterValue);
-        var parameter = field.getItemId(),
-            newFilter = Office.util.Utilities.count(filterValue) > 1 ? filterValue.join(',') : filterValue;
-        Office.util.Filters.setFilters(parameter, newFilter);
+        var parameter = field.getItemId();
+        //console.info(arguments, parameter);
+        // * случай номера квитанции (gridpay), она имеет вид номер_х_код, ее нужно распарсить и сделать 2 отдельных фильтра, номер и код
+        if (parameter == 'slipId' && filterValue.indexOf('x') > 0) {
+            var arrValue = filterValue.split('x');
+            Ext.Array.each(arrValue, function (paramValue, index) {
+                var paramName = index == 0 ? 'slipId' : 'code',
+                    newFilter = Utilities.count(paramValue) > 1 ? paramValue.join(',') : paramValue; // * преобр. массива в строку через запятую
+                Filters.setFiltersVm(null, paramName, newFilter, grid);
+            }, this);
+        } else {
+            var newFilter = Utilities.count(filterValue) > 1 ? filterValue.join(',') : filterValue; // * преобр. массива в строку через запятую
+            Filters.setFiltersVm(null, parameter, newFilter, grid);
+        }
 
         // * обновление стора
         // * стор нужно обновлять в следующих случаях:
-        // * 1) поле имеет признак срабатывать по нажатию на Enter (fireEventOnEnter) и он нажат (isEnter)
+        // * 1) поле имеет признак срабатывать по нажатию на Enter (_fireEventOnEnter) и он нажат (isEnter)
         // * 2) просто нажат Enter (зачем?)
         // * 3) выбрано значение (n != null) и это значение отличается от
         var fireEventOnEnter = field._fireEventOnEnter;
@@ -72,140 +145,134 @@ Ext.define('Office.controller.Main', {
             && ((n != null && o == null)
             || (n == null && o !== null)
             || (n !== null && o !== null)))/* || (!n && newValue !== oldValue)*/) { // * если очищаем поле, то отправлять всегда
-            var filters = Office.util.Filters.getFilters(),
-                params = {};
 
-            if (field.up('headercontainer')) {
-                var cbDateType = '',
-                    headerText = field.up('headercontainer').text;
-                switch (headerText) {
-                    case 'Совершена':
-                        cbDateType = 0;
-                        break;
-                    case 'Рассчитана':
-                        cbDateType = 1;
-                        break;
-                }
-                if (cbDateType !== '') {
-                    var foundCbDateType = Office.util.Utilities.findById(filters, 'cbDateType');
-                    foundCbDateType.value = cbDateType;
-                }
-            }
-
-            //console.info(filters);
-
-            filters.forEach(function (item) {
-                if (typeof item == 'object') {
-                    if (item.length > 1) {
-                        item.forEach(function (i) {
-                            params[i.id] = i.value;
-                        });
-                    } else {
-                        params[item.id] = item.value;
-                    }
-                } else {
-                    params[item.id] = item.value;
-                }
-            });
-            Office.util.Utilities.storeLoad(store, params);
+            // * если фильтр по датам Совершения/рассчета, то нужно менять cbDateType соответственно на 0/1
+            /*if (field.up('headercontainer')) {
+             if (field._cbDateType) {
+             Filters.setFiltersVm(null, 'filters.cbDateType', field._cbDateType, grid);
+             }
+             }*/
+            this.storeLoad(null, store, grid);
         } else {
             // * ничего не делаем
         }
     },
-    onEnter: function (field, e, store) {
+    storeLoad: function (section, store, grid) {
+        var filters = Ext.encode(grid.getViewModel().getData().filters);
+        //filters = Filters.getFilters(section),
+        //objFilters = this.convertArrayToObject(filters);
+        Utilities.storeLoad(store, filters, null, null, null, grid);
+    },
+    // * фильтры берутся из VM
+    storeLoadVm: function (grid, successFn) {
+        var filters = Ext.encode(grid.getViewModel().getData().filters),
+            store = grid.store;
+        Utilities.storeLoad(store, filters, null, successFn, null, grid);
+    },
+    /*
+     // * преобразование массива в объект
+     convertArrayToObject: function (arr) {
+     var obj = {};
+     arr.forEach(function (item) {
+     //console.info(item);
+     if (typeof item == 'object') {
+     if (item.length > 1) {
+     item.forEach(function (i) {
+     obj[i.id] = i.value;
+     });
+     } else {
+     obj[item.id] = item.value;
+     }
+     } else {
+     obj[item.id] = item.value;
+     }
+     });
+     return obj;
+     },*/
+
+
+    onEnterVm: function (field, e, store, grid) {
         if (e.getKey() == e.ENTER) {
-            this.onAddFilter(field, null, null, null, true, store);
+            this.onAddFilterVm(field, null, null, null, true, store, grid);
         }
     },
     // * очистить фильтры по нажатию на tool close в {panel}, а потом перезагрузить {grid}, если указан
-    resetFilters: function (panel, grid) {
-        // console.log(panel, grid);
-        var filterArr = Office.util.Filters.getArrFilterComp(panel);
-        console.info(filterArr);
-        if (filterArr.length > 0) {
-            // * очистка полей фильтров
-            Ext.Array.each(filterArr, function (item) {
-                //console.info(item,item.superclass,item.superclass.xtype);
-                if (item.superclass.xtype == 'container'
-                    || item.superclass.xtype == 'tableview') { // * случай, когда контейнер, внутри которого размещены элементы (как дата со временем)
-                    var contArr = item.items.items;
-                    Ext.Array.each(contArr, function (item) {
-                        this.silentReset(item);
-                    }, this);
+    // * если метод вызывается на панели фильтров, то перезагружать нужно все равно грид
+    resetFilters: function (grid) {
+        var vm = grid.getViewModel(),
+            filters = vm.getData().filters,
+            dateToday = Ext.Date.format(new Date(), 'Y-m-d');
+
+        if (filters) {
+            Ext.Object.each(filters, function (item) {
+                // * в случае с полем cbDateFrom (Совершена - Дата с) не очищаем его, а устанавливаем на текущую дату. Для удобства.
+                if (grid.getXType() == 'gridaccept' && item == 'cbDateFromMade') {
+                    console.info(dateToday);
+                    vm.set('filters.' + item, dateToday);
                 } else {
-                    this.silentReset(item);
+                    vm.set('filters.' + item, null);
                 }
-            }, this);
-            // * перезагрузка стора
-            var filters = Office.util.Filters.getFilters(),
-                params = {};
-            filters.forEach(function (item) {
-                params[item.id] = item.value;
             });
-            if (grid) {
-                Office.util.Utilities.storeLoad(grid.store, params);
-            }
-            // * нужно во всех сторах с полем checked проставить 0
-            var stores = panel.getViewModel().getData();
-            Ext.Object.each(stores, function (storeName, storeValue) {
+        }
+
+        if (grid) {
+            Utilities.storeLoad(grid.store, filters);
+        }
+        // * нужно во всех сторах с полем checked проставить 0
+        var stores = vm.getData();
+
+        Ext.Object.each(stores, function (storeName, storeValue) {
+            // * проверка, что у данного объекта есть такая функция
+            if (storeValue && typeof storeValue.each == 'function') {
                 storeValue.each(function (item) {
                     if (item.get('checked')) {
                         item.set('checked', 0);
                     }
                 });
-            });
-        }
+            }
+        });
     },
-    silentReset: function (item) {
+
+    silentReset: function (section, item) {
         // * погасим ивент на изменение, чтобы не обновлял стор каждый раз при удалении
         item.suspendEvent('change');
-
         item.reset();
         var filterId = item.getItemId(),
             filterValue = item.getRawValue();
-        Office.util.Filters.setFilters(filterId, filterValue);
+        Filters.setFilters(section, filterId, filterValue);
         item.resumeEvent('change');
     },
-    // * удаление фильтра в заголовках ячеек (кнопка DELETE)
-    onClearHeaderFilter: function (field, e, store) {
-        console.log(arguments);
-        if (e.getKey() == e.ENTER) {
-            this.onHeaderFilter(field, null, null, null, true, store);
-        }
+    silentResetVm: function (section, item, grid) {
+        // * погасим ивент на изменение, чтобы не обновлял стор каждый раз при удалении
+        item.suspendEvent('change');
+        item.reset();
+        var filterId = item.getItemId(),
+            filterValue = item.getRawValue();
+        Filters.setFiltersVm(section, filterId, filterValue, grid);
+        item.resumeEvent('change');
     },
-    // * добавляет элемент в массив фильтров, отправляет данные на сервер, ждет ответа и обновляет грид новыми данными
-    onHeaderFilter: function (field, n, o, e, isEnter, store) {
-        // console.log(arguments);
-        var fireEventOnEnter = field._fireEventOnEnter,
-            filterType = Office.util.Utilities.getXtypeById(field.getItemId()),
-            filterValue,
-            oldValue = Office.util.Utilities.nvl(o, 0),
-            newValue = Office.util.Utilities.nvl(n, 0);
-        filterValue = filterType == 'combobox' ? field.getValue() : field.getRawValue();
-        Office.util.Filters.setFilters(field.getItemId(), filterValue);
-
-        // * грид нужно обновлять в следующих случаях:
-        // * 1) поле имеет признак срабатывать по нажатию на Enter (fireEventOnEnter) и он нажат (isEnter)
-        // * 2) просто нажат Enter (зачем?)
-        // * 3) выбрано значение (n != null) и это значение отличается от
-
-        if ((fireEventOnEnter && isEnter) // * если установлен признак fireEventOnEnter, то отправлять только по нажатию Enter
-                //|| isEnter // * по нажатию Enter отправлять всегда
-            || (!fireEventOnEnter
-            && ((n != null && o == null)
-            || (n == null && o !== null)
-            || (n !== null && o !== null)))/* || (!n && newValue !== oldValue)*/) { // * если очищаем поле, то отправлять всегда
-            var filterArr = Office.util.Filters.getFilters();
-            if (filterArr.length != 0) {
-                var params = {
-                    filters: Ext.encode(filterArr)
-                };
-                console.info(store);
-                Office.util.Utilities.storeLoad(store, params);
-            }
-        } else {
-            // * ничего не делаем
-        }
+    // * тихое присваивание значения value
+    silentSet: function (section, item, value) {
+        // * погасим ивент на изменение, чтобы не обновлял стор каждый раз при изменении
+        item.suspendEvent('change');
+        item.setValue(value);
+        var filterId = item.getItemId(),
+            filterValue = item.getRawValue();
+        Filters.setFilters(section, filterId, value);
+        item.resumeEvent('change');
+    },
+    silentSetVm: function (section, item, value, grid) {
+        // * погасим ивент на изменение, чтобы не обновлял стор каждый раз при изменении
+        item.suspendEvent('change');
+        item.setValue(value);
+        var filterId = item.getItemId(),
+            filterValue = item.getRawValue();
+        Filters.setFiltersVm(section, filterId, value, grid);
+        item.resumeEvent('change');
+    },
+    // * раскрывает содержимое ячейки (нужно когда длинный текст не помещается в ячейке)
+    onCelldblclick: function (cell, td, cellIndex, record, tr, rowIndex, e) {
+        Utilities.cellWrap(td);
     }
 
 });

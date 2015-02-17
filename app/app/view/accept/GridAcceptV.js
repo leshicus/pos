@@ -1,331 +1,546 @@
 Ext.define('Office.view.accept.GridAcceptV', {
-    extend: 'Ext.tree.Panel',
-    requires: [
-        'Ext.toolbar.Paging',
-        'Ext.form.field.Tag',
-        'Ext.tree.View',
-        'Ext.tree.Panel',
-        'Office.view.accept.GridAcceptM',
-        'Office.view.accept.GridAcceptC',
-        'Office.view.common.ContainerDateTimeV'
-    ],
-    xtype: 'gridaccept',
-    viewModel: {
-        type: 'gridaccept'
-    },
-    controller: 'gridaccept',
-    columnLines: true,
-    rowLines: true,
-    flex: 1,
-    title: 'Принятые',
-    frame: true,
-    viewConfig: {
-        stripeRows: true
-    },
-    rootVisible: false,
-    _collapsed: true, // * признак раскрытости всех Экспрессов
-    stateful: true,
-    stateId: 'gridaccept',
-    bind: '{accept}',
-    defaults: {
-        menuDisabled: true,
-        layout: {
-            type: 'vbox',
-            align: 'stretch'
-        }
-    },
-    initComponent: function () {
-        var viewModel = this.getViewModel(),
-            madeFrom = Ext.create('Office.view.common.ContainerDateTimeV', {
-                margin: 2,
-                _itemIdDate: 'cbDateFrom',
-                _itemIdTime: 'cbTimeFrom',
-                _emptyTextDate: 'дата с',
-                _emptyTextTime: 'время',
-                _allowBlank: true,
-                _listenersDate: {
-                    //change: 'onAddFilter',
-                    // * почему-то не получается сделать как выше, пишет 'unable to dynamically resolve method onAddFilter'
-                    // * поменял select to change, чтобы срабатывал ивент на setValue
-                    change: function (field, n, o, e) {
-                        var mainController = Office.app.getController('Main'),
-                            store = viewModel.getStore('accept');
-                        mainController.onAddFilter(field, n, o, e, false, store);
+        extend: 'Ext.tree.Panel',
+        requires: [
+            //   'Ext.toolbar.Paging',
+            'Ext.grid.plugin.CellEditing',
+            // 'Ext.form.field.Tag',
+            //   'Ext.tree.View',
+            'Ext.tree.Panel',
+            'Office.view.accept.GridAcceptM',
+            'Office.view.accept.GridAcceptC',
+            'Office.view.common.ContainerDateTimeV'
+        ],
+        xtype: 'gridaccept',
+        viewModel: {
+            type: 'gridaccept'
+        },
+        controller: 'gridaccept',
+        columnLines: true,
+        rowLines: true,
+        flex: 1,
+        title: 'Принятые',
+        frame: true,
+        border: true,
+        viewConfig: {
+            stripeRows: true
+        },
+        rootVisible: false,
+        _collapsed: true, // * признак раскрытости всех Экспрессов
+        stateful: true,
+        stateId: 'gridaccept',
+        bind: {store: '{accept}'},
+        enableLocking: true,
+        glyph: Glyphs.get('thumbup'),
+        listeners: {
+            celldblclick: 'onCelldblclick',
+            itemmouseenter: 'onItemmouseenter',
+            //render: 'onRenderGridaccept',
+            scope: 'controller'
+        },
+        bbar: [
+            {
+                xtype: 'component',
+                itemId: 'tipTarget',
+                html: '...'
+            },
+            '->',
+            {
+                xtype: 'pagingtoolbar',
+                bind: {
+                    store: '{accept}'
+                },
+                displayInfo: true,
+                displayMsg: 'Показаны записи {0} - {1} из {2}',
+                emptyMsg: "Нет записей для отображения"
+            }
+        ],
+        initComponent: function () {
+            console.info('GridAcceptV init');
+
+            Utilities.initClassParams({
+                scope: this,
+                params: [
+                    'filters.cbDateType',
+                    'filters.cbDateFromMade',
+                    'filters.cbTimeFromMade',
+                    'filters.cbDateFromCalc',
+                    'filters.cbTimeFromCalc',
+                    'filters.cbDateToMade',
+                    'filters.cbTimeToMade',
+                    'filters.cbDateToCalc',
+                    'filters.cbTimeToCalc',
+                    'filters.cbStateSlip',
+                    'cbStateSlip_model',
+                    'filters.cbPaid',
+                    'cbPaid_model',
+                    'filters.cbIsLive',
+                    'cbIsLive_model',
+                    'filters.cbByBets',
+                    'filters.cbSport',
+                    'cbSport_model',
+                    'filters.cbSlipId'
+                ]
+            });
+            var me = this,
+                viewModel = this.getViewModel(),
+                madeFrom = Ext.create('Office.view.common.ContainerDateTimeV', {
+                    margin: 2,
+                    _itemIdDate: 'cbDateFromMade',
+                    _itemIdTime: 'cbTimeFromMade',
+                    _emptyTextDate: 'дата с',
+                    _emptyTextTime: 'время',
+                    _cbDateType: 0,
+                    _format: 'Y-m-d',
+                    _allowBlank: true,
+                    _bindDate: '{filters.cbDateFromMade}',
+                    _bindTime: '{filters.cbTimeFromMade}',
+                    _listenersDate: {
+                        change: 'onAddFilter'
+                        // * почему-то не получается сделать как выше, пишет 'unable to dynamically resolve method onAddFilter'
+                        // * поменял select to change, чтобы срабатывал ивент на setValue
+                        /*change: function (field, n, o, e) {
+                         console.info(arguments);
+                         var mainController = Office.app.getController('Main'),
+                         store = me.getViewModel().getStore('accept');
+                         //store = me.getStore('accept');
+                         //me.getViewModel().set(field.getItemId(),field.getValue());
+                         // console.info(me, store);
+                         //mainController.onAddFilter(field, n, o, e, false, store, me);
+                         mainController.onAddFilterVm(field, n, o, e, false, store, me);
+                         }*/
+                    },
+                    _listenersTime: {
+                        change: 'onAddFilter',
+                        specialkey: 'onClearFilterVm'
+                    }
+                }),
+                madeTo = Ext.create('Office.view.common.ContainerDateTimeV', {
+                    margin: 2,
+                    _itemIdDate: 'cbDateToMade',
+                    _itemIdTime: 'cbTimeToMade',
+                    _emptyTextDate: 'дата по',
+                    _emptyTextTime: 'время',
+                    _cbDateType: 0,
+                    _format: 'Y-m-d',
+                    _allowBlank: true,
+                    _bindDate: '{filters.cbDateToMade}',
+                    _bindTime: '{filters.cbTimeToMade}',
+                    _listenersDate: {
+                        change: 'onAddFilter',
+                        specialkey: 'onClearFilterVm'
+                    },
+                    _listenersTime: {
+                        change: 'onAddFilter',
+                        specialkey: 'onClearFilterVm'
+                    }
+                }),
+                calcFrom = Ext.create('Office.view.common.ContainerDateTimeV', {
+                    margin: 2,
+                    _itemIdDate: 'cbDateFromCalc',
+                    _itemIdTime: 'cbTimeFromCalc',
+                    _emptyTextDate: 'дата с',
+                    _emptyTextTime: 'время',
+                    _cbDateType: 1,
+                    _format: 'Y-m-d',
+                    _allowBlank: true,
+                    _bindDate: '{filters.cbDateFromCalc}',
+                    _bindTime: '{filters.cbTimeFromCalc}',
+                    _listenersDate: {
+                        change: 'onAddFilter',
+                        specialkey: 'onClearFilterVm'
+                    },
+                    _listenersTime: {
+                        change: 'onAddFilter',
+                        specialkey: 'onClearFilterVm'
+                    }
+                }),
+                calcTo = Ext.create('Office.view.common.ContainerDateTimeV', {
+                    margin: 2,
+                    _itemIdDate: 'cbDateToCalc',
+                    _itemIdTime: 'cbTimeToCalc',
+                    _emptyTextDate: 'дата по',
+                    _emptyTextTime: 'время',
+                    _cbDateType: 1,
+                    _format: 'Y-m-d',
+                    _allowBlank: true,
+                    _bindDate: '{filters.cbDateToCalc}',
+                    _bindTime: '{filters.cbTimeToCalc}',
+                    _listenersDate: {
+                        change: 'onAddFilter',
+                        specialkey: 'onClearFilterVm'
+                    },
+                    _listenersTime: {
+                        change: 'onAddFilter',
+                        specialkey: 'onClearFilterVm'
+                    }
+                });
+
+            Ext.defer(function () {
+                viewModel.getStore('sport').load();
+                viewModel.getStore('result').load();
+                viewModel.set('filters.cbDateFromMade', new Date());
+            }, 10);
+
+            // * установка начального значения- Дата с, срабатывает listener madeFrom
+            //Debug.setGridAcceptMadeFrom(madeFrom, 'cbDateFrom');
+
+            this.tbar = [
+                {
+                    xtype: 'combocheck',
+                    emptyText: 'Вид спорта',
+                    width: 170,
+                    margin: '2 2 0 0',
+                    padding: '5 0 0 0',
+                    itemId: 'cbSport',
+                    editable: false,
+                    queryMode: 'local',
+                    displayField: 'value',
+                    valueField: 'id',
+                    _checkField: 'checked',
+                    /*_func: function (combo, n) {
+                     me.controller.onAddFilter(combo, n);
+                     },*/
+                    _bind: {
+                        store: '{sport}',
+                        selection: '{cbSport_model}',
+                        value: '{filters.cbSport}'
                     }
                 },
-                _listenersTime: {
-                    select: 'onAddFilter'
-                }
-            }),
-            madeTo = Ext.create('Office.view.common.ContainerDateTimeV', {
-                margin: 2,
-                _itemIdDate: 'cbDateTo',
-                _itemIdTime: 'cbTimeTo',
-                _emptyTextDate: 'дата по',
-                _emptyTextTime: 'время',
-                _allowBlank: true,
-                _listenersDate: {
-                    select: 'onAddFilter',
-                    specialkey: 'onClearFilter'
+                /*{
+                 xtype: 'combobox',
+                 itemId: 'cbSport',
+                 multiSelect: true,
+                 width: 200,
+                 emptyText: 'Вид спорта',
+                 queryMode: 'local',
+                 displayField: 'value',
+                 valueField: 'id',
+                 editable: false,
+                 bind: {
+                 store:'{sport}',
+                 selection:'{cbSport_model}',
+                 value:'{filters.cbSport}'
+                 },
+                 listeners:{
+                 select: function (combo,recs) {
+                 var arr = [];
+                 Ext.Array.each(recs, function (item) {
+                 arr.push(item.get('id'));
+                 });
+                 combo.up('gridaccept').getViewModel().set('filters.cbSport',arr.join(','));
+                 }
+                 }
+                 },*/
+                {
+                    xtype: 'combobox',
+                    itemId: 'cbIsLive',
+                    width: 170,
+                    //labelWidth: 50,
+                    // margin: '2 2 2 30',
+                    emptyText: 'Лайв',
+                    queryMode: 'local',
+                    displayField: 'name',
+                    valueField: 'id',
+                    editable: false,
+                    bind: {
+                        store: '{live}',
+                        selection: '{cbIsLive_model}',
+                        value: '{filters.cbIsLive}'
+                    },
+                    listeners: {
+                        change: 'onAddFilter'
+                    }
                 },
-                _listenersTime: {
-                    select: 'onAddFilter'
+                {
+                    xtype: 'checkbox',
+                    itemId: 'cbByBets',
+                    bind: '{filters.cbByBets}',
+                    margin: '2 2 2 30',
+                    //inputValue: 'on',
+                    boxLabel: 'По бетам',
+                    flex: 1,
+                    listeners: {
+                        change: 'onAddFilter'
+                    }
                 }
-            }),
-            calcFrom = Ext.create('Office.view.common.ContainerDateTimeV', {
-                margin: 2,
-                _itemIdDate: 'cbDateFrom',
-                _itemIdTime: 'cbTimeFrom',
-                _emptyTextDate: 'дата с',
-                _emptyTextTime: 'время',
-                _allowBlank: true,
-                _listenersDate: {
-                    select: 'onAddFilter'
-                },
-                _listenersTime: {
-                    select: 'onAddFilter'
-                }
-            }),
-            calcTo = Ext.create('Office.view.common.ContainerDateTimeV', {
-                margin: 2,
-                _itemIdDate: 'cbDateTo',
-                _itemIdTime: 'cbTimeTo',
-                _emptyTextDate: 'дата по',
-                _emptyTextTime: 'время',
-                _allowBlank: true,
-                _listenersDate: {
-                    select: 'onAddFilter'
-                },
-                _listenersTime: {
-                    select: 'onAddFilter'
-                }
-            }),
-            me = this,
-            filters = Office.util.Filters;
-        filters.init();
-        //this.getViewModel().getStore('accept').load();
-        madeFrom.setValue('cbDateFrom',new Date());
+            ];
 
-        this.columns = [
-            {
-                xtype: 'treecolumn',
-                text: 'Действие',
-                dataIndex: 'operation',
-                itemId: 'gridaccept-num',
-                //flex:1 //todo заменить после обновления
-                width: 250
-            },
-            {
-                text: 'Сумма',
-                dataIndex: 'stake',
-                itemId: 'gridaccept-stake',
-                menuDisabled: true,
-                width: 70
-            },
-            {
-                text: 'Коэф.',
-                dataIndex: 'coefficient',
-                itemId: 'gridaccept-coefficient',
-                menuDisabled: true,
-                width: 60
-            },
-            {
-                text: 'Результат',
-                dataIndex: 'original_result_text',
-                itemId: 'gridaccept-original_result_text',// * указываем id, т.к. вроде только с ним stateful работает
-                menuDisabled: true,
-                renderer: Office.util.Utilities.renderResult,
-                width: 150,
-                layout: {
-                    type: 'vbox',
-                    align: 'stretch'
+            this.columns = {
+                defaults: {
+                    menuDisabled: true,
+                    sortable: false
+                    /*layout: {
+                     type: 'vbox',
+                     align: 'stretch'
+                     }*/
                 },
                 items: [
                     {
-                        xtype: 'combocheck',
-                        margin: 2,
-                        itemId: 'cbStateSlip',
-                        store: '{result}',
-                        displayField: 'value',
-                        valueField: 'id',
-                        editable: false,
-                        _checkField: 'checked',
-                        _func: function (combo, n) {
-                            me.controller.onAddFilter(combo, n);
+                        xtype: 'treecolumn',
+                        text: 'Действие',
+                        dataIndex: 'operation',
+                        itemId: 'gridaccept-operation',
+                        //flex:1 //todo заменить после обновления
+                        locked: true,
+                        width: 250,
+                        layout: {
+                            type: 'vbox',
+                            align: 'stretch'
+                        },
+                        items: [
+                            {
+                                xtype: 'textfield',
+                                itemId: 'cbSlipId',
+                                bind: '{filters.cbSlipId}',
+                                emptyText: 'Номер',
+                                editable: true,
+                                //labelWidth: 55,
+                                //width: 120,
+                                margin: 2,
+                                _fireEventOnEnter: true, // * change event будет работать только по нажатию на Enter
+                                listeners: {
+                                    specialkey: 'onEnter',
+                                    scope: 'controller'
+                                    //afterrender: 'cbSlipIdTooltip'
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        text: 'Сумма',
+                        dataIndex: 'stake',
+                        itemId: 'gridaccept-stake',
+                        width: 90,
+                        renderer: Ext.util.Format.numberRenderer('0,0.00')
+                    },
+                    {
+                        text: 'Коэф.',
+                        dataIndex: 'coefficient',
+                        itemId: 'gridaccept-coefficient',
+                        width: 60
+                    },
+                    {
+                        text: 'Результат',
+                        dataIndex: 'result_text',
+                        itemId: 'gridaccept-original_result_text',// * указываем id, т.к. вроде только с ним stateful работает
+                        renderer: Utilities.renderResult,
+                        width: 150,
+                        layout: {
+                            type: 'vbox',
+                            align: 'stretch'
+                        },
+                        items: [
+                            {
+                                xtype: 'combocheck',
+                                margin: 2,
+                                itemId: 'cbStateSlip',
+                                // _store: '{result}',
+                                _bind: {
+                                    store: '{result}',
+                                    selection: '{cbStateSlip_model}',
+                                    value: '{filters.cbStateSlip}'
+                                },
+                                //_bind:'{filters.cbStateSlip}',
+                                displayField: 'value',
+                                valueField: 'id',
+                                editable: false,
+                                _checkField: 'checked',
+                                /*_func: function (combo, n) {
+                                 me.controller.onAddFilter(combo, n);
+                                 }*/
+                            }
+                        ]
+                    },
+                    {
+                        text: 'Совершена',
+                        dataIndex: 'made_datetime',
+                        itemId: 'gridaccept-made_datetime',
+                        width: 185,
+                        format: Utilities.dateFormatDot,
+                        layout: {
+                            type: 'vbox',
+                            align: 'stretch'
+                        },
+                        items: [
+                            madeFrom,
+                            madeTo
+                        ]
+                    },
+                    {
+                        text: 'Рассчитана',
+                        dataIndex: 'fin_datetime',
+                        itemId: 'gridaccept-calc_datetime',
+                        width: 185,
+                        format: Utilities.dateFormatHyphen,
+                        layout: {
+                            type: 'vbox',
+                            align: 'stretch'
+                        },
+                        items: [
+                            calcFrom,
+                            calcTo
+                        ]
+                    },
+                    {
+                        text: 'Изм.<br>баланса',
+                        dataIndex: 'balance_change',
+                        itemId: 'gridaccept-balance_change',
+                        width: 75,
+                        renderer: Ext.util.Format.numberRenderer('0,0.00')
+                    },
+                    {
+                        text: 'Выигрыш',
+                        dataIndex: 'win_sum',//?
+                        itemId: 'gridaccept-win_sum',
+                        width: 90,
+                        renderer: Ext.util.Format.numberRenderer('0,0.00')
+                    },
+                    {
+                        text: 'НДФЛ',
+                        dataIndex: 'tax_sum',
+                        itemId: 'gridaccept-tax_sum',
+                        width: 60,
+                        renderer: Ext.util.Format.numberRenderer('0,0.00')
+                    },
+                    {
+                        text: 'К выплате',
+                        dataIndex: 'to_pay',
+                        itemId: 'gridaccept-to_pay',
+                        width: 90,
+                        renderer: Ext.util.Format.numberRenderer('0,0.00')
+                    },
+                    {
+                        text: 'Счет',
+                        dataIndex: 'score',
+                        itemId: 'gridaccept-score',
+                        width: 120,
+                        // * выяснить почему приходит <td>. Заплатка
+                        renderer: function (value) {
+                            if (value) {
+                                if (value.indexOf('td') == -1)
+                                    return value;
+                                else
+                                    return "";
+                            } else
+                                return "";
                         }
-                    }
-                ]
-            },
-            {
-                text: 'Совершена',
-                dataIndex: 'made_datetime',
-                itemId: 'gridaccept-made_datetime',
-                width: 180,
-                menuDisabled: true,
-                layout: {
-                    type: 'vbox',
-                    align: 'stretch'
-                },
-                items: [
-                    madeFrom,
-                    madeTo
-                ]
-            }, {
-                text: 'Рассчитана',
-                dataIndex: 'calc_datetime',
-                itemId: 'gridaccept-calc_datetime',
-                width: 180,
-                menuDisabled: true,
-                layout: {
-                    type: 'vbox',
-                    align: 'stretch'
-                },
-                items: [
-                    calcFrom,
-                    calcTo
-                ]
-            },
-            {
-                text: 'Изм.<br>баланса',
-                dataIndex: 'balance_change',
-                itemId: 'gridaccept-balance_change',
-                menuDisabled: true,
-                width: 75
-            },
-            {
-                text: 'Выигрыш',
-                dataIndex: 'win_sum',//?
-                itemId: 'gridaccept-win_sum',
-                menuDisabled: true,
-                width: 90
-            },
-            {
-                text: 'НДФЛ',
-                dataIndex: 'tax_sum',//?
-                itemId: 'gridaccept-tax_sum',
-                menuDisabled: true,
-                width: 60
-            },
-            {
-                text: 'К выплате',
-                dataIndex: 'to_pay',
-                itemId: 'gridaccept-to_pay',
-                menuDisabled: true,
-                width: 90
-            },
-            {
-                text: 'Счет',
-                dataIndex: 'score',
-                itemId: 'gridaccept-score',
-                menuDisabled: true,
-                width: 70
-            },
-            {
-                text: 'Лайв',
-                dataIndex: 'is_live',
-                itemId: 'gridaccept-is_live',
-                menuDisabled: true,
-                width: 60
-            },
-            {
-                text: 'Выплачено',
-                dataIndex: 'paid',
-                itemId: 'gridaccept-paid',
-                menuDisabled: true,
-                width: 110
-            },
-            {
-                text: 'Печать',
-                //dataIndex: '',//?
-                itemId: 'gridaccept-print',
-                menuDisabled: true,
-                width: 65,
-                renderer: function (val, meta, rec) {
-                    /*if (rec.get('status') == 1) {
-                     return '<span role="button" class="icon-lock-4" data-qtip="Заблокирована"></span>';
+                    },
+                    {
+                        text: 'Лайв',
+                        dataIndex: 'is_live',
+                        itemId: 'gridaccept-is_live',
+                        width: 60
+                    },
+                    {
+                        text: 'Выплачено',
+                        dataIndex: 'paid',
+                        itemId: 'gridaccept-paid',
+                        width: 120,
+                        layout: {
+                            type: 'vbox',
+                            align: 'stretch'
+                        },
+                        items: [
+                            {
+                                xtype: 'combobox',
+                                itemId: 'cbPaid',
+                                margin: 2,
+                                //width: 190,
+                                //labelWidth: 90,
+                                //fieldLabel: 'Выплачено',
+                                emptyText: 'да/нет',
+                                //margin: '2 2 2 30',
+                                editable: false,
+                                queryMode: 'local',
+                                displayField: 'name',
+                                valueField: 'id',
+                                bind: {
+                                    store: '{paid}',
+                                    selection: '{cbPaid_model}',
+                                    value: '{filters.cbPaid}'
+                                },
+                                listeners: {
+                                    change: 'onAddFilter'
+                                }
+                            }
+                        ]
+                    },
+                    /*{
+                     text: 'Печать',
+                     itemId: 'gridaccept-print',
+                     width: 65
+                     },
+                     {
+                     text: 'Подтв.',
+                     itemId: 'gridaccept-confirm',
+                     width: 65
+                     },
+                     {
+                     text: 'Копир.',
+                     itemId: 'gridaccept-copy',
+                     width: 65
+                     },
+                     {
+                     text: 'Выкуп',
+                     itemId: 'gridaccept-buyout',
+                     width: 65
+                     },
+                     {
+                     text: 'Фикс.<br>возврат',
+                     itemId: 'gridaccept-fix_return',
+                     width: 70
                      }*/
-                }
-            },
-            {
-                text: 'Подтв.',
-                //dataIndex: '',//?
-                itemId: 'gridaccept-confirm',
-                menuDisabled: true,
-                width: 65,
-                renderer: function (val, meta, rec) {
-                    /*if (rec.get('status') == 1) {
-                     return '<span role="button" class="icon-lock-4" data-qtip="Заблокирована"></span>';
-                     }*/
-                }
-            },
-            {
-                text: 'Копир.',
-                //dataIndex: '',//?
-                itemId: 'gridaccept-copy',
-                menuDisabled: true,
-                width: 65,
-                renderer: function (val, meta, rec) {
-                    /*if (rec.get('status') == 1) {
-                     return '<span role="button" class="icon-lock-4" data-qtip="Заблокирована"></span>';
-                     }*/
-                }
-            },
-            {
-                text: 'Выкуп',
-                //dataIndex: '',//?
-                itemId: 'gridaccept-buyout',
-                menuDisabled: true,
-                width: 65,
-                renderer: function (val, meta, rec) {
-                    /*if (rec.get('status') == 1) {
-                     return '<span role="button" class="icon-lock-4" data-qtip="Заблокирована"></span>';
-                     }*/
-                }
-            },
-            {
-                text: 'Фикс.<br>возврат',
-                //dataIndex: '',//?
-                itemId: 'gridaccept-fix_return',
-                menuDisabled: true,
-                width: 70,
-                renderer: function (val, meta, rec) {
-                    /*if (rec.get('status') == 1) {
-                     return '<span role="button" class="icon-lock-4" data-qtip="Заблокирована"></span>';
-                     }*/
-                }
-            },
 
-        ]
-
-        this.dockedItems = [{
-            xtype: 'pagingtoolbar',
-            //todo проверить работу после обновления
-            bind: {store: '{accept}'},
-            reference: 'pagingtoolbar',
-            dock: 'bottom',
-            displayInfo: true,
-            displayMsg: 'Показаны записи {0} - {1} из {2}',
-            emptyMsg: "Нет записей для отображения"
-        }];
-        this.tools = [
-            {
-                type: 'maximize',
-                tooltip: 'Скрыть/Раскрыть экспрессы'
-            },
-            {
-                type: 'refresh',
-                tooltip: 'Обновить'
-            },
-            /* {
-             type: 'gear',
-             tooltip: 'Настройка'
-             },*/
-            {
-                type: 'close',
-                tooltip: 'Удалить фильтры'
+                ]
             }
-        ]
 
-        this.callParent();
+            /*this.dockedItems = [{
+             xtype: 'pagingtoolbar',
+             //todo проверить работу после обновления
+             store: me.store,
+             pageSize: 25,
+             //bind: {store: '{accept}'},
+             reference: 'pagingtoolbar',
+             dock: 'bottom',
+             displayInfo: true,
+             displayMsg: 'Показаны записи {0} - {1} из {2}',
+             emptyMsg: "Нет записей для отображения"
+             }]*/
+            /*this.bbar = Ext.create('Ext.PagingToolbar', {
+             bind: {
+             store: '{accept}'
+             },
+             displayInfo: true,
+             displayMsg: 'Показаны записи {0} - {1} из {2}',
+             emptyMsg: "Нет записей для отображения"
+             });*/
+
+
+            /* this.bbar = [
+             {
+             xtype: 'component',
+             itemId: 'tipTarget',
+             html: '...'
+             }
+             ]*/
+
+            this.tools = [
+                {
+                    type: 'maximize',
+                    tooltip: 'Скрыть/Раскрыть экспрессы'
+                },
+                {
+                    type: 'refresh',
+                    tooltip: 'Обновить'
+                },
+                {
+                    type: 'close',
+                    tooltip: 'Удалить фильтры'
+                }
+            ]
+
+            this.callParent();
+        }
+
     }
-});
+);

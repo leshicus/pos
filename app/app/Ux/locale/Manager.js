@@ -92,15 +92,17 @@ Ext.define('Ux.locale.Manager', {
     },
 
     applyLocales : function() {
-        // * проходим по всем созданным компанентам, по которым имеются override'ы с методом setLocale()
+        // * проходим по всем созданным компонентам, по которым имеются override'ы с методом setLocale()
         var cmps     = Ext.ComponentQuery.query('component[enableLocale]'),
             c        = 0,
             cNum     = cmps.length,
             language = this._language,
             cmp;
-
+        //console.info(cmps);
         for (; c < cNum; c++) {
+
             cmp = cmps[c];
+            //console.info(cmp);
             if (typeof cmp.setLocale == 'function') {
                 cmp.setLocale(language);
             }
@@ -112,6 +114,7 @@ Ext.define('Ux.locale.Manager', {
     },
 
     get : function(key, defaultText) {
+        //console.info(key);
         var me     = this,
             locale = me._locale,
             plural = key.indexOf('p:') == 0,
@@ -119,7 +122,7 @@ Ext.define('Ux.locale.Manager', {
             k      = 0,
             kNum   = keys.length,
             res;
-
+        defaultText = "?";
         if (!me.isLoaded()) {
             return defaultText;
         }
@@ -133,7 +136,7 @@ Ext.define('Ux.locale.Manager', {
         }
 
         res = locale || defaultText;
-
+//console.info('res',res);
         if (plural) {
             return Ext.util.Inflector.pluralize(res);
         } else {
@@ -155,8 +158,8 @@ Ext.define('Ux.locale.Manager', {
     },
 
     updateLocale : function(locale) {
+        //console.info(arguments);
         var me = this;
-
         me._language = locale;
         if (me._loadingInd && Ext.Viewport.setMasked) {
             Ext.Viewport.setMasked({
@@ -171,10 +174,20 @@ Ext.define('Ux.locale.Manager', {
                 Ext.Viewport.setMasked(false);
             }
         });
-    }, 
-    
+    },
+
+    // * ru, en
     getLanguage : function() {
         return this._language;
+    },
+
+    // * Русский, English
+    getLanguageText : function(val) {
+        return Utilities.findByKey(this._locales, 'abbr', val)['text'] ;
+    },
+    // * текущая локаль
+    getCurrentLocale : function() {
+        return Utilities.findByKey(this._locales,'text', this.getLanguage()) ;
     },
 
     isLocalable : function(me, config) {

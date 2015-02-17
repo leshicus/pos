@@ -2,14 +2,14 @@ Ext.define('Ux.locale.override.extjs.Panel', {
     override : 'Ext.panel.Panel',
 
     requires : [
-        'Ux.locale.override.extjs.Component'
+        'Ux.locale.override.extjs.Component1'
     ],
 
     initComponent : function() {
         this.callOverridden(arguments);
 
         if (this.enableLocale) {
-            this.title = '&nbsp;';
+            //this.title = '&nbsp;';
         }
     },
 

@@ -2,34 +2,27 @@ Ext.define('Office.view.timeline.GridTimelineM', {
     extend: 'Ext.app.ViewModel',
     alias: 'viewmodel.gridtimeline',
     stores: {
-        yesNo: {
-            fields: ['id', 'name'],
-            data: [
-                ['0', "нет"],
-                ['1', "да"],
-            ]
-        },
-        gridtimeline: {
-            fields: [
-                'id',
-                'num',
-                'type',
-                'datecalc'
-            ],
-            idProperty:'id',
+        timeline: {
+            fields: [],
             proxy: {
                 type: 'ajax',
-                url: 'resources/data/timeline/getGridTimeline.json',
-                reader: {type: 'json'}
+                //url:Ext.util.Format.format(Server.getTimeline(),'{token}','{term}','{includeArchieved}'),
+                url: Server.getUrl({
+                    class: 'Pos_Timeline_Search',
+                    token: '{token}',
+                    params: {
+                        term: '{filters.term}',
+                        includeArchieved: '{filters.includeArchieved}'
+                    }
+                }),
+                reader: {
+                    type: 'json',
+                    rootProperty:'children',
+                    totalProperty: 'results'
+                }
             },
-            pageSize: Office.util.Utilities.pageSize,
-            remoteSort: true,
-            sorters: [{
-                property: 'num',
-                direction: 'DESC'
-            }],
-            autoLoad: true,
-            storeId:'gridtimeline'
+            storeId: 'timeline',
+            autoLoad: false
         }
     }
 });

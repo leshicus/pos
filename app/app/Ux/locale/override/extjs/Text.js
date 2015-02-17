@@ -2,9 +2,8 @@ Ext.define('Ux.locale.override.extjs.Text', {
     override : 'Ext.form.field.Text',
 
     requires : [
-        'Ux.locale.override.extjs.Component'
+        'Ux.locale.override.extjs.Component1'
     ],
-
     setLocale : function(locale) {
         var me          = this,
             locales     = me.locales,
@@ -26,13 +25,13 @@ Ext.define('Ux.locale.override.extjs.Text', {
         }
 
         me.callOverridden(arguments);
-    },
+    }
 
-    setFieldLabel : function(text) {
+    /*setFieldLabel : function(text) {
         this.labelEl.update(text);
 
         this.fieldLabel = text;
 
         return this;
-    }
+    }*/
 });

@@ -1,18 +1,27 @@
 /*@import 'fontello/css/fontello.css';*/
-.icon-settings {
-    /*width:15px;*/
-    /*height:15px;*/
-    background-image:url(/resources/image/settings.png) !important;
-}
-
-/*
-.x-tree-icon {
-    width: 24px;
-}*/
-
-.icon-express {
-  background-image:url(/resources/image/menu19.png) !important;
+/*.icon-express {
+  background-image:url(../image/menu.png) !important;
 }
 .icon-odinar {
-  background-image:url(/resources/image/dot1.png) !important;
+  background-image:url(../image/dot1.png) !important;
 }
+.icon-folder {
+    background-image:url(../image/Places-folder-blue-icon.png) !important;
+}*/
+
+/* общий стиль для всех иконок спорта */
+.sport {
+    height: 24px;
+    width: 24px;
+    /*vertical-align: -0.5em; для 16 */
+    vertical-align: -1em;
+}
+.football {background-image:url(../image/sport/football24.png) !important;}
+.hockey {background-image:url(../image/sport/football24.png) !important;}
+.basketball {background-image:url(../image/sport/basketball24.png) !important;}
+.volleyball {background-image:url(../image/sport/volleyball24.png) !important;}
+.golf {background-image:url(../image/sport/football24.png) !important;}
+.baseball {background-image:url(../image/sport/baseball24.png) !important;}
+.tennis {background-image:url(../image/sport/tennis24.png) !important;}
+.amerfootball {background-image:url(../image/sport/American-football24.png) !important;}
+.table-tennis {background-image:url(../image/sport/table-tennis24.png) !important;}

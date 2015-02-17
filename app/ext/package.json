@@ -1,7 +1,7 @@
 {
   "name": "ext",
   "format": "1",
-  "version": "5.0.1.1255",
+  "version": "5.1.0.47",
   "compatVersion": "4.0",
   "creator": "Sencha",
   "summary": "Ext JS",
@@ -10,5 +10,15 @@
   "requires": [
     "sencha-core"
   ],
-  "local": true
+  "signatures": [
+    {
+      "name": "Sencha",
+      "uuid": "e93ebd09-85f5-46b6-bfc1-c7f06cf0b8a5",
+      "created": "2014-11-26T19:43:06Z",
+      "algorithm": "SHA1withRSA",
+      "nonce": "NuVhtVukY24\u003d",
+      "signature": "UHFa4CXhCg4S5fdKHAtrbG7cfoab2+gRQNE2XB71v7W+pzWqJGuBOLdKVRbqzsm+UrL5+Z7Z4FmDXO+1/1XybTo+X2i+QDnqTKMlOFgRPzDC7RIAUMytxq9uf8SbZZIrqmUUBjsTPGvk6yltQKFmkKQOqLL6+wEarw7/IWyKfTN0LJYAmYZymDT0tPwVoN2mGyjezVcICvN6ylOJQMtKp0CxOdau/47FTfqdmIAJUC/Y6hG6jCBGwCMOFWXGlTlI27u4iKjInD1+fCFy39HdzeztwXKYSoKHK8CVa9DaRPKrnvNmbbFF/2U8NW0jH5EulVX4gj/jLfkvy34rP4BC+VGGCKamjc8p0Q5rhAhRERh4UDsVsio9AF11zzKqq3kWh3v/bLggefxsL8LHLfzkoa4girySwGyS9zom4bb9b1xkwpeMmfqQ5O89WfzJvSNkCmuQaG/vJPQ7D8CLCBDX5VWtRdwBfD2+L2QaTORfdIQ7EDZAki/3Y0MkCG36U/cGaa8rzyMVogq7/SVRqVZrwRKKWFDovFMk9vFheyWwD1VeAL0k8x+4Lu22WpZrE7WD+uETbpuYTNIFx4A2lHpM7mT0rT01QZZuXZ3Z1rF27IWxeGapKaxJVYhTh2dPg0tiGVUe7Jfa9u0ivpyUkszG6CsR1bToVAomkLhTnni8bi8\u003d"
+    }
+  ],
+  "output": "${package.dir}/build"
 }

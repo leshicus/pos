@@ -2,7 +2,7 @@ Ext.define('Ux.locale.override.extjs.FieldContainer', {
     override : 'Ext.form.FieldContainer',
 
     requires : [
-        'Ux.locale.override.extjs.Component'
+        'Ux.locale.override.extjs.Component1'
     ],
 
     setLocale : function(locale) {

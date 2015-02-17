@@ -1,133 +1,28 @@
 {
-    "region": {
-        "center": {
-            "title": "Center Region"
+    "windowlogin": {
+        "title": "Authorization",
+        "formfield": {
+            "language": "Language/Язык",
+            "username": "User name",
+            "password": "Password"
         },
-        "east": {
-            "title": "East Region - Form"
-        }
-    },
-    "buttons": {
-        "save": "Save"
-    },
-    "fields": {
-        "labels": {
-            "firstName": "First Name",
-            "lastName": "Last Name",
-            "chooseLocale": "Choose Your Locale"
-        }
-    },
-    "gridevent":{
-        "columns": {
-            "num": "№",
-            "datecom": "Sovershena",
-            "client": "Client",
-            "gambler": "Igrok",
-            "datecalc": "Rasschitana",
-            "bettype": "Tip stavki",
-            "host": "Hozyain",
-            "guest": "Gost'",
-            "outcome": "Ishod",
-            "sum": "Summa",
-            "coeff": "coeff.",
-            "statid": "Status",
-            "total": "Itog",
-            "datepay": "Vyplachena"
-        },
-        "tools":{
-            "refresh": "Обновить",
-            "gear": "Настройка",
-            "close": "Удалить фильтры"
+        "button": {
+            "login": "Login"
         }
     },
     "menumain": {
-        "exit": {
-            "this": "Log out"
-        },
-        "user": {
-            "this": "Users",
-            "client": "Clients",
-            "group": "Groups",
-            "access": "Access",
-            "list_details": "List details",
-            "schedule_analytics": "Schedule on duty analyst",
-            "schedule_game": "Schedule for the game on the field",
-            "player_manage": "Player management",
-            "restrict_player": "Restrictions for players",
-            "add_account": "Add.accounts",
-            "audit_log": "Audit log"
-        },
-        "finance": {
-            "this": "My account",
-            "balance": "Balances",
-            "payment": "Payments",
-            "poses": "POSes",
-            "currences": "Currences"
-        },
-        "line": {
-            "this": "Sports",
-            "event": "Events",
-            "event_line_manage": "Event line management",
-            "result": "Results",
-            "liability": "Liability",
-            "maximal": "Maximals",
-            "scanning": "Scanning",
-            "scanner_manage": "Scanners management",
-            "tournament": "Tournaments",
-            "competitor": "Competitors",
-            "live_event": "Live events line management",
-            "interval_event": "Interval events",
-            "line_history": "Line history",
-            "video_broadcast": "Video broadcast"
-        },
-        "bet": {
-            "this": "Bets",
-            "list_bet": "List of bets",
-            "hedging": "Hedging",
-            "scoreboard": "Scoreboard",
-            "import_bet": "Import bets"
-        },
-        "report": {
-            "this": "Reports",
-            "profit": "Profit",
-            "ndfl": "NDFL",
-            "payout": "Payouts",
-            "player_ndfl": "Players NDFL",
-            "per_club": "Per clubs",
-            "session": "Sessions",
-            "poses_rep": "POSes",
-            "lif_reg": "Lif registry",
-            "off_cash_move": "Office cash movements",
-            "cur_bal_player": "Current balance of players",
-            "player_result": "Players results",
-            "daily_rep_player": "Daily report by players",
-            "daily_rep_poses": "Daily report by POSes",
-            "game_field": "Game field",
-            "player_act": "Players activity",
-            "player_bet": "Players bets"
-        },
-        "setting": {
-            "this": "Settings",
-            "margin": "Margin",
-            "sys_flag": "System flags",
-            "sys_setting": "System settings",
-            "user_setting": "User settings",
-            "panel_setting": "Panel settings",
-            "partner_list": "Partners list",
-            "protocol_upload": "Protocol upload",
-            "marquee": "Marquees",
-            "news": "News",
-            "upload_image": "Upload images",
-            "download_doc": "Downloading documents"
-        },
-        "help": {
-            "this": "Information",
-            "about_system": "About system"
-        },
-        "language": {
-            "this": "Language",
-            "russian": "Русский",
-            "english": "English"
-        }
+        "session": "Sessions",
+        "fill": "Events",
+        "timeline": "Timeline",
+        "accept": "Slips",
+        "card": "Outlet cards",
+        "pay": "Payments",
+        "rat": "Rats",
+        "gameacc": "Game accounts",
+        "panels": "Panels",
+        "virtual": "Virtual bids",
+        "chat": "Chat",
+        "info": "Info",
+        "exit": "Exit"
     }
 }

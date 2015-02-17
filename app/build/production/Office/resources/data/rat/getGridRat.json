@@ -1,42 +1,46 @@
-[
-    {
-        "id": "1",
-        "numrun": "1111111",
-        "daterun": "17.08.2014 18:15:54",
-        "result": "ОК",
-        "firstplace": "5",
-        "secondplace": "1",
-        "thirdplace": "9",
-        "firstcolor": "bg-red"
-    },
-    {
-        "id": "2",
-        "numrun": "1111112",
-        "daterun": "18.08.2014 18:15:54",
-        "result": "ОК",
-        "firstplace": "7",
-        "secondplace": "9",
-        "thirdplace": "3",
-        "firstcolor": "bg-black"
-    },
-    {
-        "id": "3",
-        "numrun": "1111113",
-        "daterun": "19.08.2014 18:15:54",
-        "result": "Отменено",
-        "firstplace": "2",
-        "secondplace": "12",
-        "thirdplace": "3",
-        "firstcolor": "bg-red"
-    },
-    {
-        "id": "4",
-        "numrun": "1111114",
-        "daterun": "20.08.2014 18:15:54",
-        "result": "ОК",
-        "firstplace": "2",
-        "secondplace": "6",
-        "thirdplace": "11",
-        "firstcolor": "bg-black"
-    }
-]
+{
+    "success":true,
+    "totalCount": 4,
+    "data": [
+        {
+            "id": "1",
+            "numrun": "1111111",
+            "daterun": "17.08.2014 18:15:54",
+            "result": "ОК",
+            "firstplace": "5",
+            "secondplace": "1",
+            "thirdplace": "9",
+            "firstcolor": "bg-rat-red"
+        },
+        {
+            "id": "2",
+            "numrun": "1111112",
+            "daterun": "18.08.2014 18:15:54",
+            "result": "ОК",
+            "firstplace": "7",
+            "secondplace": "9",
+            "thirdplace": "3",
+            "firstcolor": "bg-rat-black"
+        },
+        {
+            "id": "3",
+            "numrun": "1111113",
+            "daterun": "19.08.2014 18:15:54",
+            "result": "Отменено",
+            "firstplace": "2",
+            "secondplace": "12",
+            "thirdplace": "3",
+            "firstcolor": "bg-rat-red"
+        },
+        {
+            "id": "4",
+            "numrun": "1111114",
+            "daterun": "20.08.2014 18:15:54",
+            "result": "ОК",
+            "firstplace": "2",
+            "secondplace": "6",
+            "thirdplace": "11",
+            "firstcolor": "bg-rat-black"
+        }
+    ]
+}

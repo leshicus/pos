@@ -9,7 +9,7 @@ $userToken = $userName;
 $cookieUserName = $cookieBetzet_login;
 $cookieUserToken = $cookieBetzet_login;
 $expire = time() + 60 * 60 * 24 * 7;
-$rightLogin = '1';
+$rightLogin = 'test';
 
 
 if (!$cookieBetzet_login || !$cookieBetzet_token) {
@@ -19,6 +19,13 @@ if (!$cookieBetzet_login || !$cookieBetzet_token) {
             unset($_COOKIE['betzet_token']);
             setcookie("betzet_login", $login, $expire, '/', null);
             setcookie("betzet_token", $userToken, $expire, '/', null);
+            $output = array(
+                'success' => true,
+                'userId' => 23,
+                'userName' => "test",
+                'userToken' => "d70b4695da66237b9cd5002094862567",
+                'login' => "test",
+            );
         } else if ($login == 'admin') {
             $output = array(
                 'success' => false,
