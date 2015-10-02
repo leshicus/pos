@@ -223,7 +223,13 @@ describe("Ext.direct.RemotingProvider", function() {
     });
     
     afterEach(function() {
-        provider = undefined;
+        if (provider) {
+            provider.destroy();
+        }
+        
+        Ext.direct.Manager.clearAllMethods();
+        
+        provider = null;
         
         try {
             delete window.Direct;
@@ -778,10 +784,7 @@ describe("Ext.direct.RemotingProvider", function() {
                     layout: 'form',
                     
                     api: {
-                        // TODO The fn name should be TestAction.directForm
-                        // but Direct manager is not aware of the Providers'
-                        // namespaces. We gotta fix this.
-                        submit: 'Direct.foo.bar.TestAction.directForm'
+                        submit: 'TestAction.directForm'
                     },
                     
                     items: [{
@@ -884,8 +887,7 @@ describe("Ext.direct.RemotingProvider", function() {
                 
                 it("should pass named metadata", function() {
                     runs(function() {
-                        form.getForm().api.submit =
-                            'Direct.foo.bar.TestAction.directMetaFormNamed';
+                        form.getForm().api.submit = 'TestAction.directMetaFormNamed';
                         
                         form.getForm().metadata = {
                             foo: 'bargh!'
@@ -915,8 +917,7 @@ describe("Ext.direct.RemotingProvider", function() {
                 
                 it("should pass ordered metadata", function() {
                     runs(function() {
-                        form.getForm().api.submit =
-                            'Direct.foo.bar.TestAction.directMetaFormOrdered';
+                        form.getForm().api.submit = 'TestAction.directMetaFormOrdered';
                         
                         form.getForm().metadata = ['bram', 'blam', 'qux?'];
                         

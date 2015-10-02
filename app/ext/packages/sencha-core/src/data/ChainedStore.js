@@ -39,16 +39,18 @@ Ext.define('Ext.data.ChainedStore', {
     unblockLoad: Ext.emptyFn,
 
     //<debug>
-    updateRemoteFilter: function(value) {
-        if (value) {
+    updateRemoteFilter: function(remoteFilter, oldRemoteFilter) {
+        if (remoteFilter) {
             Ext.Error.raise('Remote filtering cannot be used with chained stores.');
         }
+        this.callParent([remoteFilter, oldRemoteFilter]);
     },
 
-    updateRemoteSort: function(value) {
-        if (value) {
+    updateRemoteSort: function(remoteSort, oldRemoteSort) {
+        if (remoteSort) {
             Ext.Error.raise('Remote sorting cannot be used with chained stores.');
         }
+        this.callParent([remoteSort, oldRemoteSort]);
     },
     //</debug>
     
@@ -81,7 +83,7 @@ Ext.define('Ext.data.ChainedStore', {
             //<debug>
             if (!source) {
                 s = 'Invalid source {0}specified for Ext.data.ChainedStore';
-                s = Ext.String.format(s, typeof original === 'string' ? '"' + original + '" ' : '')
+                s = Ext.String.format(s, typeof original === 'string' ? '"' + original + '" ' : '');
                 Ext.Error.raise(s);
             }
             //</debug>
@@ -229,22 +231,18 @@ Ext.define('Ext.data.ChainedStore', {
         me.fireEvent('datachanged', me);
     },
     
-    // inherit docs
     hasPendingLoad: function() {
         return this.getSource().hasPendingLoad();
     },
     
-    // inherit docs
     isLoaded: function() {
         return this.getSource().isLoaded();
     },
 
-    // inherit docs
     isLoading: function() {
         return this.getSource().isLoading();
     },
-    
-    // inherit docs
+
     onDestroy: function() {
         var me = this;
 
@@ -255,6 +253,11 @@ Ext.define('Ext.data.ChainedStore', {
     },
 
     privates: {
+        isMoving: function () {
+            var source = this.getSource();
+            return source.isMoving ? source.isMoving.apply(source, arguments) : false;
+        },
+
         loadsSynchronously: function() {
             return this.getSource().loadsSynchronously();
         }

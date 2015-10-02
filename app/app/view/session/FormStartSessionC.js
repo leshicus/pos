@@ -28,14 +28,14 @@ Ext.define('Office.view.session.FormStartSessionC', {
                     if (response.responseText) {
                         var o = Ext.decode(response.responseText);
                         if (o.success) {
-                            Utilities.toast('Успех', 'Смена начата');
+                            Util.toast('Успех', 'Смена начата');
                             var gridcurrent = Ext.ComponentQuery.query('gridcurrent')[0];
                             gridcurrent.getController().reloadGrids();
                         } else {
-                            Ext.Msg.alert('Смена не начата', o.message);
+                            Util.erMes('Смена не начата: '+ o.message||o.errors[0]);
                         }
                     } else {
-                        Utilities.toast('Ошибка', 'Нет ответа от сервера');
+                        Util.erMes('Нет ответа от сервера');
                     }
                 }
             });

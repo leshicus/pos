@@ -9,7 +9,6 @@ Ext.define('Office.view.panels.GridPanelsC', {
             },
             'tool[type=refresh]': {
                 click: function (tool) {
-                    console.log('refresh');
                     var grid = tool.up('panel'),
                         gridParam = grid.up('menumain').down('gridparam');
                     grid.store.reload();
@@ -20,7 +19,7 @@ Ext.define('Office.view.panels.GridPanelsC', {
             '#panels': {
                 /*load: function (store, arr, success, resp) {
                     if(!success || !resp._response || !resp._response.responseText){
-                        Utilities.toast('Ошибка', 'Ошибка загрузки стора: ' + store.getStoreId());
+                        Util.toast('Ошибка', 'Ошибка загрузки стора: ' + store.getStoreId());
                     }
                 }*/
             },
@@ -70,7 +69,7 @@ Ext.define('Office.view.panels.GridPanelsC', {
             selected = gridPanels.getSelectionModel().getSelection()[0],
             storePanel = gridPanels.getViewModel().getStore('panels');
         storePanel.remove(selected);
-        Utilities.initClassParams({
+        Util.initClassParams({
             scope: gridParam,
             params: [
                 'filters.panel_id',

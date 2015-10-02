@@ -506,7 +506,7 @@ Ext.define('Ext.container.Container', {
      *
      * @since 2.3.0
      */
-
+    
      /**
       * @cfg {String} [defaultType="panel"]
       * The default {@link Ext.Component xtype} of child Components to create in this Container when
@@ -753,8 +753,8 @@ Ext.define('Ext.container.Container', {
      * Fires after any {@link Ext.Component} has changed its ordinal position within the container.
      * @param {Ext.container.Container} this
      * @param {Ext.Component} component The component that was moved
-     * @param {Ext.Component} prevIndex The previous ordinal position of the Component
-     * @param {Ext.Component} newIndex The new ordinal position of the Component
+     * @param {Number} prevIndex The previous ordinal position of the Component
+     * @param {Number} newIndex The new ordinal position of the Component
      */
 
     // ***********************************************************************************
@@ -817,13 +817,13 @@ Ext.define('Ext.container.Container', {
     add: function() {
         var me = this,
             args = Ext.Array.slice(arguments),
-            index = (typeof args[0] == 'number') ? args.shift() : -1,
+            index = (typeof args[0] === 'number') ? args.shift() : -1,
             layout = me.getLayout(),
             needsLayout = false,
             addingArray, items, i, length, item, pos, ret, instanced;
 
 
-        if (args.length == 1 && Ext.isArray(args[0])) {
+        if (args.length === 1 && Ext.isArray(args[0])) {
             items = args[0];
             addingArray = true;
         } else {
@@ -837,7 +837,7 @@ Ext.define('Ext.container.Container', {
         ret = items = me.prepareItems(items, true);
         length = items.length;
 
-        if (!addingArray && length == 1) { // an array of 1 should still return an array...
+        if (!addingArray && length === 1) { // an array of 1 should still return an array...
             ret = items[0];
         }
 
@@ -902,6 +902,10 @@ Ext.define('Ext.container.Container', {
         }     
     },
     
+    /**
+     * @method
+     * @inheritdoc
+     */
     onRemoved: function(destroying) {
         var refHolder;
         
@@ -995,7 +999,10 @@ Ext.define('Ext.container.Container', {
             layout = me.getLayout(),
             targetCls;
 
+        // In beforeRender in the parent we call disable to allow onDisable to be applied here.
+        me.preventChildDisable = true;
         me.callParent();
+        me.preventChildDisable = false;
 
         if (!layout.initialized) {
             layout.initLayout();
@@ -1073,23 +1080,22 @@ Ext.define('Ext.container.Container', {
      * @override
      * Disables all child input fields and buttons.
      */
-    disable: function() {
-        this.callParent(arguments);
+    disable: function(silent, /* private */fromParent) {
+        var me = this,
+            wasDisabled = me.disabled,
+            itemsToDisable, len, i;
 
-        var itemsToDisable = this.getChildItemsToDisable(),
-            length         = itemsToDisable.length,
-            item, i;
+        me.callParent([silent, fromParent]);
 
-        for (i = 0; i < length; i++) {
-            item = itemsToDisable[i];
+        if (!fromParent && !me.preventChildDisable && !wasDisabled) {
+            itemsToDisable = me.getChildItemsToDisable();
+            len = itemsToDisable.length;
 
-            if (item.resetDisable !== false && !item.disabled) {
-                item.disable();
-                item.resetDisable = true;
+            for (i = 0; i < len; i++) {
+                itemsToDisable[i].disable(silent, true);
             }
         }
-
-        return this;
+        return me;
     },
 
     /**
@@ -1107,22 +1113,23 @@ Ext.define('Ext.container.Container', {
      * @override
      * Enables all child input fields and buttons.
      */
-    enable: function() {
-        this.callParent(arguments);
+    enable: function(silent, /* private */fromParent) {
+        var me = this,
+            wasDisabled = me.disabled,
+            itemsToDisable, len, i;
 
-        var itemsToDisable = this.getChildItemsToDisable(),
-            length         = itemsToDisable.length,
-            item, i;
+        me.callParent([silent, fromParent]);
 
-        for (i = 0; i < length; i++) {
-            item = itemsToDisable[i];
+        if (wasDisabled) {
+            itemsToDisable = me.getChildItemsToDisable();
+            len = itemsToDisable.length;
 
-            if (item.resetDisable) {
-                item.enable();
+            for (i = 0; i < len; i++) {
+                itemsToDisable[i].enable(silent, true);
             }
         }
 
-        return this;
+        return me;
     },
 
     /**
@@ -1174,11 +1181,34 @@ Ext.define('Ext.container.Container', {
         var c = this.items.get(comp);
 
         // Only allow finding by index on the main items container
-        if (!c && typeof comp != 'number') {
+        if (!c && typeof comp !== 'number') {
             c = this.floatingItems.get(comp);
         }
 
         return c;
+    },
+
+    /**
+     * @protected
+     * Returns the focus holder element associated with this Container.
+     * By default, this is the Container's target element; however if {@link #defaultFocus}
+     * is defined, the child component referenced by that property will be found
+     * and returned instead.
+     *
+     * @return {Ext.dom.Element} the focus holding element.
+     */
+    getFocusEl: function() {
+        var delegate = this.getDefaultFocus();
+
+        if (delegate) {
+            return delegate;
+        }
+        else if (this.focusable) {
+            return this.getTargetEl();
+        }
+
+        // Containers that are not focusable should not return a focusEl
+        return undefined;
     },
 
     /**
@@ -1247,7 +1277,7 @@ Ext.define('Ext.container.Container', {
         var defaultFocus = this.defaultFocus,
             result;
         
-        if (defaultFocus != undefined) {
+        if (defaultFocus) {
             result = this.down(defaultFocus);
         }
         
@@ -1266,6 +1296,11 @@ Ext.define('Ext.container.Container', {
         me.constructing = true;
 
         me.initItems();
+
+        if (me.disabled) {
+            me.disabled = false;
+            me.disable(true);
+        }
 
         delete me.constructing;
     },
@@ -1339,6 +1374,13 @@ Ext.define('Ext.container.Container', {
              * @since 2.3.0
              */
             me.items = new Ext.util.AbstractMixedCollection(false, me.getComponentId);
+
+            /**
+             * The MixedCollection containing all the floating child items of this container.
+             * @property floatingItems
+             * @type Ext.util.MixedCollection
+             * @since 4.1.0
+            */
             me.floatingItems = new Ext.util.MixedCollection(false, me.getComponentId);
 
             if (items) {
@@ -1531,7 +1573,7 @@ Ext.define('Ext.container.Container', {
      *
      * @param {Ext.Component} child The child to use as a starting point to find the next child.
      * @param {String} [selector] A {@link Ext.ComponentQuery} selector to find the next child. This will return the next child matching this selector. This parameter is optional.
-     * @returns {Ext.Component} The next child found, `null` if no child found.
+     * @return {Ext.Component} The next child found, `null` if no child found.
      */
     nextChild: function(child, selector) {
         var me = this,
@@ -1626,7 +1668,7 @@ Ext.define('Ext.container.Container', {
      *
      * @param {Ext.Component} child The child to use as a starting point to find the previous child.
      * @param {String} [selector] A {@link Ext.ComponentQuery} selector to find the previous child. This will return the first child matching this selector. This parameter is optional.
-     * @returns {Ext.Component} The previous child found, `null` if no child found.
+     * @return {Ext.Component} The previous child found, `null` if no child found.
      */
     prevChild: function(child, selector) {
         var me = this,
@@ -1864,7 +1906,7 @@ Ext.define('Ext.container.Container', {
         // In general, if a class overrides getTargetEl it will also need to override this method. This is necessary to
         // avoid a post-render step to add the targetCls.
         applyTargetCls: function(targetCls) {
-            this.addCls(targetCls);
+            this.layoutTargetCls = targetCls;
         },
 
         /**
@@ -1987,8 +2029,8 @@ Ext.define('Ext.container.Container', {
          * @private
          * @return {Ext.Component[]} Items to be enabled/disabled
          */
-        getChildItemsToDisable: function(){
-            return this.query('[isFormField],button');
+        getChildItemsToDisable: function() {
+            return this.query('[isFormField],[isFocusableContainer],button');
         },
 
         // @private - used as the key lookup function for the items collection
@@ -2004,29 +2046,6 @@ Ext.define('Ext.container.Container', {
         // @private
         getDefaultContentTarget: function() {
             return this.el;
-        },
-        
-        /**
-         * @private
-         * Returns the focus holder element associated with this Container.
-         * By default, this is the Container's target element; however if {@link #defaultFocus}
-         * is defined, the child component referenced by that property will be found
-         * and returned instead.
-         *
-         * @returns {Ext.dom.Element} the focus holding element.
-         */
-        getFocusEl: function() {
-            var delegate = this.getDefaultFocus();
-            
-            if (delegate) {
-                return delegate;
-            }
-            else if (this.focusable) {
-                return this.getTargetEl();
-            }
-            
-            // Containers that are not focusable should not return a focusEl
-            return undefined;
         },
 
         getScrollerEl: function() {

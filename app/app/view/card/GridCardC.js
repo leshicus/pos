@@ -11,7 +11,9 @@ Ext.define('Office.view.card.GridCardC', {
             '#': {
                 celldblclick: function (grid, td, cellIndex, record, tr, rowIndex, e) {
                     var selected = grid.getSelectionModel().getSelection()[0],
-                        card_status = selected.get('card_status');
+                        card_status = selected.get('card_status'),
+                        _this = this;
+
                     if (card_status !== '1') {
                         var form = Ext.create('Office.view.card.FormCardV', {
                             viewModel: {
@@ -20,22 +22,23 @@ Ext.define('Office.view.card.GridCardC', {
                                 }
                             }
                         });
+
                         var window = Ext.create('Ext.Window', {
                             title: 'Редактирование',
                             constrain: true,
-                            closable: false,
                             frame: true,
                             modal: true,
                             layout: 'fit'
                         });
                         window.add(form);
                         window.show();
+
                         // * сделать не пустые поля не редактируемыми
-                        Ext.defer(function(){
-                            Utilities.setNotEditable(form);
+                        Ext.defer(function(){ // * без задержки не успевают проставиться признаки
+                            form.getController().setNotEditable();
                         },100);
                     }else{
-                        Utilities.toast('Ошибка','Нельзя редактировать активные карты');
+                        Util.toast('Ошибка','Нельзя редактировать активные карты');
                     }
                 },
                 // * контекстное меню в гриде
@@ -44,7 +47,7 @@ Ext.define('Office.view.card.GridCardC', {
                         e.stopEvent(); // * чтобы не показывалось
                         var menu = Ext.create('Office.view.card.contextmenu.MenuCardV');
                         menu.showAt(e.getXY());
-                        if (!rec.get('card_status')) {
+                        if (rec.get('card_status') != 1) {
                             menu.down('#menuBlock').disable();
                         }
                     }
@@ -55,8 +58,30 @@ Ext.define('Office.view.card.GridCardC', {
                 click: function (button) {
                     var grid = this.getView(),
                         newRec = grid.store.add({
-                            is_resident: '1'
+                            is_resident: '1',
+                            id: '0',
+                            lastname:'',
+                            firstname:'',
+                            patronymic_name:'',
+                            passport_number:'',
+                            passport_issuer:'',
+                            passport_issue_datetime:'',
+
+                            passport_code:'',
+                            address:'',
+                            mobile_phone:'',
+                            is_vip:'0',
+                            is_blacklisted:'0',
+                            barcode:'',
+                            //binding_datetime:'',
+
+                            card_status:'0',
+                            //edit:'',
+                            login:'',
+                            passer:'',
+                            pasnom:''
                         })[0],
+
                         form = Ext.create('Office.view.card.FormCardV', {
                             viewModel: {
                                 data: {
@@ -78,13 +103,19 @@ Ext.define('Office.view.card.GridCardC', {
             }
         },
         store: {
-            '#card': {
-                load: function (store, arr) {
-                    //console.info(arguments);
-                }
-            }
+            //'#card': {
+            //    load: function (store, arr) {
+            //        //console.info(arguments);
+            //    }
+            //}
         }
     },
+
+    onLoadCard: function (store, arrRecs) {
+        if(!arrRecs.length)
+        Util.warnMes('Клубные карты не найдены');
+    },
+
     onEnter: function (field, e) {
         if (e.getKey() == e.ENTER) {
             var mainController = Office.app.getController('Main'),
@@ -94,13 +125,14 @@ Ext.define('Office.view.card.GridCardC', {
             mainController.storeLoadVm(grid);
         }
     },
+
     // * проверка штрих-кода
     onEnterBarcodeInfo: function (field, e) {
         if (e.getKey() == e.ENTER) {
             var success = function (response) {
                     try {
                         var mes = Ext.decode(response.responseText);
-                        Ext.Msg.alert('Сообщение', mes.mes);
+                        Util.warnMes(mes.mes);
                     } catch (e) {
                         return;
                     }
@@ -108,7 +140,7 @@ Ext.define('Office.view.card.GridCardC', {
                 failure = function (response) {
                     try {
                         var mes = Ext.decode(response.responseText);
-                        Ext.Msg.alert('Ошибка', mes);
+                        Util.erMes(mes);
                     } catch (e) {
                         return;
                     }
@@ -128,6 +160,8 @@ Ext.define('Office.view.card.GridCardC', {
             });
         }
     },
+
+
     /*onAddFilter: function (field, n, o, e) {
         var mainController = Office.app.getController('Main'),
             grid = this.getView();

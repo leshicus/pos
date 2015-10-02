@@ -38,13 +38,17 @@
     <target name="-before-init">
         <property name="pkg.excludes"
                   value="examples/build/**/*,
-                         test/**/*,
+                         test_internal/**/*,
                          attic/**/*,
                          deployment_workspace/**/*,
                          docs/**/*,
                          release-notes-*,         
-						 all-licenses/**/*
-						 build/temp/**/*"/>
+						 all-licenses/**/*,
+						 build/temp/**/*,
+						 ext-all*.js,
+						 ext-debug.js,
+						 ext.js,
+						 bootstrap*.js"/>
 
         <condition property="repo.dev.mode" value="true">
             <available file="${basedir}/../packages/sencha-core" type="dir"/>
@@ -171,7 +175,7 @@
         <property file="${package.dir}/version.properties"/>
     </target>
 
-    <target name="-apply-version-stamp" if="build.version">
+    <target name="-apply-version-stamp" if="enable.version.stamp">
         <x-property-file file="${package.dir}/cmd/sencha.cfg">
             <entry type="string" key="framework.version" operation="="
                    value="${build.version}"/>
@@ -530,7 +534,7 @@ var Ext = Ext || {};
                 </for>
             </sequential>
         </for>
-
+        
         <copy file="${basedir}/ext-bootstrap.js"
               tofile="${build.dir}/bootstrap.js">
             <filterchain>

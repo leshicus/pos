@@ -4,7 +4,8 @@ Ext.define('Office.view.session.FormPrintLineV', {
         'Office.view.session.FormPrintLineC',
         'Office.view.session.FormPrintLineM',
         'Office.view.common.ComboCheckV',
-        'Office.view.common.DateFromToV'
+        'Office.view.common.DateFromToV',
+        'Office.model.SportM'
     ],
     xtype: 'formprintline',
     controller: 'formprintline',
@@ -17,7 +18,7 @@ Ext.define('Office.view.session.FormPrintLineV', {
         type: 'vbox',
         align: 'stretch'
     },
-    collapsible:true,
+    collapsible: true,
     title: 'Печать линии',
     defaults: {
         // labelWidth: 150,
@@ -25,17 +26,20 @@ Ext.define('Office.view.session.FormPrintLineV', {
     },
     initComponent: function () {
         var me = this;
-        Utilities.initClassParams({
+        Util.initClassParams({
             scope: this,
             params: [
                 'filters.cbSport',
-                'cbSport_model'
+               // 'cbSport_model'
             ]
         });
 
-        Ext.defer(function(){
+        Ext.defer(function () {
+            // * нельзя сначала объявить переменную стор, а потом написать storeSport.load().
+            // * ругается, что метод load() не определен. Наверно, потому что в момент определения переменной
+            // * стор еще не создан, и storeSport=null
             me.getViewModel().getStore('sport').load();
-        },10);
+        }, 20);
 
         this.items = [
             {
@@ -48,13 +52,13 @@ Ext.define('Office.view.session.FormPrintLineV', {
                 valueField: 'id',
                 _checkField: 'checked',
                 _bind: {
-                    store:'{sport}',
-                    selection:'{cbSport_model}',
-                    value:'{filters.cbSport}'
+                    store: '{sport}',
+                    //selection: '{cbSport_model}',
+                    value: '{filters.cbSport}'
                 },
-                _func: function (combo, n) {
-                    me.getViewModel().set('cbSport', n);
-                }
+                //_func: function (combo, n) {
+                //    me.getViewModel().set('cbSport', n);
+                //}
             },
             {
                 xtype: 'datefromto',
@@ -95,7 +99,7 @@ Ext.define('Office.view.session.FormPrintLineV', {
                             width: 150,
                             textAlign: 'left',
                             handler: 'onPrintLine',
-                            _type:'short'
+                            _type: 'short'
                         }
                     ]
                 },
@@ -107,7 +111,7 @@ Ext.define('Office.view.session.FormPrintLineV', {
                             width: 150,
                             textAlign: 'left',
                             handler: 'onPrintLine',
-                            _type:'full'
+                            _type: 'full'
                         }
                     ]
                 },
@@ -119,14 +123,38 @@ Ext.define('Office.view.session.FormPrintLineV', {
                             width: 150,
                             textAlign: 'left',
                             handler: 'onPrintResults',
-                            _type:'short'
+                            _type: 'short'
+                        }
+                    ]
+                },
+                {
+                    items: [
+                        {
+                            text: 'Пятерочка',
+                            glyph: Glyphs.get('print'),
+                            hidden: !(Ext.ComponentQuery.query('menumain')[0].getViewModel().get('globals').keepRecordsOfPlayers && Ext.ComponentQuery.query('menumain')[0].getViewModel().get('globals').use_express_day),
+                            width: 150,
+                            textAlign: 'left',
+                            handler: 'onPrintDayExpress',
+                            _type: '0'
+                        }
+                    ]
+                },
+                {
+                    items: [
+                        {
+                            text: 'Двойной шанс',
+                            glyph: Glyphs.get('print'),
+                            hidden: !(Ext.ComponentQuery.query('menumain')[0].getViewModel().get('globals').keepRecordsOfPlayers && Ext.ComponentQuery.query('menumain')[0].getViewModel().get('globals').use_express_day_dc),
+                            width: 150,
+                            textAlign: 'left',
+                            handler: 'onPrintDayExpress',
+                            _type: '1'
                         }
                     ]
                 }
             ]
         });
-
-
 
 
         this.callParent();

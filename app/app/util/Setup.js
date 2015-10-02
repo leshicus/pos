@@ -10,13 +10,11 @@ Ext.define('Office.util.Setup', {
         },
         url: Ext.util.Format.format(Server.getLogin(), Server.getToken()),
         constructor: function (config) {
-            console.info('constructor Setup');
 
             var me = this,
                 login,
                 params,
                 success = function (response) {
-                    console.info('success getLogin');
                     var o;
                     params = null;
                     try {
@@ -30,12 +28,10 @@ Ext.define('Office.util.Setup', {
                     }
                 },
                 failure = function (response) {
-                    console.info('failure getLogin');
                     params = null;
                     me.failApp(response);
                 },
                 successParams = function (response) {
-                    console.info('successParams');
                     var o,
                         days = 7,
                         expiresDate = new Date();
@@ -50,13 +46,15 @@ Ext.define('Office.util.Setup', {
                             return;
                         }
                         if (o.success !== true) {
-                            Utilities.toast('Внимание', 'Ошибка авторизации');
+                            Util.toast('Внимание', 'Ошибка авторизации');
                             me.failApp(o);
                         } else {
                             Ext.util.Cookies.set('betzet_token', o.token);
+                            Ext.util.Cookies.set('userId', o.userId);
                             Server.setToken(o.token);
                             Server.tok = o.token;
-                            me.startApp(params['username']);
+                            me.startApp();
+                            //me.startApp(params['username']);
                         }
                     } else { // фиг знает что это за случай
                         console.info(arguments);
@@ -69,7 +67,6 @@ Ext.define('Office.util.Setup', {
 
             Ext.apply(me, {
                 init: function () {
-                    console.info('Setup init');
                     Ext.Ajax.request({
                         url: me.url,
                         success: success,
@@ -78,7 +75,6 @@ Ext.define('Office.util.Setup', {
                     });
                 },
                 sendParams: function () {
-                    console.info('sendParams');
                     Ext.Ajax.request({
                         url: Ext.util.Format.format(Server.getLogin(params), Server.getToken()),
                         success: successParams,
@@ -86,7 +82,6 @@ Ext.define('Office.util.Setup', {
                     });
                 },
                 sendCookie: function () {
-                    console.info('sendCookie');
                     Ext.Ajax.request({
                         url: me.url,
                         success: successCookie,
@@ -106,19 +101,19 @@ Ext.define('Office.util.Setup', {
                 }
             });
             // * вывод ошибок приложения в окне (вместо консоли)
-            /*Ext.Error.handle = function (err) {
-             Ext.Msg.show({
-             title: 'Error',
-             msg: [
-             'source class: ' + err.sourceClass,
-             'source method: ' + err.sourceMethod,
-             'Message:' + err.msg
-             ].join('<br/>'),
-             icon: Ext.Msg.ERROR,
-             buttons: Ext.Msg.OK
-             });
-             return true;
-             }*/
+            //Ext.Error.handle = function (err) {
+            // Ext.Msg.show({
+            // title: 'Error',
+            // msg: [
+            // 'source class: ' + err.sourceClass,
+            // 'source method: ' + err.sourceMethod,
+            // 'Message:' + err.msg
+            // ].join('<br/>'),
+            // icon: Ext.Msg.ERROR,
+            // buttons: Ext.Msg.OK
+            // });
+            // return true;
+            // }
         },
         clearCookies: function () {
             Ext.util.Cookies.clear('betzet_login');
@@ -130,67 +125,106 @@ Ext.define('Office.util.Setup', {
             Ext.util.Cookies.clear('officePagesProperty');
         },
 
-        showMenumain: function (username, globals) {
+        showMenumain: function (globals, constants) {
             // * главное меню
-            var menumain = Ext.create('Office.view.menumain.MenuMainV', {
+            var menumain = Ext.ComponentQuery.query('menumain')[0];
+
+            if (!menumain) {
+                menumain = Ext.create('Office.view.menumain.MenuMainV', {
                     viewModel: {
                         data: {
-                            theUser: username,
-                            globals:globals
+                            theUser: Ext.util.Cookies.get('betzet_login'),
+                            globals: globals,
+                            constants: constants
                         }
                     }
-                }),
-                mainController = Office.app.getController('Main');
-            var runner = new Ext.util.TaskRunner(),
-                taskSession = runner.newTask({
-                    run: function () {
-                        console.info('taskSession reload');
-                        menumain.getController().loadSessionData();
-                    },
-                    interval: 1000 * Utilities.sessionAskInterval // в секундах
                 });
+            } else {
+                var vm = menumain.getViewModel();
+                vm.set('theUser', Ext.util.Cookies.get('betzet_login'));
+                vm.set('globals', globals);
+                vm.set('constants', constants);
+            }
 
-            menumain.on('close', function () {
-                taskSession.stop();
-            });
-
-            taskSession.start();
+            TaskF.taskSessionStart();
         },
-        // * успешная авторизация
-        startApp: function (username) {
-            console.info('startApp');
 
-            // * запросим глобальные параметры системы
-            var me = this,
+        // * получить глобальные константы системы
+        getGlobalCons: function (arrProps, callbackFn) {
+            var _this = this,
                 objUrl = {
-                class: 'Pos_Sessions_Globalpropread',
-                params: {}
-            };
+                    class: 'Pos_Sessions_Constantsread',
+                    params: {
+                        userId: Ext.util.Cookies.get('userId')
+                    }
+                };
             Ext.Ajax.request({
                 url: Server.getUrl(objUrl),
                 success: function (response) {
                     if (response.responseText) {
                         var o = Ext.decode(response.responseText);
                         if (o.success) {
-                            me.showMenumain(username, o.rows);
+                            _this.showMenumain(arrProps, o.rows);
+                            if (callbackFn)
+                                callbackFn();
                         } else {
-                            Utilities.toast('Ошибка', 'Не удалось получить глобальные настройки системы');
-                            me.failApp(response);
+                            Util.toast('Ошибка', 'Не удалось получить глобальные настройки системы');
+                            _this.failApp(response);
                         }
                     } else {
-                        Utilities.toast('Ошибка', 'Не удалось получить глобальные настройки системы');
-                        me.failApp(response);
+                        Util.toast('Ошибка', 'Не удалось получить глобальные настройки системы');
+                        _this.failApp(response);
                     }
                 },
                 failure: function (response) {
-                    me.failApp(response);
+                    _this.failApp(response);
                 }
             });
         },
+
+        //todo объединить c  getGlobalCons
+        // * получить глобальные параметры системы
+        getGlobalProp: function (callbackFn) {
+            // * запросим глобальные параметры системы
+            var _this = this,
+                objUrl = {
+                    class: 'Pos_Sessions_Globalpropread',
+                    params: {}
+                };
+            Ext.Ajax.request({
+                url: Server.getUrl(objUrl),
+                success: function (response) {
+                    if (response.responseText) {
+                        var o = Ext.decode(response.responseText);
+                        if (o.success) {
+                            _this.getGlobalCons(o.rows, callbackFn);
+                        } else {
+                            Util.toast('Ошибка', 'Не удалось получить глобальные настройки системы');
+                            _this.failApp(response);
+                        }
+                    } else {
+                        Util.toast('Ошибка', 'Не удалось получить глобальные настройки системы');
+                        _this.failApp(response);
+                    }
+                },
+                failure: function (response) {
+                    _this.failApp(response);
+                }
+            });
+        },
+
+        // * успешная авторизация
+        startApp: function () {
+            this.getGlobalProp();
+
+            window.FayeClient = new FayeClient();
+            FayeClient.init();
+
+            FayeClient.sendCommand({command: 'hide_modal'});
+        },
+
         // * провал авторизации
         failApp: function (o) {
-            console.info('failApp');
-
             var E = Ext.Error;
 
             if (Ext.isObject(o)) {
@@ -215,12 +249,13 @@ Ext.define('Office.util.Setup', {
                         _language: Ux.locale.Manager.getLanguage(),
                         _languageStore: Ux.locale.Manager.getAvailable()
                     });
-                    Debug.setLoginFields(win);
+                    //Debug.setLoginFields(win);
                 }
             } else {
                 E.raise('Сервер вернул не объект');
             }
         }
+
     },
 
     function () {

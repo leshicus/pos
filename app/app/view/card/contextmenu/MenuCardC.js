@@ -8,7 +8,6 @@ Ext.define('Office.view.card.contextmenu.MenuCardC', {
     control: {
         '#menuBlock': {
             click: function (button) {
-                console.log('click menuBlock');
                 var grid = Ext.ComponentQuery.query('gridcard')[0],
                     selection = grid.getSelectionModel().getSelection()[0],
                     id = selection.get('id'),
@@ -31,7 +30,7 @@ Ext.define('Office.view.card.contextmenu.MenuCardC', {
                                 try {
                                     var mes = Ext.decode(response.responseText);
                                     if (mes.success) {
-                                        Utilities.toast('Успех', 'Карта заблокирована');
+                                        Util.toast('Успех', 'Карта заблокирована');
                                         Ext.Msg.confirm('Новая карта', textNew, function (button) {
                                             if (button == 'yes') {
                                                 selection.set('card_status',0);
@@ -48,7 +47,7 @@ Ext.define('Office.view.card.contextmenu.MenuCardC', {
                                             }
                                         }, this);
                                     } else
-                                        Ext.Msg.alert('Ошибка', mes || ' Карта не заблокирована');
+                                        Util.erMes(mes || ' Карта не заблокирована');
 
                                 } catch (e) {
                                     return;
@@ -57,7 +56,7 @@ Ext.define('Office.view.card.contextmenu.MenuCardC', {
                             failure: function (response) {
                                 try {
                                     var mes = Ext.decode(response.responseText);
-                                    Ext.Msg.alert('Ошибка', mes || 'Ошибка данных');
+                                    Util.erMes(mes || ' Ошибка данных');
                                 } catch (e) {
                                     return;
                                 }

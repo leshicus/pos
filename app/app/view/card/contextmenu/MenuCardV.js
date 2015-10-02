@@ -8,8 +8,6 @@ Ext.define('Office.view.card.contextmenu.MenuCardV', {
     itemId: 'menucard',
     border: false,
     initComponent: function () {
-        console.log('MenucardV init');
-
         this.items = [
             {
                 text: 'Заблокировать',
@@ -19,6 +17,5 @@ Ext.define('Office.view.card.contextmenu.MenuCardV', {
             }
         ]
         this.callParent(arguments);
-        console.log('MenucardV end');
     }
 });

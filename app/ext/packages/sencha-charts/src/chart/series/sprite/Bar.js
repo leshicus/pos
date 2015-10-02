@@ -165,7 +165,9 @@ Ext.define('Ext.chart.series.sprite.Bar', {
         me.putMarker('items', itemCfg, index, !renderer);
     },
 
-    //@inheritdoc
+    /**
+     * @inheritdoc
+     */
     renderClipped: function (surface, ctx, clip, rect) {
         if (this.cleanRedraw) {
             return;
@@ -209,7 +211,8 @@ Ext.define('Ext.chart.series.sprite.Bar', {
 
             me.drawBar(ctx, surface, clip, left, top - halfLineWidth, right, bottom - halfLineWidth, i);
 
-            if (drawMarkers && dataText[i]) {
+            // We want 0 values to be passed to the renderer
+            if (drawMarkers && dataText[i] != null) {
                 me.drawLabel(dataText[i], center, bottom, top, i);
             }
             me.putMarker('markers', {
@@ -219,7 +222,9 @@ Ext.define('Ext.chart.series.sprite.Bar', {
         }
     },
 
-    //@inheritdoc
+    /**
+     * @inheritdoc
+     */
     getIndexNearPoint: function (x, y) {
         var sprite = this,
             attr = sprite.attr,

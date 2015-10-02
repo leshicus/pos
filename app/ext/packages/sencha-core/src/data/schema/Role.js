@@ -57,6 +57,11 @@ Ext.define('Ext.data.schema.Role', {
 
     defaultReaderType: 'json',
 
+    _internalReadOptions: {
+        recordsOnly: true,
+        asRoot: true
+    },
+
     constructor: function (association, config) {
         var me = this,
             extra = config.extra;
@@ -84,16 +89,18 @@ Ext.define('Ext.data.schema.Role', {
 
     /**
      * Exclude any locally modified records that don't belong in the store. Include locally
-     * modified records that should be in the store.
-     * 
-     * @param {Ext.data.Session} session The session holding the records
+     * modified records that should be in the store. Also correct any foreign keys that
+     * need to be updated.
+     *
+     * @param {Ext.data.Store} store The store.
      * @param {Ext.data.Model} associatedEntity The entity that owns the records.
      * @param {Ext.data.Model[]} records The records to check.
+     * @param {Ext.data.Session} session The session holding the records
      * @return {Ext.data.Model[]} The corrected set of records.
      *
      * @private
      */
-    validateAssociationRecords: function(session, associatedEntity, records) {
+    processLoad: function(store, associatedEntity, records, session) {
         return records;
     },
 
@@ -129,7 +136,6 @@ Ext.define('Ext.data.schema.Role', {
             id = from.getId(),
             config = {
                 model: me.cls,
-                data: records,
                 role: me,
                 session: session,
                 associatedEntity: from,
@@ -137,8 +143,7 @@ Ext.define('Ext.data.schema.Role', {
                 pageSize: null,
                 remoteFilter: true,
                 trackRemoved: !session
-            },
-            matrix, store;
+            }, store;
 
         if (isMany) {
             // For many-to-many associations each role has a field
@@ -161,37 +166,27 @@ Ext.define('Ext.data.schema.Role', {
         }
 
         store = Ext.Factory.store(config);
-        if (records) {
-            store.complete = !!isComplete;
-        }
-        if (isMany) {
-            if (session) {
-                // If we are creating a store of say Groups in a UserGroups matrix, we want
-                // to traverse the inverse side of the matrix (Users) because the id we have
-                // is that of the User to which these Groups are associated.
-                matrix = session.getMatrixSlice(me.inverse, id);
-
-                matrix.attach(store);
-                matrix.notify = me.onMatrixUpdate;
-                matrix.scope = me;
-            }
-        }
+        
+        me.onStoreCreate(store, session, id);
 
         if (foreignKeyName || (isMany && session)) {
             store.on({
+                scope: me,
                 add: 'onAddToMany',
-                load: 'onLoadMany',
                 remove: 'onRemoveFromMany',
-                clear: 'onRemoveFromMany',
-                scope: me
+                clear: 'onRemoveFromMany'
             });
-            if (records) {
-                me.onLoadMany(store, store.getData().items, true);
-            }
+        }
+
+        if (records) {
+            store.loadData(records);
+            store.complete = !!isComplete;
         }
 
         return store;
     },
+
+    onStoreCreate: Ext.emptyFn,
 
     getAssociatedStore: function (inverseRecord, options, scope, records, isComplete) {
         // Consider the Comment entity with a ticketId to a Ticket entity. The Comment
@@ -324,6 +319,11 @@ Ext.define('Ext.data.schema.Role', {
                (me.instanceName = me.association.schema.getNamer().instanceName(me.role));
     },
 
+    getOldInstanceName: function() {
+        return this.oldInstanceName ||
+            (this.oldInstanceName = '$old' + this.getInstanceName());
+    },
+
     getStoreName: function () {
         var me = this;
         return me.storeName ||
@@ -355,16 +355,18 @@ Ext.define('Ext.data.schema.Role', {
                     rootProperty: root
                 });
             }
-            me.reader = reader
+            me.reader = reader;
         }
         return reader;
     },
     
     read: function (record, data, fromReader, readOptions) {
-        var me = this,
-            reader = this.constructReader(fromReader);
-            
-        return reader.read(data, readOptions);
+        var reader = this.constructReader(fromReader),
+            root = reader.getRoot(data);
+
+        if (root) {            
+            return reader.readRecords(root, readOptions, this._internalReadOptions);
+        }
     },
 
     getCallbackOptions: function(options, scope, defaultScope) {
@@ -468,19 +470,24 @@ Ext.define('Ext.data.schema.Role', {
         var me = this,
             foreignKey = me.association.getFieldName(),  // "managerId"
             instanceName = me.getInstanceName(),  // "manager"
-            ret = leftRecord[instanceName],
+            current = leftRecord[instanceName],
             inverse = me.inverse,
             inverseSetter = inverse.setterName,  // setManagerDepartment for User
             session = leftRecord.session,
-            modified;
+            modified, oldInstanceName;
 
         if (rightRecord && rightRecord.isEntity) {
-            if (ret !== rightRecord) {
+            if (current !== rightRecord) {
+                oldInstanceName = me.getOldInstanceName();
+                leftRecord[oldInstanceName] = current;
+                leftRecord[instanceName] = rightRecord;
+                if (current && current.isEntity) {
+                    current[inverse.getInstanceName()] = undefined;
+                }
                 if (foreignKey) {
                     leftRecord.set(foreignKey, rightRecord.getId());
                 }
-                
-                leftRecord[instanceName] = rightRecord;
+                delete leftRecord[oldInstanceName];
 
                 if (inverseSetter) {
                     // Because the rightRecord has a reference back to the leftRecord
@@ -503,12 +510,12 @@ Ext.define('Ext.data.schema.Role', {
             modified = (leftRecord.changingKey && !inverse.isMany) || leftRecord.set(foreignKey, rightRecord);
             // set returns the modifiedFieldNames[] or null if nothing was change
 
-            if (modified && ret && ret.isEntity && !ret.isEqual(ret.getId(), rightRecord)) {
+            if (modified && current && current.isEntity && !current.isEqual(current.getId(), rightRecord)) {
                 // If we just modified the FK value and it no longer matches the id of the
                 // record we had cached (ret), remove references from *both* sides:
                 leftRecord[instanceName] = undefined;
                 if (!inverse.isMany) {
-                    ret[inverse.getInstanceName()] = undefined;
+                    current[inverse.getInstanceName()] = undefined;
                 }
             }
         }

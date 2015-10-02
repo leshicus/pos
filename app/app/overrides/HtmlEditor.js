@@ -1,5 +1,5 @@
 // * for operability allowBlank=false for HtmlEditor
-Ext.define('App.overrides.HtmlEditor', {
+Ext.define('Office.overrides.HtmlEditor', {
     override: 'Ext.form.HtmlEditor',
     addClearInvalidListener: true,
     markInvalid: function()

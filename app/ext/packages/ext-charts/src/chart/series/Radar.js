@@ -135,7 +135,7 @@ Ext.define('Ext.chart.series.Radar', {
      *     markerConfig: {
      *         type: 'circle',
      *         radius: 4,
-     *         'fill': '#f00'
+     *         '#face': '#f00'
      *     }
      */
 

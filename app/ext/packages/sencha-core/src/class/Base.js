@@ -914,7 +914,7 @@ var noArgs = [],
          * overrides defined that target the class.
          * 
          * @param {Object} config
-         * @param {Class} [mixinClass] The mixin class if the configs are from a mixin.
+         * @param {Ext.Class} [mixinClass] The mixin class if the configs are from a mixin.
          * @private
          * @static
          * @inheritable
@@ -1229,7 +1229,7 @@ var noArgs = [],
                         ((method = method.$owner ? method : method.caller) &&
                                 method.$owner.superclass[method.$name]));
 
-            //<debug error>
+            //<debug>
             if (!superMethod) {
                 method = this.callParent.caller;
                 var parentClass, methodName;
@@ -1315,7 +1315,7 @@ var noArgs = [],
                         ((method = method.$owner ? method : method.caller) &&
                           method.$owner.superclass[method.$name]);
 
-            //<debug error>
+            //<debug>
             if (!superMethod) {
                 method = this.callSuper.caller;
                 var parentClass, methodName;

@@ -9,6 +9,13 @@ Ext.define('Office.view.session.GridCurrentM', {
             if (openDatetime) {
                 return openDatetime == 'Глобальная смена';
             }
+        },
+        showOperatorFio: {
+            get: function (data) {
+                var globals = Ext.ComponentQuery.query('menumain')[0].getViewModel().get('globals');
+                return globals.use_ndfl;
+            }
         }
+
     }
 });

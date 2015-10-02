@@ -27,7 +27,7 @@ Ext.define('Office.view.timeline.FormWithdrawC', {
                     slipId: slipId,
                     login: Ext.util.Cookies.get('betzet_login') || '',
                     token: Server.getToken(),
-                    complexMode:'STAKE_AND_RETURN'
+                    complexMode: 'STAKE_AND_RETURN'
                 }
             },
             formsmscode = Ext.create('Office.view.timeline.FormSmsCodeV', {
@@ -36,8 +36,8 @@ Ext.define('Office.view.timeline.FormWithdrawC', {
                         theTimeline: {player: {mobile_phone: phone}},
                         slipId: slipId,
                         sum: to_pay,
-                        objUrlXaction:objUrlXaction,
-                        isPrintable:isPrintable
+                        objUrlXaction: objUrlXaction,
+                        isPrintable: isPrintable
                     }
                 }
             }),
@@ -48,6 +48,7 @@ Ext.define('Office.view.timeline.FormWithdrawC', {
                 constrain: true,
                 width: 360,
                 itemId: 'windowSms',
+                defaultButton: 'code',
                 layout: {
                     type: 'vbox',
                     align: 'stretch'
@@ -55,14 +56,14 @@ Ext.define('Office.view.timeline.FormWithdrawC', {
                 items: [
                     formsmscode
                 ],
-                buttons: Utilities.getButtonsSaveCancel({
+                buttons: Util.getButtonsSaveCancel({
                     scope: formsmscode.getController(),
                     textSave: 'Отправить'
                 })
             });
         win.show();
     },
-    sendSms : function (button, isPrintable) {
+    sendSms: function (button, isPrintable) {
         var formWithdraw = this.getView(),
             vmformWithdraw = formWithdraw.getViewModel(),
             slipId = vmformWithdraw.get('slipId'),
@@ -86,12 +87,12 @@ Ext.define('Office.view.timeline.FormWithdrawC', {
                             var phone = o.rows.sentTo;
                             this.showFormSms(phone, to_pay, slipId, isPrintable);
                         } else
-                            Ext.Msg.alert('Ошибка', 'Сервер не прислал номер телефона');
+                            Util.erMes('Сервер не прислал номер телефона');
                     } else {
-                        Ext.Msg.alert('Ошибка', o.errors[0]);
+                        Util.erMes(o.errors[0]);
                     }
                 } else {
-                    Ext.Msg.alert('Ошибка', 'Нет ответа от сервера');
+                    Util.erMes('Нет ответа от сервера');
                 }
             },
             scope: this
@@ -99,7 +100,18 @@ Ext.define('Office.view.timeline.FormWithdrawC', {
     },
     // * печать с чеком. Форма отправки смс
     onClickPayPrint: function (button) {
-        this.sendSms(button, true);
+        var formWithdraw = this.getView(),
+            vmformWithdraw = formWithdraw.getViewModel(),
+            slipId = vmformWithdraw.get('slipId'),
+            to_pay = vmformWithdraw.get('to_pay');
+        if(to_pay > 0)
+        {
+            this.sendSms(button, true);
+        }
+        else
+        {
+            Util.erMes('Сумма не может быть меньше или равна 0!');
+        }
     },
     // * печать без чека. Форма отправки смс
     onClickPay: function (button) {
@@ -108,6 +120,117 @@ Ext.define('Office.view.timeline.FormWithdrawC', {
     onClickCancel: function (button) {
         var windowWithdraw = button.up('window');
         windowWithdraw.close();
-    }
+    },
 
+    // * нажали кнопку Пополнение
+    onClickPayin: function (button) {
+        var formWithdraw = this.getView(),
+            vmformWithdraw = formWithdraw.getViewModel(),
+            slipId = vmformWithdraw.get('slipId'),
+            to_pay = vmformWithdraw.get('to_pay'),
+            objUrl = {
+                class: 'Pos_Timeline_Xaction',
+                params: {
+                    xaction: 'confirmPayin',
+                    slipId: slipId,
+                    sum: to_pay
+                }
+            };
+        if(to_pay > 0)
+        {
+            Ext.Ajax.request({
+                url: Server.getUrl(objUrl),
+                method: 'POST',
+                callback: function (opt, success, response) {
+                    if (response.responseText) {
+                        var o = Ext.decode(response.responseText);
+                        if (o.success) {
+                            if (o.rows.confirmation_msg) {
+                                this.showPayinConfirmMes(to_pay, slipId, o.rows.confirmation_msg);
+                            } else
+                                Util.erMes('Сервер не прислал текст ответа');
+                        } else {
+                            Util.erMes(o.errors[0]);
+                        }
+                    } else {
+                        Util.erMes('Нет ответа от сервера');
+                    }
+                },
+                scope: this
+            });
+        }
+        else
+        {
+            Util.erMes('Сумма не может быть меньше или равна 0!');
+        }
+    },
+
+    // * сообщение о подтверждении внесения денег
+    showPayinConfirmMes: function (to_pay, slipId, confirmation_msg) {
+        // * закроем окно с суммой
+        var win = Ext.ComponentQuery.query('#windowWithdraw')[0];
+        win.close();
+
+        Ext.Msg.confirm('Подтверждение', confirmation_msg, function (btn, text) {
+            if (btn == 'yes') {
+                var objUrl = {
+                    class: 'Pos_Timeline_Xaction',
+                    params: {
+                        xaction: 'payin',
+                        slipId: slipId,
+                        sum: to_pay
+                    }
+                };
+                Ext.Ajax.request({
+                    url: Server.getUrl(objUrl),
+                    method: 'POST',
+                    callback: function (opt, success, response) {
+                        if (response.responseText) {
+                            var o = Ext.decode(response.responseText);
+                            if (o.success) {
+                                if (o.rows.balance != 'undefined' && o.rows.new_sms_key != 'undefined' && o.rows.transaction_id != 'undefined') {
+                                    // * покажем сообщение об успехе операции
+                                    var str = 'Пополнение ' + to_pay + 'р на ТЛ №' + slipId + ' произведено успешно. Остаток ' + o.rows.balance + 'р.';
+                                    Util.infoMes(str);
+
+                                    // * печать чека
+                                    var objUrlXaction = {
+                                        class: 'Pos_Pageprinter_Print',
+                                        params: {
+                                            slipId: slipId,
+                                            code: o.rows.new_sms_key,
+                                            token: Server.getToken(),
+                                            login: Ext.util.Cookies.get('betzet_login'),
+                                            t: o.rows.transaction_id
+                                        }
+                                    };
+                                    window.open(Server.getUrl(objUrlXaction), '_blank');
+                                } else
+                                    Util.erMes('Сервер не прислал необходимые данные');
+                            } else {
+                                Util.erMes(o.errors[0]);
+                            }
+                        } else {
+                            Util.erMes('Нет ответа от сервера');
+                        }
+
+                        // * обновим грид таймлайн
+                        var gridTimeline = Ext.ComponentQuery.query('gridtimeline')[0];
+                        if (gridTimeline.getViewModel().get('filters.term'))
+                            gridTimeline.getViewModel().getStore('timeline').reload();
+                    },
+                    scope: this
+                });
+            } else {
+                var win = Ext.ComponentQuery.query('#windowWithdraw')[0];
+                win.close();
+            }
+        });
+    },
+
+    onEnter: function (field, e) {
+        if (e.getKey() == e.ENTER) {
+            this.onClickPayin();
+        }
+    },
 });

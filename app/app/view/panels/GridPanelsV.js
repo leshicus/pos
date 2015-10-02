@@ -32,7 +32,7 @@ Ext.define('Office.view.panels.GridPanelsV', {
         scope: 'controller'
     },
     initComponent: function () {
-        Utilities.initClassParams({
+        Util.initClassParams({
             scope: this,
             params: [
                 'filters.panel_id',

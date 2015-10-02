@@ -14,6 +14,9 @@ Ext.define('Office.view.gameacc.FormInputCashGameaccV', {
         labelWidth: 200,
         margin: 5
     },
+    listeners:{
+        afterrender:'onAfterRender'
+    },
     initComponent: function () {
         this.items = [
             {
@@ -29,7 +32,7 @@ Ext.define('Office.view.gameacc.FormInputCashGameaccV', {
                     }
                 },
                 allowBlank:false,
-                msgTarget:'side',
+                //msgTarget:'side',
                 bind:{
                     value:'{theClient.mobile_phone}'
                 }
@@ -42,13 +45,19 @@ Ext.define('Office.view.gameacc.FormInputCashGameaccV', {
                 maskRe:/^[0-9.]$/, // * не дает ввести иные символы
                 validator: function (val) { // * определяет корректность структуры введенного значения
                     var regex = /^\d+(\.\d+)?$/;
+                    if(val<=0)
+                        return 'Число должно быть положительным';
+
                     if (!regex.test(val)) {
                         return 'Допустимо только число (разделитель - точка)';
                     } else {
                         return true;
                     }
                 },
-                msgTarget:'side'
+                listeners: {
+                    specialkey: 'onEnter'
+                }
+                //msgTarget:'side'
             }
 
         ];

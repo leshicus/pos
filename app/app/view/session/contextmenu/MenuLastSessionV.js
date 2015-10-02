@@ -8,8 +8,6 @@ Ext.define('Office.view.session.contextmenu.MenuLastSessionV', {
     itemId: 'menulastsession',
     border: true,
     initComponent: function () {
-        console.log('MenulastsessionV init');
-
         this.items = [
             {
                 text: 'Отчет по смене',
@@ -25,6 +23,5 @@ Ext.define('Office.view.session.contextmenu.MenuLastSessionV', {
             }
         ]
         this.callParent(arguments);
-        console.log('MenulastsessionV end');
     }
 });

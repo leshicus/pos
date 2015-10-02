@@ -38,14 +38,14 @@ Ext.define('Office.view.accept.GridAcceptV', {
             scope: 'controller'
         },
         bbar: [
-            {
+           /* {
                 xtype: 'component',
                 itemId: 'tipTarget',
                 html: '...'
-            },
-            '->',
-            {
+            },*/
+           {
                 xtype: 'pagingtoolbar',
+                //pageSize:5,
                 bind: {
                     store: '{accept}'
                 },
@@ -55,9 +55,7 @@ Ext.define('Office.view.accept.GridAcceptV', {
             }
         ],
         initComponent: function () {
-            console.info('GridAcceptV init');
-
-            Utilities.initClassParams({
+            Util.initClassParams({
                 scope: this,
                 params: [
                     'filters.cbDateType',
@@ -81,6 +79,13 @@ Ext.define('Office.view.accept.GridAcceptV', {
                     'filters.cbSlipId'
                 ]
             });
+
+            var now = new Date();
+            var now_ms = now.getTime();
+            var days_slips_visible_in_office = Ext.ComponentQuery.query('menumain')[0].getViewModel().get('globals').days_slips_visible_in_office;
+            var minDate_ms = now_ms - 1000 * 60 * 60 * 24 * days_slips_visible_in_office;
+            var minDate = new Date(minDate_ms);
+
             var me = this,
                 viewModel = this.getViewModel(),
                 madeFrom = Ext.create('Office.view.common.ContainerDateTimeV', {
@@ -94,6 +99,7 @@ Ext.define('Office.view.accept.GridAcceptV', {
                     _allowBlank: true,
                     _bindDate: '{filters.cbDateFromMade}',
                     _bindTime: '{filters.cbTimeFromMade}',
+                    _minDateValue: minDate,
                     _listenersDate: {
                         change: 'onAddFilter'
                         // * почему-то не получается сделать как выше, пишет 'unable to dynamically resolve method onAddFilter'
@@ -125,6 +131,7 @@ Ext.define('Office.view.accept.GridAcceptV', {
                     _allowBlank: true,
                     _bindDate: '{filters.cbDateToMade}',
                     _bindTime: '{filters.cbTimeToMade}',
+                    _minDateValue: minDate,
                     _listenersDate: {
                         change: 'onAddFilter',
                         specialkey: 'onClearFilterVm'
@@ -145,6 +152,7 @@ Ext.define('Office.view.accept.GridAcceptV', {
                     _allowBlank: true,
                     _bindDate: '{filters.cbDateFromCalc}',
                     _bindTime: '{filters.cbTimeFromCalc}',
+                    _minDateValue: minDate,
                     _listenersDate: {
                         change: 'onAddFilter',
                         specialkey: 'onClearFilterVm'
@@ -165,6 +173,7 @@ Ext.define('Office.view.accept.GridAcceptV', {
                     _allowBlank: true,
                     _bindDate: '{filters.cbDateToCalc}',
                     _bindTime: '{filters.cbTimeToCalc}',
+                    _minDateValue: minDate,
                     _listenersDate: {
                         change: 'onAddFilter',
                         specialkey: 'onClearFilterVm'
@@ -206,31 +215,6 @@ Ext.define('Office.view.accept.GridAcceptV', {
                         value: '{filters.cbSport}'
                     }
                 },
-                /*{
-                 xtype: 'combobox',
-                 itemId: 'cbSport',
-                 multiSelect: true,
-                 width: 200,
-                 emptyText: 'Вид спорта',
-                 queryMode: 'local',
-                 displayField: 'value',
-                 valueField: 'id',
-                 editable: false,
-                 bind: {
-                 store:'{sport}',
-                 selection:'{cbSport_model}',
-                 value:'{filters.cbSport}'
-                 },
-                 listeners:{
-                 select: function (combo,recs) {
-                 var arr = [];
-                 Ext.Array.each(recs, function (item) {
-                 arr.push(item.get('id'));
-                 });
-                 combo.up('gridaccept').getViewModel().set('filters.cbSport',arr.join(','));
-                 }
-                 }
-                 },*/
                 {
                     xtype: 'combobox',
                     itemId: 'cbIsLive',
@@ -258,10 +242,22 @@ Ext.define('Office.view.accept.GridAcceptV', {
                     margin: '2 2 2 30',
                     //inputValue: 'on',
                     boxLabel: 'По бетам',
-                    flex: 1,
                     listeners: {
                         change: 'onAddFilter'
                     }
+                },
+                {
+                    xtype: 'tbseparator',
+                    height: 40,
+                    margin: '0 0 0 30',
+                },
+                {
+                    xtype: 'textfield',
+                    itemId: 'cashBalance',
+                    labelWidth: 50,
+                    margin: '2 2 2 30',
+                    fieldLabel: 'Сумма в кассе',
+                    readOnly: true,
                 }
             ];
 
@@ -280,12 +276,15 @@ Ext.define('Office.view.accept.GridAcceptV', {
                         text: 'Действие',
                         dataIndex: 'operation',
                         itemId: 'gridaccept-operation',
-                        //flex:1 //todo заменить после обновления
                         locked: true,
                         width: 250,
                         layout: {
                             type: 'vbox',
                             align: 'stretch'
+                        },
+                        renderer: function(value, meta, record, row, col) {
+                            meta['tdAttr'] = 'data-qtip="' + value + '"';
+                            return value;
                         },
                         items: [
                             {
@@ -323,7 +322,7 @@ Ext.define('Office.view.accept.GridAcceptV', {
                         text: 'Результат',
                         dataIndex: 'result_text',
                         itemId: 'gridaccept-original_result_text',// * указываем id, т.к. вроде только с ним stateful работает
-                        renderer: Utilities.renderResult,
+                        renderer: Util.renderResult,
                         width: 150,
                         layout: {
                             type: 'vbox',
@@ -356,7 +355,7 @@ Ext.define('Office.view.accept.GridAcceptV', {
                         dataIndex: 'made_datetime',
                         itemId: 'gridaccept-made_datetime',
                         width: 185,
-                        format: Utilities.dateFormatDot,
+                        format: Util.dateFormatDot,
                         layout: {
                             type: 'vbox',
                             align: 'stretch'
@@ -371,10 +370,17 @@ Ext.define('Office.view.accept.GridAcceptV', {
                         dataIndex: 'fin_datetime',
                         itemId: 'gridaccept-calc_datetime',
                         width: 185,
-                        format: Utilities.dateFormatHyphen,
+                        format: Util.dateFormatHyphen,
                         layout: {
                             type: 'vbox',
                             align: 'stretch'
+                        },
+                        renderer: function (val,id,rec) {
+                            if(rec.get('result_text') == "в игре"){  // * todo сделать переводчик
+                                return '0000-00-00 00:00:00';
+                            }else{
+                                return rec.get('fin_datetime');
+                            }
                         },
                         items: [
                             calcFrom,
@@ -392,6 +398,7 @@ Ext.define('Office.view.accept.GridAcceptV', {
                         text: 'Выигрыш',
                         dataIndex: 'win_sum',//?
                         itemId: 'gridaccept-win_sum',
+                        hidden: !Ext.ComponentQuery.query('menumain')[0].getViewModel().get('globals').use_ndfl,
                         width: 90,
                         renderer: Ext.util.Format.numberRenderer('0,0.00')
                     },
@@ -399,6 +406,7 @@ Ext.define('Office.view.accept.GridAcceptV', {
                         text: 'НДФЛ',
                         dataIndex: 'tax_sum',
                         itemId: 'gridaccept-tax_sum',
+                        hidden: !Ext.ComponentQuery.query('menumain')[0].getViewModel().get('globals').use_ndfl,
                         width: 60,
                         renderer: Ext.util.Format.numberRenderer('0,0.00')
                     },
@@ -435,7 +443,7 @@ Ext.define('Office.view.accept.GridAcceptV', {
                         text: 'Выплачено',
                         dataIndex: 'paid',
                         itemId: 'gridaccept-paid',
-                        width: 120,
+                        width: 130,
                         layout: {
                             type: 'vbox',
                             align: 'stretch'
@@ -494,26 +502,26 @@ Ext.define('Office.view.accept.GridAcceptV', {
                 ]
             }
 
-            /*this.dockedItems = [{
-             xtype: 'pagingtoolbar',
-             //todo проверить работу после обновления
-             store: me.store,
-             pageSize: 25,
-             //bind: {store: '{accept}'},
-             reference: 'pagingtoolbar',
-             dock: 'bottom',
-             displayInfo: true,
-             displayMsg: 'Показаны записи {0} - {1} из {2}',
-             emptyMsg: "Нет записей для отображения"
-             }]*/
-            /*this.bbar = Ext.create('Ext.PagingToolbar', {
-             bind: {
-             store: '{accept}'
-             },
-             displayInfo: true,
-             displayMsg: 'Показаны записи {0} - {1} из {2}',
-             emptyMsg: "Нет записей для отображения"
-             });*/
+            //this.dockedItems = [{
+            //    xtype: 'pagingtoolbar',
+            //    store: me.store,
+            //    pageSize: 5,
+            //    //bind: {store: '{accept}'},
+            //    reference: 'pagingtoolbar',
+            //    dock: 'bottom',
+            //    displayInfo: true,
+            //    displayMsg: 'Показаны записи {0} - {1} из {2}',
+            //    emptyMsg: "Нет записей для отображения"
+            //}]
+            //this.bbar = Ext.create('Ext.PagingToolbar', {
+            //    bind: {
+            //        store: '{accept}'
+            //    },
+            //    pageSize: 5,
+            //    displayInfo: true,
+            //    displayMsg: 'Показаны записи {0} - {1} из {2}',
+            //    emptyMsg: "Нет записей для отображения"
+            //});
 
 
             /* this.bbar = [

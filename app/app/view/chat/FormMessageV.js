@@ -13,7 +13,7 @@ Ext.define('Office.view.chat.FormMessageV', {
         type: 'hbox'
     },
     initComponent: function () {
-        Utilities.initClassParams({
+        Util.initClassParams({
             scope: this,
             params: [
                 'filters.id',

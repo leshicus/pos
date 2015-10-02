@@ -12,15 +12,30 @@ Ext.define('Office.view.rat.GridRatV', {
     },
     controller: 'gridrat',
     columnLines: true,
-    flex: 1,
-    title: 'Крысы',
+    //flex: 1,
+    title: 'Крысы: история ставок',
     frame: true,
     viewConfig: {
         stripeRows: true
     },
     bind: '{rat}',
+    listeners: {
+        //render: 'onRatRender'
+    },
+    bbar: [
+        {
+            xtype: 'pagingtoolbar',
+            pageSize:Util.ITEMS_PER_PAGE,
+            bind: {
+                store: '{rat}'
+            },
+            displayInfo: true,
+            displayMsg: 'Показаны записи {0} - {1} из {2}',
+            emptyMsg: "Нет записей для отображения"
+        }
+    ],
     initComponent: function () {
-        Utilities.initClassParams({
+        Util.initClassParams({
             scope: this,
             params: [
                 'filters.min_date',
@@ -43,6 +58,7 @@ Ext.define('Office.view.rat.GridRatV', {
                 _allowBlankTo: true,
                 _bindFrom:'{filters.min_date}',
                 _bindTo:'{filters.max_date}',
+                //_dateFrom:dateFrom,
                 _format: 'Y-m-d H:i:s',
                 _listenersFrom: {
                     //change: 'onAddFilter',
@@ -51,7 +67,7 @@ Ext.define('Office.view.rat.GridRatV', {
                     change: function (field, n, o, e) {
                         var mainController = Office.app.getController('Main'),
                             store = viewModel.getStore('rat');
-                       // mainController.onAddFilterVm(field, n, o, e, false, store, me);
+                        // mainController.onAddFilterVm(field, n, o, e, false, store, me);
                         mainController.storeLoadVm(grid);
                     }
                 },
@@ -62,14 +78,17 @@ Ext.define('Office.view.rat.GridRatV', {
                     change: function (field, n, o, e) {
                         var mainController = Office.app.getController('Main'),
                             store = viewModel.getStore('rat');
-                       // mainController.onAddFilterVm(field, n, o, e, false, store, me);
+                        // mainController.onAddFilterVm(field, n, o, e, false, store, me);
                         mainController.storeLoadVm(grid);
                     }
                 }
             });
 
-        // * устанавливает начальное значение поля "с"
-        //Debug.setGridAcceptMadeFrom(date);
+        // * установка начального значения Дата с
+        var dateFrom = Ext.Date.subtract(new Date(), Ext.Date.MINUTE, 20);
+        Ext.defer(function(){
+            viewModel.set('filters.min_date',dateFrom);
+        },100,this);
 
         this.columns = {
             defaults: {
@@ -120,28 +139,74 @@ Ext.define('Office.view.rat.GridRatV', {
                 },
                 {
                     text: 'I место',
+                    align: 'center',
                     dataIndex: 'first',
                     itemId: 'first',
-                    renderer: Utilities.renderRat,
+                    //renderer: Util.renderRat,
                     width: 70
                 },
                 {
                     text: 'II место',
+                    align: 'center',
                     dataIndex: 'second',
                     itemId: 'second',
                     width: 70
                 },
                 {
                     text: 'III место',
+                    align: 'center',
                     dataIndex: 'third',
                     itemId: 'third',
                     width: 75
-                }/*,
-                 {
-                 text: 'Повтор записи',
-                 width: 130
-                 //flex:1
-                 }*/
+                },
+                {
+                    xtype: 'actioncolumn',
+                    text: 'Повтор записи',
+                    width:120,
+                    align: 'center',
+                    dataIndex: 'url_video',
+                    items: [
+                        {
+                            id: 'button',
+                            getClass: function(v, meta, rec) {  // Or return a class from a function
+                                return 'icon-go-to-game';
+                            },
+                            disabled: false,
+                            handler: function (grid, rowIndex, colIndex, item, e) 
+                            { 
+                                var rec = grid.getStore().getAt(rowIndex);
+                                console.log(item);
+                                Ext.Msg.confirm('<?php echo Language::getCaption(Language::ID_CONFIRMATION); ?>', 'Вы действительно хотите вывести забег номер ' + rec.data.race_number + ' на монитор пользователя?', function (btn) {
+                                    if (btn == 'yes') {
+                                        var btnImgHtml = Ext.query('.button_url_' + rec.id + ' img')[0];
+                                        var btnImgObj = Ext.get(btnImgHtml);
+
+                                        if(btnImgObj.hasCls('icon-go-to-game'))
+                                        {
+                                            var btnsImgHtml = Ext.query('td[class*="button_url_"] img');
+                                            var btnsImgObj = Ext.get(btnsImgHtml);
+                                            btnsImgObj.removeCls('icon-go-blue-to-game').addCls('icon-go-to-game');
+
+                                            btnImgObj.removeCls('icon-go-to-game').addCls('icon-go-blue-to-game');
+                                        }
+
+                                        var data = grid.getStore().getAt(rowIndex).data;
+
+                                        FayeClient.sendCommand({
+                                            command: 'rats_replay',
+                                            url: data.url_video,
+                                            race: data.race_number
+                                        });
+                                    }
+                                });
+                            }
+                        }
+                    ],
+                    renderer: function(val, meta, rec, rowIndex, colIndex, store)
+                    {
+                        meta.css = 'button_url_' + rec.id;
+                    }  
+                }
             ]
         }
 

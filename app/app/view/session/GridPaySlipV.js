@@ -45,7 +45,7 @@ Ext.define('Office.view.session.GridPaySlipV', {
         var vm = this.getViewModel(),
             menumain = Ext.ComponentQuery.query('menumain')[0],
             vmMenumain = menumain.getViewModel();
-        Utilities.initClassParams({
+        Util.initClassParams({
             scope: this,
             params: []
         });
@@ -76,6 +76,15 @@ Ext.define('Office.view.session.GridPaySlipV', {
                 {
                     text: 'Детали по изъятию ТЛ',
                     handler: 'onDetailsTL',
+                    hidden: !Ext.ComponentQuery.query('menumain')[0].getViewModel().get('globals').use_ndfl,
+                    glyph: Glyphs.get('list'),
+                    cls: 'detail'
+                    //itemId: 'startSession'
+                },
+                {
+                    text: 'Детали по игровым счетам',
+                    handler: 'onDetailsAccounts',
+                    hidden: Ext.ComponentQuery.query('menumain')[0].getViewModel().get('globals').use_ndfl,
                     glyph: Glyphs.get('list'),
                     cls: 'detail'
                     //itemId: 'startSession'

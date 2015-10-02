@@ -7,7 +7,6 @@ Ext.define('Office.view.rat.GridRatC', {
         component: {
             'tool[type=refresh]': {
                 click: function (tool) {
-                    console.log('refresh');
                     var grid = tool.up('panel');
                     grid.store.reload();
                 }
@@ -16,14 +15,19 @@ Ext.define('Office.view.rat.GridRatC', {
             // * очистка фильтров в grid column header
             'tool[type=close]': {
                 click: function (button) {
-                    console.log('tool[type=close]');
                     var grid = button.up('panel'),
                         mainController = Office.app.getController('Main');
                     mainController.resetFilters(grid, grid);
                 }
             }
         }
-
+    },
+    onRatRender: function (grid) {
+        // * устанавливает начальное значение поля "с" на 20 минут раньше текущего времени
+        var dateFrom = Ext.Date.subtract(new Date(), Ext.Date.MINUTE, 20);
+        Ext.defer(function(){
+            grid.getViewModel().set('filters.min_date', dateFrom);
+        },100,this);
     },
     onEnter: function (field, e) {
         if (e.getKey() == e.ENTER) {

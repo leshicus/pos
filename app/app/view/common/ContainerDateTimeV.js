@@ -3,7 +3,7 @@ Ext.define('Office.view.common.ContainerDateTimeV', {
     extend: 'Ext.container.Container',
     requires: [
         'Ext.form.field.Time',
-        'Office.util.Utilities'
+        'Office.util.Util'
     ],
     xtype: 'containerdatetime',
     layout: {
@@ -16,7 +16,7 @@ Ext.define('Office.view.common.ContainerDateTimeV', {
         this.items = [
             {
                 xtype: 'datefield',
-                //format: Utilities.dateFormatHyphenShort, // * определяется требуемым форматом передачи на сервер
+                //format: Util.dateFormatHyphenShort, // * определяется требуемым форматом передачи на сервер
                 itemId: this._itemIdDate,
                 value: this._value,
                 allowBlank: this._allowBlank,
@@ -24,6 +24,7 @@ Ext.define('Office.view.common.ContainerDateTimeV', {
                 width:105,
                 format: this._format,
                 emptyText: this._emptyTextDate,
+                minValue: this._minDateValue,
                 bind: this._bindDate,
                 listeners:this._listenersDate
             },

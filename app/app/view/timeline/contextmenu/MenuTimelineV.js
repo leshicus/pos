@@ -8,8 +8,6 @@ Ext.define('Office.view.timeline.contextmenu.MenuTimelineV', {
     itemId: 'menutimeline',
     border: false,
     initComponent: function () {
-        console.log('MenutimelineV init');
-
         this.items = [
             {
                 text: 'Чек',
@@ -35,12 +33,18 @@ Ext.define('Office.view.timeline.contextmenu.MenuTimelineV', {
             {
                 text: 'Частичное снятие',
                 itemId: 'menuWithdraw',
-                glyph: Glyphs.get('dollar'),
-                cls: 'buyout',
+                glyph: Glyphs.get('minus'),
+                cls: 'cancel',
                 handler:'onClickButtonWithdraw'
+            },
+            {
+                text: 'Пополнение',
+                itemId: 'menuPayin',
+                glyph: Glyphs.get('plus'),
+                cls: 'plus',
+                handler:'onClickButtonPayin'
             }
         ]
         this.callParent(arguments);
-        console.log('MenutimelineV end');
     }
 });

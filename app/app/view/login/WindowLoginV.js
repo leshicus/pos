@@ -7,7 +7,8 @@ Ext.define('Office.view.login.WindowLoginV', {
             'Ext.form.Label',
             'Ux.locale.Manager',
             'Office.util.Setup',
-            'Office.view.login.WindowLoginC'
+            'Office.view.login.WindowLoginC',
+            //'Office.view.login.WindowLoginM'
         ],
         alias: 'widget.windowlogin',
         controller: 'windowlogin',
@@ -19,19 +20,24 @@ Ext.define('Office.view.login.WindowLoginV', {
         },
         layout: 'fit',
         modal: true,
-        defaultListenerScope: true,
+        //defaultListenerScope: true,
         referenceHolder: true,
         viewModel: 'default',
+        //viewModel: {
+        //    type: 'windowlogin'
+        //},
         glyph: 'xf084@FontAwesome',
         cls: 'loginkey',
-        defaultButton: 'username',
+        //defaultButton: 'username',
+        listeners:{
+          afterrender:'onAfterRender'
+        },
         initComponent: function () {
-            console.info('WindowLoginV init');
-
             Setup.clearCookies();
 
-            var vm = this.getViewModel();
-            vm.set('username', 'kassa103'); // * удалить
+            //var vm = this.getViewModel();
+            //vm.set('username', Debug.defaultUserName); // * удалить
+            //vm.set('password', Debug.defaultUserPassword); // * удалить
 
             this.title = Ux.locale.Manager.get("windowlogin.title", '?');
             this.items = [
@@ -45,12 +51,9 @@ Ext.define('Office.view.login.WindowLoginV', {
                         allowBlank: false,
                         enableKeyEvents: true,
                         anchor: '100%',
-                        msgTarget: 'side', // * чтобы убрать глюк со сбиванием фокуса с поля всплывающей подсказкой
-                        listeners: {
-                            keypress: 'onKeyPress',
-                            scope: 'controller'
-                        }
-                    },
+                       // msgTarget: 'side', // * чтобы убрать глюк со сбиванием фокуса с поля всплывающей подсказкой
+                     },
+                    layout: 'anchor',
                     items: [
                         {
                             xtype: 'combo',
@@ -69,28 +72,40 @@ Ext.define('Office.view.login.WindowLoginV', {
                         {
                             bind: '{username}',
                             itemId: 'username',
+
+                            selectOnFocus:true,
                             fieldLabel: Ux.locale.Manager.get("windowlogin.formfield.username"),
                             locales: {
                                 fieldLabel: "windowlogin.formfield.username"
                             },
                             listeners:{
-                                render: 'usernameClickEvent',
+                                //render: 'usernameClickEvent',
+                                keypress: 'onKeyPress',
+                                change: 'onChangeUsername',
                                 scope:'controller'
                             }
                         },
                         {
                             bind: '{password}',
                             itemId: 'password',
+                            //emptyText:'\u0362 \u20D7 \u279F \u2192',
                             fieldLabel: Ux.locale.Manager.get("windowlogin.formfield.password"),
                             inputType: 'password',
                             locales: {
                                 fieldLabel: "windowlogin.formfield.password"
+                            },
+                            listeners:{
+                                render: 'passwordClickEvent',
+                                keypress: 'onKeyPress',
+                                scope:'controller'
                             }
                         },
                         {
                             xtype: 'button',
                             scale: 'medium',
-                            margin: '15 0 0 180',
+                            anchor: '100%',
+                           // margin: '15 0 0 180',
+                            margin: '15 0 0 135',
                             glyph: Glyphs.get('signin'),
                             formBind: true, // * enable|disable depends on form validation
                             handler: 'onLoginClick',
@@ -99,20 +114,30 @@ Ext.define('Office.view.login.WindowLoginV', {
                             locales: {
                                 text: "windowlogin.button.login"
                             }
-                        }
+                        },
+                        //{
+                        //    xtype: 'button',
+                        //    scale: 'medium',
+                        //    anchor: '100%',
+                        //    margin: '15 0 0 135',
+                        //    handler: 'onTest',
+                        //    scope: 'controller',
+                        //    text: 'grid'
+                        //}
+
                     ]
                 }
             ]
-            this.tools = [
-                {
-                    type: 'close',
-                    tooltip: 'test',
-                    listeners:{
-                        click:'onTest',
-                        scope:'controller'
-                    }
-                }
-            ]
+            //this.tools = [
+            //    {
+            //        type: 'close',
+            //        tooltip: 'test',
+            //        listeners:{
+            //            click:'onTest',
+            //            scope:'controller'
+            //        }
+            //    }
+            //]
             this.callParent();
         }
     }

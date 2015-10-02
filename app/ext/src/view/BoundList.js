@@ -75,8 +75,9 @@ Ext.define('Ext.view.BoundList', {
      * @cfg {String/Ext.XTemplate} tpl
      * A String or Ext.XTemplate instance to apply to inner template.
      *
-     * {@link Ext.view.BoundList} is used for the dropdown list of {@link Ext.form.field.ComboBox}.
-     * To customize the template you can do this:
+     * {@link Ext.view.BoundList} is used for the dropdown list of 
+     * {@link Ext.form.field.ComboBox}. To customize the template you can set the tpl on 
+     * the combobox config object:
      *
      *     Ext.create('Ext.form.field.ComboBox', {
      *         fieldLabel   : 'State',
@@ -92,9 +93,14 @@ Ext.define('Ext.view.BoundList', {
      *                 //...
      *             ]
      *         }),
-     *         listConfig : {
-     *             tpl : '<tpl for="."><div class="x-boundlist-item">{abbr}</div></tpl>'
-     *         }
+     *         // Template for the dropdown menu.
+     *         // Note the use of the "x-list-plain" and "x-boundlist-item" class,
+     *         // this is required to make the items selectable.
+     *         tpl: Ext.create('Ext.XTemplate',
+     *             '<ul class="x-list-plain"><tpl for=".">',
+     *                 '<li role="option" class="x-boundlist-item">{abbr} - {name}</li>',
+     *             '</tpl></ul>'
+     *         ),
      *     });
      *
      * Defaults to:
@@ -179,9 +185,7 @@ Ext.define('Ext.view.BoundList', {
 
     refresh: function(){
         var me = this,
-            tpl = me.tpl,
-            toolbar = me.pagingToolbar,
-            rendered = me.rendered;
+            tpl = me.tpl;
 
         // Allow access to the context for XTemplate scriptlets
         tpl.field = me.pickerField;
@@ -189,11 +193,8 @@ Ext.define('Ext.view.BoundList', {
         me.callParent();
         tpl.field =  tpl.store = null;
 
-        // The view removes the targetEl from the DOM before updating the template
-        // Ensure the toolbar goes to the end
-        if (rendered && toolbar && toolbar.rendered && !me.preserveScrollOnRefresh) {
-            me.el.appendChild(toolbar.el, true);
-        }
+        // The view selectively removes item nodes, so the toolbar
+        // will be preserves in the DOM
     },
 
     bindStore : function(store, initial) {
@@ -238,13 +239,28 @@ Ext.define('Ext.view.BoundList', {
     onHide: function() {
         var inputEl = this.pickerField.inputEl.dom;
 
-        // If we're hiding a focused picker, focus must move to the input field.
-        if (Ext.Element.getActiveElement() !== inputEl) {
+        // If we're hiding a focused picker, focus must move to the input field unless the instigating
+        // browser event is a touch. In that case, the input only focuses when they touch it -
+        // we want to avoid an appearing keyboard.
+        if (Ext.Element.getActiveElement() !== inputEl && 
+            (!Ext.EventObject || Ext.EventObject.pointerType !== 'touch')) {
             inputEl.focus();
         }
         // Call parent (hide the element) *after* focus has been moved out.
         // Maintainer: Component#onHide takes parameters. 
         this.callParent(arguments);
+    },
+
+    afterComponentLayout: function(width, height, oldWidth, oldHeight) {
+        var picker = this.pickerField;
+
+        this.callParent(arguments);
+
+        // Bound list may change size, so realign on layout
+        // **if the field is an Ext.form.field.Picker which has alignPicker!**
+        if (picker && picker.alignPicker) {
+            picker.alignPicker();
+        }
     },
 
     // Clicking on an already selected item collapses the picker
@@ -261,6 +277,14 @@ Ext.define('Ext.view.BoundList', {
             if (selected && pickerField.isEqual(record.get(valueField), selected.get(valueField)) && pickerField.collapse) {
                 pickerField.collapse();
             }
+        }
+    },
+
+    onContainerClick: function(e) {
+        // Ext.view.View template method
+        // Do not continue to process the event as a container click if it is within the pagingToolbar
+        if (this.pagingToolbar && this.pagingToolbar.rendered && e.within(this.pagingToolbar.el)) {
+            return false;
         }
     },
 

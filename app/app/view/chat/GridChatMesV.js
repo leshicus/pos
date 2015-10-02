@@ -35,8 +35,7 @@ Ext.define('Office.view.chat.GridChatMesV', {
         scope: 'controller'
     },
     initComponent: function () {
-        console.info('gridchatmes init');
-        Utilities.initClassParams({
+        Util.initClassParams({
             scope: this,
             params: [
                 'filters.userid',

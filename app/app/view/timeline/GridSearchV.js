@@ -1,26 +1,26 @@
 Ext.define('Office.view.timeline.GridSearchV', {
     extend: 'Ext.grid.Panel',
     requires: [
-        'Office.view.timeline.FormTimelineM',
-        'Office.view.timeline.FormTimelineC'
+        'Office.view.timeline.GridSearchM',
+        'Office.view.timeline.GridSearchC'
     ],
     xtype: 'gridsearch',
-    controller: 'formtimeline',
+    controller: 'gridsearch',
     viewModel: {
-        type: 'formtimeline'
+        type: 'gridsearch'
     },
     columnLines: true,
     rowLines: true,
     flex: 1,
-    frame:true,
-    border:true,
+    frame: true,
+    border: true,
     title: 'Игроки',
     autoScroll: true,
     viewConfig: {
         stripeRows: true,
         enableTextSelection: true,
-        getRowClass: function( record, index, rowParams, store) { // * класс для строки грида
-            if(record.get('enabled') != 1 || record.get('is_blacklisted') == 1 || record.get('is_demo') == 1) return 'blocked-card-row';
+        getRowClass: function (record, index, rowParams, store) { // * класс для строки грида
+            if (record.get('enabled') != 1 || record.get('is_blacklisted') == 1 || record.get('is_demo') == 1) return 'blocked-card-row';
         }
     },
     glyph: Glyphs.get('user'),
@@ -30,11 +30,18 @@ Ext.define('Office.view.timeline.GridSearchV', {
         celldblclick: 'onCellDblclick',
         scope: 'controller'
     },
+    //buttons: Util.getButtonCancel({scope: 'controller'}),
     initComponent: function () {
-
+        Util.initClassParams({
+            scope: this,
+            params: ['filters.term']
+        });
 
         this.columns = {
-            defaults: {},
+            defaults: {
+                menuDisabled: true,
+                sortable: false
+            },
             items: [
                 {
                     text: 'id',
@@ -92,7 +99,7 @@ Ext.define('Office.view.timeline.GridSearchV', {
                     text: 'Активный',
                     dataIndex: 'enabled',
                     itemId: 'enabled',
-                    width: 75,
+                    width: 80,
                     renderer: function (val, meta, rec) {
                         if (val == 1) {
                             meta.align = 'center';
@@ -104,7 +111,7 @@ Ext.define('Office.view.timeline.GridSearchV', {
                     text: 'Черный<br>список',
                     dataIndex: 'is_blacklisted',
                     itemId: 'is_blacklisted',
-                    width: 65,
+                    width: 70,
                     renderer: function (val, meta, rec) {
                         if (val == 1) {
                             meta.align = 'center';
@@ -116,7 +123,7 @@ Ext.define('Office.view.timeline.GridSearchV', {
                     text: 'Демо',
                     dataIndex: 'is_demo',
                     itemId: 'is_demo',
-                    width: 50,
+                    width: 60,
                     renderer: function (val, meta, rec) {
                         if (val == 1) {
                             meta.align = 'center';
@@ -133,7 +140,7 @@ Ext.define('Office.view.timeline.GridSearchV', {
             ]
         }
 
-        this.buttons=Utilities.getButtonCancel({scope:'controller'});
+        //this.buttons=Util.getButtonCancel({scope:'controller'});
 
         this.callParent();
     }

@@ -3148,11 +3148,16 @@ jasmine.Spec.prototype.removeAllSpies = function() {
             children = body && body.childNodes || [],
             len = children.length,
             badNodes = [],
-            i = 0;
+            badIds = [],
+            i = 0,
+            child, ids;
 
         for (; i < len; i++) {
-            if (children[i].nodeType === 3 || !children[i].getAttribute('data-sticky')) {
-                badNodes.push(children[i]);
+            child = children[i];
+
+            if (child.nodeType === 3 || !child.getAttribute('data-sticky')) {
+                badIds.push(child.tagName + '#' + child.id);
+                badNodes.push(child);
             }
         }
 
@@ -3161,7 +3166,15 @@ jasmine.Spec.prototype.removeAllSpies = function() {
         }
 
         if (badNodes.length) {
-            this.fail('document.body contains childNodes after spec execution');
+            ids = badIds.join(', ');
+
+            Ext.log({
+                dump: badNodes,
+                level: 'error',
+                msg: 'CLEAN UP YOUR DOM LEAKS!! --> ' + ids
+            });
+
+            this.fail('document.body contains childNodes after spec execution --> ' + ids);
         }
     };
 
@@ -4113,13 +4126,14 @@ jasmine.simulateArrowKey = function(from, key) {
 // In IE, focus events are asynchronous so we often have to wait
 // after attempting to focus something. Otherwise tests will fail.
 jasmine.waitForFocus = jasmine.waitsForFocus = function(cmp, desc, timeout) {
-    var dom = cmp.isComponent ? cmp.getFocusEl().dom
-            : cmp.isElement   ? cmp.dom
-            :                   cmp
-        ;
+    var isComponent = cmp.isComponent,
+        dom = isComponent   ? cmp.getFocusEl().dom
+            : cmp.isElement ? cmp.dom
+            :                 cmp,
+        id = isComponent ? (cmp.itemId || cmp.id) : dom.id;
     
     if (!desc) {
-        desc = dom.id + ' to focus';
+        desc = id + ' to focus';
     }
 
     // Default to Jasmine's default timeout.
@@ -4128,6 +4142,27 @@ jasmine.waitForFocus = jasmine.waitsForFocus = function(cmp, desc, timeout) {
     waitsFor(
         function() {
             return document.activeElement === dom;
+        },
+        desc,
+        timeout
+    );
+};
+
+jasmine.waitForBlur = jasmine.waitsForBlur = function(cmp, desc, timeout) {
+    var dom = cmp.isComponent ? cmp.getFocusEl().dom
+            : cmp.isElement   ? cmp.dom
+            :                   cmp;
+    
+    if (!desc) {
+        desc = dom.id + ' to blur';
+    }
+
+    // Default to Jasmine's default timeout.
+    timeout = timeout || 5000;
+
+    waitsFor(
+        function() {
+            return document.activeElement !== dom;
         },
         desc,
         timeout
@@ -4158,6 +4193,16 @@ jasmine.focusAndWait = function(cmp, waitFor) {
     });
 
     jasmine.waitForFocus(waitFor || cmp);
+
+    jasmine.waitAWhile();
+};
+
+jasmine.blurAndWait = function(cmp, waitFor) {
+    runs(function() {
+        cmp.blur();
+    });
+
+    jasmine.waitForBlur(waitFor || cmp);
 
     jasmine.waitAWhile();
 };

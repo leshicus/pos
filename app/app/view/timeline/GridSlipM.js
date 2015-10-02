@@ -28,7 +28,13 @@ Ext.define('Office.view.timeline.GridSlipM', {
                 //text: 'rows',
                 loaded: true // * нужно, чтобы реагировало на autoLoad: false, а иначе все равно грузит
             },
-            autoLoad: false
+            autoLoad: false,
+            listeners: {
+                // * этот beforeload для: если быстро щелкнуть на Обовить, то одни и те же данные загружаются несколько раз
+                beforeload: function (store, operation, eOpts) {
+                    if(store.isLoading()) return false;
+                }
+            }
         }
     }
 });

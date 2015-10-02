@@ -13,7 +13,6 @@ Ext.define('Office.view.panels.GridParamC', {
         gridParam.getViewModel().set('filters.value',value);
     },
 
-    //todo добавить панель
     // * добавить панель
     onAddPanel: function (btn) {
         var gridPanels = this.getView(),
@@ -30,7 +29,6 @@ Ext.define('Office.view.panels.GridParamC', {
                 win = new Ext.window.Window({
                     title: 'Внесение средств на игровой счет',
                     modal: true,
-                    closable: false,
                     constrain: true,
                     width: 360,
                     layout: {
@@ -40,7 +38,7 @@ Ext.define('Office.view.panels.GridParamC', {
                     items: [
                         forminputcash
                     ],
-                    buttons: Utilities.getButtonsSaveCancel({
+                    buttons: Util.getButtonsSaveCancel({
                         scope: forminputcash.getController(),
                         textSave: 'Внести сумму'
                     })

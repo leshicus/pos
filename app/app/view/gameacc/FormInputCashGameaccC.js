@@ -33,24 +33,24 @@ Ext.define('Office.view.gameacc.FormInputCashGameaccC', {
                 Ext.Ajax.request({
                     //url: Ext.util.Format.format(Server.accountsCreate(), Server.getToken(), user_id, username),
                     url: Server.getUrl(objUrl),
-/*                    params: {
-                        amount: amount,
-                        name: name
-                    },*/
+                    /*                    params: {
+                     amount: amount,
+                     name: name
+                     },*/
                     method: 'POST',
                     callback: function (opt, success, response) {
                         if (response.responseText) {
                             var o = Ext.decode(response.responseText);
                             if (o.success) {
-                                Utilities.toast('Успех', 'Внесение прошло успешно');
+                                Util.toast('Успех', 'Внесение прошло успешно');
                                 vmGridgameacc.getStore('gameacc').reload();
                                 var gridgameaction = Ext.ComponentQuery.query('gridgameaction')[0];
                                 gridgameaction.getViewModel().getStore('gameaction').reload();
                             } else {
-                                Ext.Msg.alert('Ошибка', o.errorText);
+                                Util.erMes(o.errorText || o.errors[0]);
                             }
                         } else {
-                            Ext.Msg.alert('Ошибка', 'Нет ответа от сервера');
+                            Util.erMes('Нет ответа от сервера');
                         }
                         window.close();
                     }
@@ -66,10 +66,10 @@ Ext.define('Office.view.gameacc.FormInputCashGameaccC', {
                 };
                 Ext.Ajax.request({
                     /*url: Ext.util.Format.format(Server.accountsWithdrawRequest(), Server.getToken(), user_id, username),
-                    params: {
-                        amount: amount,
-                        name: name
-                    },*/
+                     params: {
+                     amount: amount,
+                     name: name
+                     },*/
                     url: Server.getUrl(objUrl),
                     method: 'POST',
                     callback: function (opt, success, response) {
@@ -91,7 +91,6 @@ Ext.define('Office.view.gameacc.FormInputCashGameaccC', {
                                     winPin = new Ext.window.Window({
                                         title: 'Введите пин-код',
                                         modal: true,
-
                                         closable: false,
                                         constrain: true,
                                         width: 360,
@@ -102,17 +101,17 @@ Ext.define('Office.view.gameacc.FormInputCashGameaccC', {
                                         items: [
                                             forminputpin
                                         ],
-                                        buttons: Utilities.getButtonsSaveCancel({
+                                        buttons: Util.getButtonsSaveCancel({
                                             scope: forminputpin.getController(),
                                             textSave: 'Отправить пин-код'
                                         })
                                     });
                                 winPin.show();
                             } else {
-                                Ext.Msg.alert('Ошибка', o.errorText);
+                                Util.erMes(o.errorText || o.errors[0]);
                             }
                         } else {
-                            Ext.Msg.alert('Ошибка', 'Нет ответа от сервера');
+                            Util.erMes('Нет ответа от сервера');
                         }
                     }
                 });
@@ -122,6 +121,25 @@ Ext.define('Office.view.gameacc.FormInputCashGameaccC', {
     onClickCancel: function (button) {
         var window = button.up('window');
         window.close();
+    },
+
+    onEnter: function (field, e) {
+        if (e.getKey() == e.ENTER) {
+            var win = field.up('window'),
+                button = win.down('button[action=save]');
+            this.onClickSave(button);
+        }
+    },
+
+    onAfterRender: function (form) {
+        // * если телефон есть- фокусируемся на сумме, если нет- на телефоне
+        var phone = form.down('#name'),
+            amount = form.down('#amount'),
+            vm = form.getViewModel();
+        if (vm.get('theClient.mobile_phone'))
+            amount.focus();
+        else
+            phone.focus();
     }
 
 });

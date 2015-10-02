@@ -6,8 +6,8 @@ Ext.define('Office.view.session.GridCurrentV', {
         'Office.view.menumain.MenuMainM'
     ],
     xtype: 'gridcurrent',
-    viewModel:{
-        type:'gridcurrent'
+    viewModel: {
+        type: 'gridcurrent'
     },
     title: 'Смена',
     frame: true,
@@ -18,18 +18,26 @@ Ext.define('Office.view.session.GridCurrentV', {
     },
     collapsible: true,
     controller: 'gridcurrent',
-    /*glyph: Glyphs.get('clock'),
-     cls: 'gridcard',*/
     sortableColumns: false,
     bind: {
         source: {
             sumAtOpenTime: '{theSession.sumAtOpenTime}',
             acceptedPerSession: '{theSession.acceptedPerSession}',
+
             acceptedPerSessionWithoutTL: '{theSession.acceptedPerSessionWithoutTL}',
             acceptedPerSessionForTL: '{theSession.acceptedPerSessionForTL}',
+
+            sessionAcceptedPerSessionWithoutAccounts: '{theSession.acceptedPerSessionWithoutAccounts}',
+            sessionAcceptedPerSessionForAccounts: '{theSession.acceptedPerSessionForAccounts}',
+
             paidPerSessionWithTLPOs: '{theSession.paidPerSessionWithTLPOs}',
             paidPerSession: '{theSession.paidPerSession}',
             cashMovementTLOutput: '{theSession.cashMovementTLOutput}',
+
+            sessionPaidPerSession: '{theSession.paidPerSession}',
+            sessionPaidPerSessionWithoutAccounts: '{theSession.paidPerSessionWithoutAccounts}',
+            sessionPaidPerSessionForAccounts: '{theSession.paidPerSessionForAccounts}',
+
             returnedPerSession: '{theSession.returnedPerSession}',
             administrativeBalance: '{theSession.administrativeBalance}',
             cashMovementInput: '{theSession.cashMovementInput}',
@@ -48,31 +56,35 @@ Ext.define('Office.view.session.GridCurrentV', {
                 return false;
             }
         },
-        // * адаптивная под содержание ширина столбца Названий
-        afterrender: function (grid) {
-            grid.columns[0].setWidth(250);
-
-            // * проверяю, если данные не загрузились, то попробовать еще раз
-            // * не знаю как по-другому
-            var vm = this.getViewModel();
-            if (!vm.getData().theSession) {
-                Ext.defer(function () {
-                    var menumain = Ext.ComponentQuery.query('menumain')[0],
-                        vmMenumain = menumain.getViewModel();
-                    vm.set('theSession', vmMenumain.getData().theSession);
-                }, 500);
-            }
-        }
+        afterrender: 'onAfterrender'
     },
+    // * если use_ndfl=true, то скрывать эти поля
+    _use_ndfl_hideProperties:[
+        "sessionAcceptedPerSessionWithoutAccounts",
+        "sessionAcceptedPerSessionForAccounts",
+        "sessionPaidPerSession",
+        "sessionPaidPerSessionWithoutAccounts",
+        "sessionPaidPerSessionForAccounts"
+    ],
+    // * если use_ndfl=false, то скрывать эти поля
+    _use_ndfl_showProperties:[
+        "acceptedPerSessionWithoutTL",
+        "acceptedPerSessionForTL",
+        "paidPerSessionWithTLPOs",
+        "paidPerSession",
+        "cashMovementTLOutput",
+        "cachierFullname",
+        'balanceByBSO'
+    ],
+
     initComponent: function () {
-        Utilities.initClassParams({
+        Util.initClassParams({
             scope: this,
-            params: [
-            ]
+            params: []
         });
 
-        var menumain = Ext.ComponentQuery.query('menumain')[0];
-        menumain.getController().loadSessionData();
+        //var menumain = Ext.ComponentQuery.query('menumain')[0];
+        //menumain.getController().loadSessionData();
 
         var toolbar_1 = new Ext.toolbar.Toolbar({
                 items: [
@@ -84,9 +96,10 @@ Ext.define('Office.view.session.GridCurrentV', {
                         bind: {
                             disabled: '{isGlobalSession}'
                         },
-                        listeners:{
+                        listeners: {
                             click: 'onButtonClick'
-                        }
+                        },
+                        disabled:true
                     },
                     {
                         text: 'Начать новую смену',
@@ -95,7 +108,8 @@ Ext.define('Office.view.session.GridCurrentV', {
                         cls: 'plus',
                         bind: {
                             disabled: '{!isGlobalSession}'
-                        }
+                        },
+                        disabled:true
                     },
                     {
                         text: 'Отчет по смене',
@@ -104,9 +118,10 @@ Ext.define('Office.view.session.GridCurrentV', {
                         bind: {
                             disabled: '{isGlobalSession}'
                         },
-                        listeners:{
+                        listeners: {
                             click: 'onButtonClick'
-                        }
+                        },
+                        disabled:true
                     }
                 ]
             }),
@@ -119,9 +134,10 @@ Ext.define('Office.view.session.GridCurrentV', {
                         bind: {
                             disabled: '{isGlobalSession}'
                         },
-                        listeners:{
+                        listeners: {
                             click: 'onButtonClick'
-                        }
+                        },
+                        disabled:true
                     },
                     {
                         text: 'Внести',
@@ -131,9 +147,10 @@ Ext.define('Office.view.session.GridCurrentV', {
                         bind: {
                             disabled: '{isGlobalSession}'
                         },
-                        listeners:{
+                        listeners: {
                             click: 'onButtonClick'
-                        }
+                        },
+                        disabled:true
                     },
                     {
                         text: 'Изъять',
@@ -143,9 +160,10 @@ Ext.define('Office.view.session.GridCurrentV', {
                         bind: {
                             disabled: '{isGlobalSession}'
                         },
-                        listeners:{
+                        listeners: {
                             click: 'onButtonClick'
-                        }
+                        },
+                        disabled:true
                     }
                 ]
             });
@@ -155,71 +173,124 @@ Ext.define('Office.view.session.GridCurrentV', {
                 type: 'vbox',
                 align: 'stretch'
             },
-            items: [toolbar_1, toolbar_2]
+            items: [
+                toolbar_1,
+                toolbar_2
+            ]
         });
 
         this.sourceConfig = {
             sumAtOpenTime: {
+                id: 'sumAtOpenTime',
                 displayName: '1. Сумма в кассе на начало смены',
                 renderer: Ext.util.Format.numberRenderer('0,0.00')
             },
             acceptedPerSession: {
+                id: 'acceptedPerSession',
                 displayName: '2. Принято за смену',
+                hidden: true,
                 renderer: Ext.util.Format.numberRenderer('0,0.00')
             },
+            /* use ndfl*/
             acceptedPerSessionWithoutTL: {
+                id: 'acceptedPerSessionWithoutTL',
                 displayName: '&nbsp&nbsp 2.1. Спорт',
                 renderer: Ext.util.Format.numberRenderer('0,0.00')
             },
             acceptedPerSessionForTL: {
+                id: 'acceptedPerSessionForTL',
                 displayName: '&nbsp&nbsp 2.2. ТЛ',
                 renderer: Ext.util.Format.numberRenderer('0,0.00')
             },
+            /* --------- */
+            /* not use ndfl*/
+            sessionAcceptedPerSessionWithoutAccounts: {
+                id: 'sessionAcceptedPerSessionWithoutAccounts',
+                displayName: '&nbsp&nbsp 2.1. Спорт',
+                renderer: Ext.util.Format.numberRenderer('0,0.00')
+            },
+            sessionAcceptedPerSessionForAccounts: {
+                id: 'sessionAcceptedPerSessionForAccounts',
+                displayName: '&nbsp&nbsp 2.2. Счет',
+                renderer: Ext.util.Format.numberRenderer('0,0.00')
+            },
+            /* --------- */
+            /* use ndfl*/
             paidPerSessionWithTLPOs: {
+                id: 'paidPerSessionWithTLPOs',
                 displayName: '3. Выплачено за смену',
                 renderer: Ext.util.Format.numberRenderer('0,0.00')
             },
             paidPerSession: {
+                id: 'paidPerSession',
                 displayName: '&nbsp&nbsp 3.1. Спорт',
                 renderer: Ext.util.Format.numberRenderer('0,0.00')
             },
             cashMovementTLOutput: {
+                id: 'cashMovementTLOutput',
                 displayName: '&nbsp&nbsp 3.2. ТЛ',
                 renderer: Ext.util.Format.numberRenderer('0,0.00')
             },
+            /* --------- */
+            /* not use ndfl*/
+            sessionPaidPerSession: {
+                id: 'sessionPaidPerSession',
+                displayName: '3. Выплачено за смену',
+                renderer: Ext.util.Format.numberRenderer('0,0.00')
+            },
+            sessionPaidPerSessionWithoutAccounts: {
+                id: 'sessionPaidPerSessionWithoutAccounts',
+                displayName: '&nbsp&nbsp 3.1. Спорт',
+                renderer: Ext.util.Format.numberRenderer('0,0.00')
+            },
+            sessionPaidPerSessionForAccounts: {
+                id: 'sessionPaidPerSessionForAccounts',
+                displayName: '&nbsp&nbsp 3.2. Счет',
+                renderer: Ext.util.Format.numberRenderer('0,0.00')
+            },
+            /* --------- */
             returnedPerSession: {
+                id: 'returnedPerSession',
                 displayName: '4. Возвращено',
                 renderer: Ext.util.Format.numberRenderer('0,0.00')
             },
             administrativeBalance: {
+                id: 'administrativeBalance',
                 displayName: '5. Баланс',
                 renderer: Ext.util.Format.numberRenderer('0,0.00')
             },
             cashMovementInput: {
+                id: 'cashMovementInput',
                 displayName: '6. Внесено денег за смену',
                 renderer: Ext.util.Format.numberRenderer('0,0.00')
             },
             cashMovementOutputWithoutTL: {
+                id: 'cashMovementOutputWithoutTL',
                 displayName: '7. Изъято денег за смену',
                 renderer: Ext.util.Format.numberRenderer('0,0.00')
             },
             currentSumInCash: {
+                id: 'currentSumInCash',
                 displayName: '8. Текущая сумма в кассе',
                 renderer: function (v) {
                     return '<b>' + Ext.util.Format.number(v, '0,0.00') + '</b>';
                 }
             },
             balanceByBSO: {
+                id: 'balanceByBSO',
                 displayName: '9. Учет по БСО',
                 renderer: Ext.util.Format.numberRenderer('0,0.00')
             },
             openDatetime: {
+                id: 'openDatetime',
                 displayName: 'Смена начата'
             },
             closeDatetime: {
+                id: 'closeDatetime',
                 displayName: 'Смена завершена'
             },
             cachierFullname: {
+                id: 'cachierFullname',
                 displayName: 'Кассир'
             }
         };

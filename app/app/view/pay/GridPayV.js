@@ -10,7 +10,7 @@ Ext.define('Office.view.pay.GridPayV', {
     },
     controller: 'gridpay',
     columnLines: true,
-    //flex: 1,
+    flex: 1,
     title: 'Выплаты',
     frame: true,
     viewConfig: {
@@ -21,41 +21,38 @@ Ext.define('Office.view.pay.GridPayV', {
     cls: 'gridpay',
     listeners: {
         celldblclick: 'onCelldblclick'
-        //specialkey: 'onEnter',
-        //scope: 'controller'
     },
     initComponent: function () {
-        Utilities.initClassParams({
+        Util.initClassParams({
             scope: this,
             params: [
-                'filters.slipId',
-                'filters.code'
+                'slipRawValue'
             ]
         });
 
         var slipId = Ext.create('Ext.form.field.Text', {
             emptyText: 'Номер квитанции',
             //margin: '0 0 0 15',
+            //itemId: 'slipIdField',
             enableKeyEvents: true,
             _fireEventOnEnter: true,
             itemId: 'slipId',
-            bind:'{filters.slipId}',
+            bind: '{slipRawValue}',
+            selectOnFocus: true,
+            //в штрихкоде стоит символ x, данный регэксп учитывает все возможности написания - русская буква х, англ буква х, русская ч
+            regex: /^[0-9]+[xхчХЧX]?[0-9]+$/,
+            maskRe: /[0-9xхчХЧX]+$/,
             listeners: {
-                specialkey: 'onEnter'
+                specialkey: 'onEnter',
+                render: 'focusSlipId'
             },
             triggers: {// * значек лупы
                 one: {
-                    cls: 'x-form-search-trigger'
+                    cls: 'x-form-search-trigger',
+                    handler:'onPressLoupe'
                 }
             }
-        })/*,
-         buttonMake = Ext.create('Ext.button.Button', {
-         text: 'Провести',
-         handler: 'onButtonMake',
-         itemId:'buttonMake',
-         disabled:true
-         })*/;
-
+        });
 
 
         // * определяет состав параметров, наименование и порядок полей для отображения
@@ -149,7 +146,7 @@ Ext.define('Office.view.pay.GridPayV', {
             slipId,
             {
                 xtype: 'button',
-                text: 'Печать чека',
+                text: 'Повторная печать чека',
                 handler: 'onButtonPrintBill',
                 itemId: 'buttonPrintBill',
                 disabled: true,
@@ -162,22 +159,30 @@ Ext.define('Office.view.pay.GridPayV', {
                 xtype: 'toolbar',
                 //layout:'hbox',
                 itemId: 'buttonsMake',
-                hidden: true,
+                // hidden: true,
                 items: [
                     {
                         xtype: 'button',
                         text: 'Выплатить с чеком',
                         handler: 'onButtonMakeBill',
                         //itemId: 'buttonMake',
+                        id: 'buttonPayWithPrint',
                         glyph: Glyphs.get('print'),
+                        bind: {
+                            disabled: '{!get_showMakeButtonCheck}'
+                        },
                         cls: 'print'
                     },
                     {
                         xtype: 'button',
                         text: 'Выплатить без чека',
                         handler: 'onButtonMake',
+                        id: 'buttonPayWithoutPrint',
                         //itemId: 'buttonMake',
                         glyph: Glyphs.get('dollar'),
+                        bind: {
+                            disabled: '{!get_showMakeButtons}'
+                        },
                         cls: 'plus'
                     }
                 ]

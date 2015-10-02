@@ -2,21 +2,19 @@
 Ext.define('Office.util.Debug', {
     singleton: true,
     alternateClassName: ['Debug'],
-    /* requires: [
-     'Office.util.Utilities'
-     ],*/
 
     // * заполнение полей формы Авторизация
-    debug: 0, // * 1- отладочный режим
+    debug: 1, // * 1- отладочный режим
 
     username: 'kassa103',
     password: '1',
-    cbDateFrom:'2014-10-06',
-    slipId: 12,
-    lastname: 'Ккк',
-    barcode: '27472453',
-    phone_number: '12345612345',
-    term: 'Ккк',
+    //cbDateFrom:'2014-10-06',
+    //slipId: 12,
+    //lastname: 'Ккк',
+    //barcode: '27472453',
+    phone_number: '79261539419',
+    //term: 'Ккк',
+    DEFAULT_MENU_ITEM:'session', // * раздел главного меню, открывающий по-умолчанию
 
     setLoginFields: function (win) {
         if (this.debug) {
@@ -27,14 +25,15 @@ Ext.define('Office.util.Debug', {
     setGridAcceptMadeFrom: function (vm, bindName) {
         /*if (this.debug) {
             Ext.defer(function () {
-                var date = Utilities.stringToDateHyphen('2014-10-06');
+                var date = Util.stringToDateHyphen('2014-10-06');
                 madeFrom.setValue(date);
             }, 100);
         } else {
             madeFrom.setValue(new Date());
         }*/
         if (this.debug) {
-            vm.set(bindName, this.cbDateFrom);
+            vm.set(bindName, new Date());
+            //vm.set(bindName, this.cbDateFrom);
         }
     },
     setBarcode: function (vm, bindName) {

@@ -24,7 +24,7 @@ Ext.define('Office.view.chat.GridChatUserV', {
         scope: 'controller'
     },
     initComponent: function () {
-        Utilities.initClassParams({
+        Util.initClassParams({
             scope: this,
             params: [
                 'filters.groupid',

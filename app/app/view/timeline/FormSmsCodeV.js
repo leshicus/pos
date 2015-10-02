@@ -26,7 +26,7 @@ Ext.define('Office.view.timeline.FormSmsCodeV', {
                 xtype: 'textfield',
                 itemId: 'code',
                 allowBlank:false,
-                msgTarget:'side',
+                //msgTarget:'side',
                 listeners:{
                     specialkey:'onEnter'
                 }

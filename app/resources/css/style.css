@@ -6,6 +6,13 @@
     opacity: .5;
 }*/
 
+
+/* багфиксы */
+/* Исправление бага 43 Хрома, когда смещалось отображение textfield */
+.chrome-43 .x-form-text {
+    display: inline!important;
+}
+
 /*отступ сверху названий полей грида*/
 .x-column-header-inner {
     line-height: 17px !important;
@@ -79,6 +86,13 @@
 .blocked-card-row {
     opacity: 0.5 !important;
 }
+/*
+.changed-event-row {
+   background-color: green;
+}*/
+
+/* класс для скрытия записи таблицы */
+.x-hide-display { display: none;}
 
 @import url(http://fonts.googleapis.com/css?family=Roboto+Condensed&subset=cyrillic-ext,latin);
 

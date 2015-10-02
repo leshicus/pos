@@ -385,10 +385,23 @@ describe("Ext.data.Store", function() {
             it("should return the first record", function() {
                 expect(store.first()).toBe(edRec);
             });
+
+            it("should return the record if there is only 1", function() {
+                store.remove([edRec, abeRec, tommyRec]);
+                expect(store.first()).toBe(aaronRec);
+            });
             
             it("should return null with an empty store", function() {
-                createStore();
+                store.removeAll();
                 expect(store.first()).toBeNull();
+            });
+
+            it("should be affected by filters", function() {
+                store.getFilters().add({
+                    property: 'group',
+                    value: 'admin'
+                });
+                expect(store.first()).toBe(abeRec);
             });
         });
         
@@ -396,10 +409,23 @@ describe("Ext.data.Store", function() {
             it("should return the last record", function() {
                 expect(store.last()).toBe(tommyRec);
             });
+
+            it("should return the record if there is only 1", function() {
+                store.remove([edRec, abeRec, tommyRec]);
+                expect(store.last()).toBe(aaronRec);
+            });
             
             it("should return null with an empty store", function() {
                 createStore();
                 expect(store.last()).toBeNull();
+            });
+
+            it("should be affected by filters", function() {
+                store.getFilters().add({
+                    property: 'group',
+                    value: 'admin'
+                });
+                expect(store.last()).toBe(aaronRec);
             });
         });
         
@@ -1166,6 +1192,372 @@ describe("Ext.data.Store", function() {
                 });
             });
         });
+
+        describe("moving records", function() {
+            var spy, removeMap, addMap;
+
+            beforeEach(function() {
+                createStore();
+                addStoreData();
+                spy = jasmine.createSpy();
+            });
+
+            afterEach(function() {
+                removeMap = addMap = spy = null;
+            });
+
+            function mapify(map, records) {
+                Ext.Array.forEach(records, function(record) {
+                    if (store.isMoving(record)) {
+                        map[record.id] = true;
+                    }
+                });
+            }
+
+            function setupAddRemove() {
+                removeMap = {};
+                addMap = {};
+
+                store.on('remove', function(store, records) {
+                    mapify(removeMap, records);
+                });
+                store.on('add', function(store, records) {
+                    mapify(addMap, records);
+                });
+            }
+
+            describe("via add", function() {
+                describe("a single record", function() {
+                    it("should move the record to the end of the collection", function() {
+                        store.add(edRec);
+                        expect(store.indexOf(edRec)).toBe(3);
+                    });
+
+                    it("should be moving during the add & remove event", function() {
+                        setupAddRemove();
+
+                        store.add(edRec);
+                        var expected = {
+                            'ed@sencha.com': true
+                        };
+                        expect(removeMap).toEqual(expected);
+                        expect(addMap).toEqual(expected);
+
+                        expect(store.isMoving([edRec])).toBe(0);
+                        expect(store.isMoving()).toBe(0);
+                    });
+                });
+
+                describe("multiple records", function() {
+                    describe("existing records only", function() {
+                        describe("in a contiguous range", function() {
+                            it("should move the records to the end of the collection", function() {
+                                store.add([edRec, abeRec]);
+                                expect(store.indexOf(edRec)).toBe(2);
+                                expect(store.indexOf(abeRec)).toBe(3);
+                            });
+
+                            it("should be moving during the add & remove event", function() {
+                                setupAddRemove();
+
+                                store.add([edRec, abeRec]);
+                                var expected = {
+                                    'ed@sencha.com': true,
+                                    'abe@sencha.com': true
+                                };
+
+                                expect(removeMap).toEqual(expected);
+                                expect(addMap).toEqual(expected);
+
+                                expect(store.isMoving([edRec, abeRec])).toBe(0);
+                                expect(store.isMoving()).toBe(0);
+                            });
+                        });
+
+                        describe("in a discontiguous range", function() {
+                            var fooRec, barRec, bazRec;
+
+                            beforeEach(function() {
+                                fooRec = makeUser('foo@sencha.com');
+                                barRec = makeUser('bar@sencha.com');
+                                bazRec = makeUser('baz@sencha.com');
+                                store.add([fooRec, barRec, bazRec]);
+                            });
+
+                            afterEach(function() {
+                                fooRec = barRec = bazRec = null;
+                            });
+
+                            it("should move the records to the end of the collection", function() {
+                                store.add([abeRec, tommyRec, barRec]);
+                                expect(store.indexOf(abeRec)).toBe(4);
+                                expect(store.indexOf(tommyRec)).toBe(5);
+                                expect(store.indexOf(barRec)).toBe(6);
+                            });
+
+                            it("should be moving during the add & remove event", function() {
+                                setupAddRemove();
+
+                                store.add([abeRec, tommyRec, barRec]);
+                                var expected = {
+                                    'abe@sencha.com': true,
+                                    'tommy@sencha.com': true,
+                                    'bar@sencha.com': true
+                                };
+
+                                expect(removeMap).toEqual(expected);
+                                expect(addMap).toEqual(expected);
+
+                                expect(store.isMoving([abeRec, tommyRec, barRec])).toBe(0);
+                                expect(store.isMoving()).toBe(0);
+                            });
+                        });
+                    });
+
+                    describe("mixture of new/existing records", function() {
+                        var fooRec, barRec, bazRec;
+
+                        beforeEach(function() {
+                            fooRec = makeUser('foo@sencha.com');
+                            barRec = makeUser('bar@sencha.com');
+                            bazRec = makeUser('baz@sencha.com');
+                        });
+
+                        afterEach(function() {
+                            fooRec = barRec = bazRec = null;
+                        });
+
+                        it("should add the records to the end", function() {
+                            store.add([fooRec, edRec]);
+                            expect(store.indexOf(fooRec)).toBe(3);
+                            expect(store.indexOf(edRec)).toBe(4);
+                        });
+
+                        it("should only mark existing records as moving", function() {
+                            setupAddRemove();
+
+                            store.add([fooRec, edRec]);
+                            var expected = {
+                                'ed@sencha.com': true
+                            };
+                            expect(removeMap).toEqual(expected);
+                            expect(addMap).toEqual(expected);
+
+                            expect(store.isMoving([fooRec, edRec])).toBe(0);
+                            expect(store.isMoving()).toBe(0);
+                        });
+                    });
+                });
+            });
+
+            describe("via insert", function() {
+                describe("a single record", function() {
+                    it("should move the record to the specified position", function() {
+                        store.insert(0, tommyRec);
+                        expect(store.indexOf(tommyRec)).toBe(0);
+                    });
+
+                    it("should be moving during the add & remove event", function() {
+                        setupAddRemove();
+
+                        store.insert(0, tommyRec);
+                        var expected = {
+                            'tommy@sencha.com': true
+                        };
+                        expect(removeMap).toEqual(expected);
+                        expect(addMap).toEqual(expected);
+
+                        expect(store.isMoving(tommyRec)).toBe(0);
+                        expect(store.isMoving()).toBe(0);
+                    });
+                });
+
+                describe("multiple records", function() {
+                    describe("existing records only", function() {
+                        describe("in a contiguous range", function() {
+                            it("should move the records to the specified position", function() {
+                                store.insert(0, [aaronRec, tommyRec]);
+                                expect(store.indexOf(aaronRec)).toBe(0);
+                                expect(store.indexOf(tommyRec)).toBe(1);
+                            });
+
+                            it("should be moving during the add & remove event", function() {
+                                setupAddRemove();
+
+                                store.insert(0, [aaronRec, tommyRec]);
+                                var expected = {
+                                    'aaron@sencha.com': true,
+                                    'tommy@sencha.com': true
+                                };
+
+                                expect(removeMap).toEqual(expected);
+                                expect(addMap).toEqual(expected);
+
+                                expect(store.isMoving([aaronRec, tommyRec])).toBe(0);
+                                expect(store.isMoving()).toBe(0);
+                            });
+                        });
+
+                        describe("in a discontiguous range", function() {
+                            var fooRec, barRec, bazRec;
+
+                            beforeEach(function() {
+                                fooRec = makeUser('foo@sencha.com');
+                                barRec = makeUser('bar@sencha.com');
+                                bazRec = makeUser('baz@sencha.com');
+                                store.add([fooRec, barRec, bazRec]);
+                            });
+
+                            afterEach(function() {
+                                fooRec = barRec = bazRec = null;
+                            });
+
+                            it("should move the records to the specified position", function() {
+                                store.insert(0, [abeRec, tommyRec, barRec]);
+                                expect(store.indexOf(abeRec)).toBe(0);
+                                expect(store.indexOf(tommyRec)).toBe(1);
+                                expect(store.indexOf(barRec)).toBe(2);
+                            });
+
+                            it("should be moving during the add & remove event", function() {
+                                setupAddRemove();
+
+                                store.insert(0, [abeRec, tommyRec, barRec]);
+                                var expected = {
+                                    'abe@sencha.com': true,
+                                    'tommy@sencha.com': true,
+                                    'bar@sencha.com': true
+                                };
+
+                                expect(removeMap).toEqual(expected);
+                                expect(addMap).toEqual(expected);
+
+                                expect(store.isMoving([abeRec, tommyRec, barRec])).toBe(0);
+                                expect(store.isMoving()).toBe(0);
+                            });
+                        });
+                    });
+
+                    describe("mixture of new/existing records", function() {
+                        var fooRec, barRec, bazRec;
+
+                        beforeEach(function() {
+                            fooRec = makeUser('foo@sencha.com');
+                            barRec = makeUser('bar@sencha.com');
+                            bazRec = makeUser('baz@sencha.com');
+                        });
+
+                        afterEach(function() {
+                            fooRec = barRec = bazRec = null;
+                        });
+
+                        it("should move the records to the specified position", function() {
+                            store.insert(2, [fooRec, edRec]);
+                            expect(store.indexOf(fooRec)).toBe(1);
+                            expect(store.indexOf(edRec)).toBe(2);
+                        });
+
+                        it("should only mark existing records as moving", function() {
+                            setupAddRemove();
+
+                            store.insert(2, [fooRec, edRec]);
+                            var expected = {
+                                'ed@sencha.com': true
+                            };
+                            expect(removeMap).toEqual(expected);
+                            expect(addMap).toEqual(expected);
+
+                            expect(store.isMoving([fooRec, edRec])).toBe(0);
+                            expect(store.isMoving()).toBe(0);
+                        });
+                    });
+                });
+            });
+
+            describe("via edits that cause position changes", function() {
+                beforeEach(function() {
+                    store.getSorters().add({
+                        property: 'name',
+                        direction: 'ASC'
+                    })
+                });
+
+                it("should move the record to the correct position", function() {
+                    tommyRec.set('name', 'cccc');
+                    expect(store.indexOf(tommyRec)).toBe(2);
+                });
+
+                it("should be moving during the add & remove event", function() {
+                    setupAddRemove();
+                    tommyRec.set('name', 'cccc');
+
+                    var expected = {
+                        'tommy@sencha.com': true
+                    };
+                    expect(removeMap).toEqual(expected);
+                    expect(addMap).toEqual(expected);
+
+                    expect(store.isMoving(tommyRec)).toBe(0);
+                    expect(store.isMoving()).toBe(0);
+                });
+            });
+
+            describe("isMoving", function() {
+                describe("no records", function() {
+                    it("should return 0 when no records are moving", function() {
+                        expect(store.isMoving()).toBe(0);
+                    });
+
+                    it("should return 1 when a single record is moving", function() {
+                        var moving;
+                        store.on('add', function() {
+                            moving = store.isMoving();
+                        });
+                        store.add(edRec);
+                        expect(moving).toBe(1);
+                    });
+
+                    it("should return the amount of moving records", function() {
+                        var moving;
+                        store.on('add', function() {
+                            moving = store.isMoving();
+                        });
+                        store.add([edRec, abeRec]);
+                        expect(moving).toBe(2);
+                    });
+                });
+
+                describe("single record", function() {
+                    it("should return 0 when the record is not moving", function() {
+                        expect(store.isMoving(edRec)).toBe(0);
+                    });
+
+                    it("should return 1 when the record is moving", function() {
+                        var moving;
+                        store.on('add', function() {
+                            moving = store.isMoving(edRec);
+                        });
+                        store.add(edRec);
+                        expect(moving).toBe(1);
+                    });
+                });
+
+                describe("multiple records", function() {
+                    it("should return 0 for an empty array", function() {
+                        expect(store.isMoving([])).toBe(0);
+                    });
+
+                    it("should return the number of moving records", function() {
+                        var moving;
+                        store.on('add', function() {
+                            moving = store.isMoving([edRec, abeRec, aaronRec, tommyRec]);
+                        });
+                        store.add([edRec, abeRec]);
+                        expect(moving).toBe(2);
+                    });
+                });
+            });
+        });
     });
     
     describe("removing", function() {
@@ -1641,6 +2033,64 @@ describe("Ext.data.Store", function() {
                     expect(store.last().get('email')).toBe('foo@sencha.com');
                     expect(store.getCount()).toBe(5);
                 });
+
+                describe("when filtered", function() {
+                    it("should clear filtered out records", function() {
+                        addStoreData();
+                        store.getFilters().add({
+                            property: 'email',
+                            value: 'ed@sencha.com'
+                        });
+
+                        expect(store.getCount()).toBe(1);
+
+                        store.loadData([{
+                            email: 'a@sencha.com'
+                        }, {
+                            email: 'b@sencha.com'
+                        }]);
+
+                        expect(store.getCount()).toBe(0);
+
+                        store.getFilters().removeAll();
+
+                        expect(store.getCount()).toBe(2);
+                        expect(store.getAt(0).getId()).toBe('a@sencha.com');
+                        expect(store.getAt(1).getId()).toBe('b@sencha.com');
+
+                        expect(store.indexOf(edRec)).toBe(-1);
+                    });
+
+                    it("should include only matching records", function() {
+                        addStoreData();
+                        store.getFilters().add({
+                            property: 'group',
+                            value: 'code'
+                        });
+
+                        expect(store.getCount()).toBe(2);
+
+                        store.loadData([{
+                            email: 'a@sencha.com',
+                            group: 'admin'
+                        }, {
+                            email: 'b@sencha.com',
+                            group: 'code'
+                        }]);
+
+                        expect(store.getCount()).toBe(1);
+                        expect(store.getAt(0).getId()).toBe('b@sencha.com');
+
+                        store.getFilters().removeAll();
+
+                        expect(store.getCount()).toBe(2);
+                        expect(store.getAt(0).getId()).toBe('a@sencha.com');
+                        expect(store.getAt(1).getId()).toBe('b@sencha.com');
+
+                        expect(store.indexOf(edRec)).toBe(-1);
+                        expect(store.indexOf(tommyRec)).toBe(-1);
+                    });
+                });
                 
                 describe("events", function() {
                     var spy;
@@ -1709,6 +2159,58 @@ describe("Ext.data.Store", function() {
                     });
                     expect(store.last()).toBe(rec);
                     expect(store.getCount()).toBe(5);
+                });
+
+                describe("when filtered", function() {
+                    it("should clear filtered out records", function() {
+                        addStoreData();
+                        store.getFilters().add({
+                            property: 'email',
+                            value: 'ed@sencha.com'
+                        });
+
+                        expect(store.getCount()).toBe(1);
+
+                        store.loadRecords([makeUser('a@sencha.com'), makeUser('b@sencha.com')]);
+
+                        expect(store.getCount()).toBe(0);
+
+                        store.getFilters().removeAll();
+
+                        expect(store.getCount()).toBe(2);
+                        expect(store.getAt(0).getId()).toBe('a@sencha.com');
+                        expect(store.getAt(1).getId()).toBe('b@sencha.com');
+
+                        expect(store.indexOf(edRec)).toBe(-1);
+                    });
+
+                    it("should include only matching records", function() {
+                        addStoreData();
+                        store.getFilters().add({
+                            property: 'group',
+                            value: 'code'
+                        });
+
+                        expect(store.getCount()).toBe(2);
+                        
+                        store.loadRecords([makeUser('a@sencha.com', {
+                            group: 'admin'
+                        }), makeUser('b@sencha.com', {
+                            group: 'code'
+                        })]);
+
+                        expect(store.getCount()).toBe(1);
+                        expect(store.getAt(0).getId()).toBe('b@sencha.com');
+
+                        store.getFilters().removeAll();
+
+                        expect(store.getCount()).toBe(2);
+                        expect(store.getAt(0).getId()).toBe('a@sencha.com');
+                        expect(store.getAt(1).getId()).toBe('b@sencha.com');
+
+                        expect(store.indexOf(edRec)).toBe(-1);
+                        expect(store.indexOf(tommyRec)).toBe(-1);
+                    });
                 });
                 
                 describe("events", function() {
@@ -1845,6 +2347,64 @@ describe("Ext.data.Store", function() {
                     });
                     expect(store.last().get('email')).toBe('foo@sencha.com');
                     expect(store.getCount()).toBe(5);
+                });
+
+                describe("when filtered", function() {
+                    it("should clear filtered out records", function() {
+                        addStoreData();
+                        store.getFilters().add({
+                            property: 'email',
+                            value: 'ed@sencha.com'
+                        });
+
+                        expect(store.getCount()).toBe(1);
+
+                        store.loadRawData([{
+                            email: 'a@sencha.com'
+                        }, {
+                            email: 'b@sencha.com'
+                        }]);
+
+                        expect(store.getCount()).toBe(0);
+
+                        store.getFilters().removeAll();
+
+                        expect(store.getCount()).toBe(2);
+                        expect(store.getAt(0).getId()).toBe('a@sencha.com');
+                        expect(store.getAt(1).getId()).toBe('b@sencha.com');
+
+                        expect(store.indexOf(edRec)).toBe(-1);
+                    });
+
+                    it("should include only matching records", function() {
+                        addStoreData();
+                        store.getFilters().add({
+                            property: 'group',
+                            value: 'code'
+                        });
+
+                        expect(store.getCount()).toBe(2);
+
+                        store.loadRawData([{
+                            email: 'a@sencha.com',
+                            group: 'admin'
+                        }, {
+                            email: 'b@sencha.com',
+                            group: 'code'
+                        }]);
+
+                        expect(store.getCount()).toBe(1);
+                        expect(store.getAt(0).getId()).toBe('b@sencha.com');
+
+                        store.getFilters().removeAll();
+
+                        expect(store.getCount()).toBe(2);
+                        expect(store.getAt(0).getId()).toBe('a@sencha.com');
+                        expect(store.getAt(1).getId()).toBe('b@sencha.com');
+
+                        expect(store.indexOf(edRec)).toBe(-1);
+                        expect(store.indexOf(tommyRec)).toBe(-1);
+                    });
                 });
                 
                 describe("events", function() {
@@ -2191,6 +2751,13 @@ describe("Ext.data.Store", function() {
                                 page: 7
                             });
                             expect(getOperation().getPage()).toBe(7);
+                        });
+
+                        it("should set the store currentPage", function() {
+                            store.load({
+                                page: 7
+                            });
+                            expect(store.currentPage).toBe(7);
                         });
                         
                         it("should default to the current page in the store", function() {
@@ -2799,6 +3366,18 @@ describe("Ext.data.Store", function() {
             it("should not set the rootProperty as data on the sorter collection", function() {
                 createStore();
                 expect(store.getSorters().getRootProperty()).not.toBe('data');
+            });
+
+            it("should not trigger events when asking for the collection and it has not been created", function () {
+                var spy = jasmine.createSpy();
+                createStore({
+                    listeners: {
+                        beforesort: spy,
+                        sort: spy
+                    }
+                });
+                store.getSorters();
+                expect(spy).not.toHaveBeenCalled();
             });
         });
 
@@ -3664,6 +4243,18 @@ describe("Ext.data.Store", function() {
                             group: 'admin'
                         });
                     });
+
+                    it("should position items correctly when adding multiple items", function() {
+                        groupBy();
+                        var new1 = makeUser('new1@sencha.com', {
+                            group: 'code'
+                        }), new2 = makeUser('new2@sencha.com', {
+                            group: 'admin'
+                        });
+                        store.add([new1, new2]);
+                        expect(store.indexOf(new1)).toBe(5);
+                        expect(store.indexOf(new2)).toBe(2);
+                    });
                 });
 
                 describe("removing", function() {
@@ -3789,8 +4380,10 @@ describe("Ext.data.Store", function() {
                 });
 
                 describe("updating", function() {
-                    it("should move the item if the group changes", function() {
+                    it("should move the item if the group changes but the record does not change position", function() {
                         groupBy();
+
+                        var index = store.indexOf(aaronRec);
                         aaronRec.set('group', 'code');
 
                         var admins = store.getGroups().get('admin'),
@@ -3800,6 +4393,22 @@ describe("Ext.data.Store", function() {
                         expect(admins.contains(aaronRec)).toBe(false);
                         expect(coders.getCount()).toBe(3);
                         expect(coders.contains(aaronRec)).toBe(true);
+                        expect(store.indexOf(aaronRec)).toBe(index);
+                    });
+
+                    it("should move the item if the group changes and the record changes position", function() {
+                        groupBy();
+                        var index = store.indexOf(abeRec);
+                        abeRec.set('group', 'code');
+
+                        var admins = store.getGroups().get('admin'),
+                            coders = store.getGroups().get('code');
+
+                        expect(admins.getCount()).toBe(1);
+                        expect(admins.contains(abeRec)).toBe(false);
+                        expect(coders.getCount()).toBe(3);
+                        expect(coders.contains(abeRec)).toBe(true);
+                        expect(store.indexOf(abeRec)).not.toBe(index);
                     });
                 });
             });
@@ -4075,6 +4684,51 @@ describe("Ext.data.Store", function() {
                     });
                 });
             });
+
+            describe("with remoteSort", function() {
+                beforeEach(function() {
+                    createStore({
+                        remoteSort: true,
+                        groupField: 'group'
+                    });
+                    edRaw.group = 'bots';
+                });
+
+                it("should leave the items in group order", function() {
+                    store.load();
+                    completeWithData([edRaw, tommyRaw, abeRaw, aaronRaw]);
+                    expect(store.getAt(0).getId()).toBe('ed@sencha.com');
+                    expect(store.getAt(1).getId()).toBe('tommy@sencha.com');
+                    expect(store.getAt(2).getId()).toBe('abe@sencha.com');
+                    expect(store.getAt(3).getId()).toBe('aaron@sencha.com');
+                });
+
+                it("should leave groups in order", function() {
+                    store.load();
+                    completeWithData([edRaw, tommyRaw, abeRaw, aaronRaw]);
+
+                    var groups = store.getGroups(),
+                        group;
+                    
+                    expect(groups.getCount()).toBe(3);
+
+                    group = groups.getAt(0);
+                    expect(group.getGroupKey()).toBe('bots');
+                    expect(group.getCount()).toBe(1);
+                    expect(group.getAt(0).getId()).toBe('ed@sencha.com');
+
+                    group = groups.getAt(1);
+                    expect(group.getGroupKey()).toBe('code');
+                    expect(group.getCount()).toBe(1);
+                    expect(group.getAt(0).getId()).toBe('tommy@sencha.com');
+
+                    group = groups.getAt(2);
+                    expect(group.getGroupKey()).toBe('admin');
+                    expect(group.getCount()).toBe(2);
+                    expect(group.getAt(0).getId()).toBe('abe@sencha.com');
+                    expect(group.getAt(1).getId()).toBe('aaron@sencha.com');
+                });
+            })
         });
         
         describe("events", function() {
@@ -4610,6 +5264,17 @@ describe("Ext.data.Store", function() {
                 createStore();
                 expect(store.getFilters().getRootProperty()).not.toBe('data');
             });
+
+            it("should not trigger events when asking for the collection and it has not been created", function () {
+                var spy = jasmine.createSpy();
+                createStore({
+                    listeners: {
+                        filterchange: spy
+                    }
+                });
+                store.getFilters();
+                expect(spy).not.toHaveBeenCalled();
+            });
         });
 
         describe("filter method", function() {
@@ -4898,9 +5563,85 @@ describe("Ext.data.Store", function() {
                     });
                 });
             });
+
+            describe("removal from collection", function() {
+                beforeEach(function() {
+                    createStore();
+                    addStoreData();
+                });
+
+                it("should not add records to the removed collection when filtering the store", function() {
+                    store.filter('group', 'code');
+                    expect(store.getRemovedRecords()).toEqual([]);
+                });
+
+                it("should not add records to the removed collection when changing an item to be filtered", function() {
+                    store.filter('group', 'code');
+                    edRec.set('group', 'admin');
+                    expect(store.getRemovedRecords()).toEqual([]);
+                });
+            });
+
+            describe("joined status", function() {
+                beforeEach(function() {
+                    createStore();
+                    addStoreData();
+                });
+
+                it("should remain joined when filtering the store", function() {
+                    store.filter('group', 'code');
+                    expect(abeRec.joined).toEqual([store]);
+                });
+
+                it("should remain joined when changing an item to be filtered", function() {
+                    store.filter('group', 'code');
+                    edRec.set('group', 'admin');
+                    expect(edRec.joined).toEqual([store]);
+                });
+
+                it("should be joined when adding to the store but the item will be filtered", function() {
+                    store.filter('group', 'code');
+                    var rec = makeUser('new@sencha.com', {
+                        group: 'admin'
+                    });
+                    store.add(rec);
+                    expect(rec.joined).toEqual([store]);
+                });
+            });
         });
         
         describe("remote", function() {
+            describe("errors", function() {
+                beforeEach(function() {
+                    createStore({
+                        remoteFilter: true
+                    });
+                    addStoreData();
+                });
+
+                it("should raise an exception when calling filterBy", function() {
+                    expect(function() {
+                        store.filterBy(function() {});
+                    }).toThrow();
+                });
+
+                it("should raise an exception when calling addFilter with a filterFn", function() {
+                    expect(function() {
+                        store.addFilter({
+                            filterFn: function() {}
+                        });
+                    }).toThrow();
+                });
+
+                it("should raise an exception when adding a filter with a filterFn", function() {
+                    expect(function() {
+                        store.getFilters().add({
+                            filterFn: function() {}
+                        });
+                    }).toThrow();
+                });
+            });
+
             describe("during construction", function() {
                 it("should not trigger a load when applying initial filters", function() {
                     var spy = spyOn(Ext.data.Store.prototype, 'load');
@@ -5411,10 +6152,11 @@ describe("Ext.data.Store", function() {
         describe("via set", function() {
             describe("a single value", function() {
                 it("should fire the update event but not the datachanged event", function() {
-                    var datachangedSpy = spyOnEvent(store, 'datachanged');
+                    var datachangedSpy = jasmine.createSpy();
 
                     store.on('update', spy);
-                    store.first().set('name', 'Ned Spencer');
+                    store.on('datachanged', datachangedSpy);
+                    edRec.set('name', 'Ned Spencer');
                     expect(spy.callCount).toBe(1);
 
                     // datachanged is only for record additions/removals
@@ -5422,25 +6164,30 @@ describe("Ext.data.Store", function() {
                 });
                 
                 it("should pass the store, model, type & modified field", function() {
-                    var rec = store.first(),
-                        args;
-                    
                     store.on('update', spy);
-                    rec.set('name', 'Ned Spencer');
-                    args = spy.mostRecentCall.args;
+                    edRec.set('name', 'Ned Spencer');
+                    var args = spy.mostRecentCall.args;
                     expect(args[0]).toBe(store);
-                    expect(args[1]).toBe(rec);
+                    expect(args[1]).toBe(edRec);
                     expect(args[2]).toBe(Ext.data.Model.EDIT);
                     expect(args[3]).toEqual(['name']);
+                });
+
+                it("should not fire an event if the record was removed from the store", function() {
+                    store.on('update', spy);
+                    store.remove(edRec);
+                    edRec.set('name', 'Ned Spencer');
+                    expect(spy).not.toHaveBeenCalled();
                 });
             });
             
             describe("multiple values", function() {
                 it("should fire update once but not the datachanged event", function() {
-                    var datachangedSpy = spyOnEvent(store, 'datachanged');
+                    var datachangedSpy = jasmine.createSpy();
 
                     store.on('update', spy);
-                    store.first().set({
+                    store.on('datachanged', datachangedSpy);
+                    edRec.set({
                         name: 'Ned Spencer',
                         evilness: 9000
                     });
@@ -5451,27 +6198,33 @@ describe("Ext.data.Store", function() {
                 });
                 
                 it("should pass the store, model, type & modified fields", function() {
-                    var rec = store.first(),
-                        args;
-                        
                     store.on('update', spy);
-                    rec.set({
+                    edRec.set({
                         name: 'Ned Spencer',
                         evilness: 9000
                     });
-                    args = spy.mostRecentCall.args;
+                    var args = spy.mostRecentCall.args;
                     expect(args[0]).toBe(store);
-                    expect(args[1]).toBe(rec);
+                    expect(args[1]).toBe(edRec);
                     expect(args[2]).toBe(Ext.data.Model.EDIT);
                     expect(args[3]).toEqual(['name', 'evilness']);
+                });
+
+                it("should not fire an event if the record was removed from the store", function() {
+                    store.on('update', spy);
+                    store.remove(edRec);
+                    edRec.set({
+                        name: 'Ned Spencer',
+                        evilness: 9000
+                    });
+                    expect(spy).not.toHaveBeenCalled();
                 });
             });
             
             describe("changing the id", function() {
                 it("should remap the id value", function() {
-                    var rec = store.first();
-                    rec.setId('ted@sencha.com');
-                    expect(store.getById('ted@sencha.com')).toBe(rec);
+                    edRec.setId('ted@sencha.com');
+                    expect(store.getById('ted@sencha.com')).toBe(edRec);
                 });
                 
                 it("should remap the id even when filtered out", function() {
@@ -5489,6 +6242,30 @@ describe("Ext.data.Store", function() {
                     store.sort('email');
                     tommyRec.set('email', 'aaa@sencha.com');
                     expect(store.indexOf(tommyRec)).toBe(0);
+                });
+
+                it("should not be moving if the position is changed", function() {
+                    store.on('add', spy);
+                    store.on('remove', spy);
+                    store.sort('email');
+                    tommyRec.set('name', 'Foo');
+                    expect(spy).not.toHaveBeenCalled();
+                });
+
+                it("should be moving in the add/remove event if changing position", function() {
+                    var add, remove;
+
+                    store.on('remove', function() {
+                        remove = store.isMoving(tommyRec);
+                    });
+
+                    store.on('add', function() {
+                        add = store.isMoving(tommyRec);
+                    })
+                    store.sort('email');
+                    tommyRec.set('email', 'aaa@sencha.com');
+                    expect(remove).toBe(1);
+                    expect(add).toBe(1);
                 });
             });
             
@@ -5555,6 +6332,14 @@ describe("Ext.data.Store", function() {
                 edRec.commit();
                 expect(spy.callCount).toBe(1);
             });
+
+            it("should not fire the update event when removed", function() {
+                edRec.set('name', 'Foo');
+                store.on('update', spy);
+                store.remove(edRec);
+                edRec.commit();
+                expect(spy).not.toHaveBeenCalled();
+            });
         });
         
         describe("via reject", function() {
@@ -5583,6 +6368,14 @@ describe("Ext.data.Store", function() {
                 edRec.reject();
                 expect(spy.callCount).toBe(1);
             });
+
+            it("should not fire the update event when removed", function() {
+                edRec.set('name', 'Foo');
+                store.on('update', spy);
+                store.remove(edRec);
+                edRec.reject();
+                expect(spy).not.toHaveBeenCalled();
+            });
         });
         
         describe("via erase", function() {
@@ -5595,12 +6388,24 @@ describe("Ext.data.Store", function() {
                 expect(store.needsSync).toBe(false);
                 expect(store.getRemovedRecords().length).toBe(0);
             });
+
+            it("should fire the remove event", function() {
+                store.on('remove', spy);
+                edRec.erase();
+                expect(spy.callCount).toBe(1);
+            });
         });
 
         describe("via drop", function() {
             it("should remove the record from the store", function() {
                 edRec.drop();
                 expect(store.indexOf(edRec)).toBe(-1);
+            });
+
+            it("should remove the record from the store", function() {
+                store.on('remove', spy);
+                edRec.drop();
+                expect(spy.callCount).toBe(1);
             });
         });
     });
@@ -5663,6 +6468,21 @@ describe("Ext.data.Store", function() {
                 store.commitChanges();
                 expect(store.removed.length).toBe(0);
                 expect(store.getCount()).toBe(2);
+            });
+        });
+
+        describe("events", function() {
+            it("should fire an update event for each record", function() {
+                var spy = jasmine.createSpy();
+                edRec.set('validField', 'A');
+                aaronRec.set('validField', 'B');
+                tommyRec.set('validField', 'C');
+                store.on('update', spy);
+                store.commitChanges();
+                expect(spy.callCount).toBe(3);
+                expect(spy.calls[0].args[1]).toBe(edRec);
+                expect(spy.calls[1].args[1]).toBe(aaronRec);
+                expect(spy.calls[2].args[1]).toBe(tommyRec);
             });
         });
     });
@@ -5746,9 +6566,107 @@ describe("Ext.data.Store", function() {
                 store.rejectChanges();
                 expect(store.removed.length).toBe(0);
             });
+
+            describe('with and without sorters', function () {
+                function doTests(sorter) {
+                    var count;
+
+                    beforeEach(function () {
+                        if (sorter) {
+                            store.sort(sorter);
+                        }
+
+                        count = store.count;
+                    });
+
+                    afterEach(function () {
+                        count = null;
+                    });
+
+                    it('should reject dropped records', function () {
+                        store.getAt(0).drop();
+                        store.rejectChanges();
+                        expect(store.count).toBe(count);
+                    });
+
+                    it('should reject erased records', function () {
+                        store.getAt(0).erase();
+                        store.rejectChanges();
+                        expect(store.count).toBe(count);
+                    });
+                }
+
+                doTests(null);
+                doTests({property: 'name', direction: 'DESC'});
+            });
         });
-    }); 
-    
+
+        describe("events", function() {
+            it("should not fire an update event for phantom records", function() {
+                var phantom1 = store.insert(2, {
+                    name: 'X'
+                })[0];
+                var spy = jasmine.createSpy();
+                store.on('update', spy);
+                store.rejectChanges();
+                expect(spy).not.toHaveBeenCalled();
+            });
+
+            it("should fire a remove event for phantom records", function() {
+                var phantom1 = store.insert(0, {
+                    name: 'X'
+                })[0];
+
+                var phantom2 = store.add({
+                    name: 'Y'
+                })[0];
+                var spy = jasmine.createSpy();
+                store.on('remove', spy);
+                store.rejectChanges();
+                expect(spy.callCount).toBe(2);
+                expect(spy.calls[0].args[1]).toEqual([phantom2]);
+                expect(spy.calls[1].args[1]).toEqual([phantom1]);
+            });
+
+            it("should fire an update event for non-phantom records", function() {
+                edRec.set('name', 'A');
+                tommyRec.set('name', 'B');
+                var spy = jasmine.createSpy();
+                store.on('update', spy);
+                store.rejectChanges();
+                expect(spy.callCount).toBe(2);
+                expect(spy.calls[0].args[1]).toBe(edRec);
+                expect(spy.calls[1].args[1]).toBe(tommyRec);
+            });
+
+            it("should not fire an update event for removed records", function() {
+                var spy = jasmine.createSpy();
+                store.remove(edRec);
+                store.on('update', spy);
+                store.rejectChanges();
+                expect(spy).not.toHaveBeenCalled();
+            });
+
+            it("should not fire an update event for removed records, with sorters", function() {
+                var spy = jasmine.createSpy();
+                store.sort('name', 'DESC');
+                store.remove(edRec);
+                store.on('update', spy);
+                store.rejectChanges();
+                expect(spy).not.toHaveBeenCalled();
+            });
+
+            it("should fire add events for readded records", function() {
+                var spy = jasmine.createSpy();
+                store.remove(edRec);
+                store.on('add', spy);
+                store.rejectChanges();
+                expect(spy.callCount).toBe(1);
+                expect(spy.mostRecentCall.args[1]).toEqual([edRec]);
+            });
+        });
+    });
+
     describe("metachange event", function () {
         var wasCalled = false,
             successData = {
@@ -6042,22 +6960,97 @@ describe("Ext.data.Store", function() {
         });
 
         describe("removing", function() {
-            beforeEach(function() {
-                createStore();
-                addStoreData();
+            describe("with trackRemoved: true", function() {
+                beforeEach(function() {
+                    createStore({
+                        trackRemoved: true
+                    });
+                    addStoreData();
+                });
+
+                it("should not unjoin when removing a non phantom record", function() {
+                    store.removeAt(0);
+                    // Pushed into the removed collection
+                    expectJoined(edRec);
+                });
+
+                it("should unjoin when removing a phantom", function() {
+                    var rec = store.add({})[0];
+                    store.remove(rec);
+                    // Won't be in the removed collection
+                    expectNotJoined(rec);
+                });
+
+                it("should only unjoin items not in the removed collection when calling removeAll", function() {
+                    var rec = store.add({})[0];
+                    store.removeAll();
+                    expectJoined(edRec);
+                    expectJoined(abeRec);
+                    expectJoined(aaronRec);
+                    expectJoined(tommyRec);
+                    expectNotJoined(rec);
+                });
             });
 
-            it("should unjoin when removing a record", function() {
-                store.removeAt(0);
-                expectNotJoined(edRec);
+            describe("with trackRemoved: false", function() {
+                beforeEach(function() {
+                    createStore({
+                        trackRemoved: false
+                    });
+                    addStoreData();
+                });
+
+                it("should unjoin when removing a non phantom record", function() {
+                    store.removeAt(0);
+                    expectNotJoined(edRec);
+                });
+
+                it("should unjoin when removing a phantom", function() {
+                    var rec = store.add({})[0];
+                    store.remove(rec);
+                    expectNotJoined(rec);
+                });
+
+                it("should unjoin when calling removeAll", function() {
+                    var rec = store.add({})[0];
+                    store.removeAll();
+                    expectNotJoined(edRec);
+                    expectNotJoined(abeRec);
+                    expectNotJoined(aaronRec);
+                    expectNotJoined(tommyRec);
+                    expectNotJoined(rec);
+                });
+            });
+        });
+
+        describe("via record changes", function() {
+            describe("with trackRemoved: true", function() {
+                it("should keep the record joined until erased", function() {
+                    createStore({
+                        trackRemoved: true
+                    });
+                    addStoreData();
+
+                    edRec.drop();
+                    expectJoined(edRec);
+                    edRec.erase();
+                    completeWithData({
+                        success: true
+                    });
+                    expectNotJoined(edRec);
+                });
             });
 
-            it("should unjoin when calling removeAll", function() {
-                store.removeAll();
-                expectNotJoined(edRec);
-                expectNotJoined(abeRec);
-                expectNotJoined(aaronRec);
-                expectNotJoined(tommyRec);
+            describe("with trackRemoved: false", function() {
+                it("should not keep the record joined when dropped", function() {
+                    createStore({
+                        trackRemoved: false
+                    });
+                    addStoreData();
+
+                    edRec.drop();
+                    expectNotJoined(edRec);
+                });
             });
         });
 
@@ -6330,6 +7323,56 @@ describe("Ext.data.Store", function() {
             });
         });
     });
+
+    describe("extraKeys", function() {
+        describe("setting after initialization", function() {
+            beforeEach(function() {
+                createStore();
+                addStoreData();
+                store.setExtraKeys({
+                    byAge: {
+                        property: 'age',
+                        rootProperty: 'data'
+                    }
+                });
+            });
+
+            it("should have the extraKeys updated when add fires", function() {
+                var rec = makeUser('foo@sencha.com', {
+                    age: 100
+                });
+
+                store.on('add', function() {
+                    expect(store.byAge.get(100)).toBe(rec);
+                });
+                store.add(rec);
+            });
+
+            it("should have the extraKeys updated when remove fires", function() {
+                store.on('remove', function() {
+                    expect(store.byAge.get(25)).toBeNull();
+                });
+                store.remove(edRec);
+            });
+
+            it("should have the extraKeys updated when update fires", function() {
+                store.on('update', function() {
+                    expect(store.byAge.get(1)).toBe(edRec);
+                });
+                edRec.set('age', 1);
+            });
+
+            it("should have the extraKeys updated when clear fires", function() {
+                store.on('clear', function() {
+                    expect(store.byAge.get(20)).toBeNull();
+                    expect(store.byAge.get(25)).toBeNull();
+                    expect(store.byAge.get(26)).toBeNull();
+                    expect(store.byAge.get(70)).toBeNull();
+                });
+                store.removeAll();
+            });
+        });
+    })
 
     /*
      * edRaw    = {name: 'Ed Spencer',   email: 'ed@sencha.com',    evilness: 100, group: 'code',  old: false, age: 25, valid: 'yes'};

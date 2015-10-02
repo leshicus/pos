@@ -40,17 +40,13 @@ Ext.define('Ext.util.Event', function() {
             listeners, listener, priority, isNegativePriority, highestNegativePriorityIndex,
             hasNegativePriorityIndex, length, index, i, listenerPriority;
 
-        //<debug error>
-        if (!fn) {
-            Ext.Error.raise({
-                sourceClass: Ext.getClassName(observable),
-                sourceMethod: "addListener",
-                msg: "The specified callback function is undefined"
-            });
+        //<debug>
+        if (scope && !Ext._namedScopes[scope] && (typeof fn === 'string') && (typeof scope[fn] !== 'function')) {
+            Ext.Error.raise("No method named '" + fn + "' found on scope object");
         }
         //</debug>
 
-        if (!me.isListening(fn, scope)) {
+        if (me.findListener(fn, scope) === -1) {
             listener = me.createListener(fn, scope, options, caller, manager);
             if (me.firing) {
                 // if we are currently firing this event, don't disturb the listener loop
@@ -60,7 +56,7 @@ Ext.define('Ext.util.Event', function() {
             index = length = listeners.length;
             priority = options && options.priority;
             highestNegativePriorityIndex = me._highestNegativePriorityIndex;
-            hasNegativePriorityIndex = (highestNegativePriorityIndex !== undefined);
+            hasNegativePriorityIndex = highestNegativePriorityIndex !== undefined;
             if (priority) {
                 // Find the index at which to insert the listener into the listeners array,
                 // sorted by priority highest to lowest.
@@ -98,12 +94,18 @@ Ext.define('Ext.util.Event', function() {
                 me._highestNegativePriorityIndex ++;
             }
             if (index === length) {
-                me.listeners[length] = listener;
+                listeners[length] = listener;
             } else {
-                arrayInsert(me.listeners, index, [listener]);
+                arrayInsert(listeners, index, [listener]);
             }
 
             if (observable.isElement) {
+                // It is the role of Ext.util.Event (vs Ext.Element) to handle subscribe/
+                // unsubscribe because it is the lowest level place to intercept the
+                // listener before it is added/removed.  For addListener this could easily
+                // be done in Ext.Element's doAddListener override, but since there are
+                // multiple paths for listener removal (un, clearListeners), it is best
+                // to keep all subscribe/unsubscribe logic here.
                 observable._getPublisher(eventName).subscribe(
                     observable,
                     eventName,
@@ -120,7 +122,7 @@ Ext.define('Ext.util.Event', function() {
 
     createListener: function(fn, scope, o, caller, manager) {
         var me = this,
-            namedScope = (Ext._namedScopes[scope]),
+            namedScope = Ext._namedScopes[scope],
             listener = {
                 fn: fn,
                 scope: scope,
@@ -190,17 +192,13 @@ Ext.define('Ext.util.Event', function() {
         return - 1;
     },
 
-    isListening: function(fn, scope) {
-        return this.findListener(fn, scope) !== -1;
-    },
-
     removeListener: function(fn, scope, index) {
         var me = this,
             removed = false,
             observable = me.observable,
             eventName = me.name,
             listener, highestNegativePriorityIndex, options,
-            k, manager, managedListeners, managedListener, i, ln;
+            k, manager, managedListeners, managedListener, i;
 
         index = index || me.findListener(fn, scope);
 
@@ -243,13 +241,14 @@ Ext.define('Ext.util.Event', function() {
                 //     manager.on(target, 'foo', fn);
                 //
                 //     target.un('foo', fn);
-                managedListeners = manager.managedListeners ? manager.managedListeners.slice() : [];
-
-                for (i = 0, ln = managedListeners.length; i < ln; i++) {
-                    managedListener = managedListeners[i];
-                    if (managedListener.item === me.observable && managedListener.ename === eventName &&
-                            managedListener.fn === fn && managedListener.scope === scope) {
-                        Ext.Array.remove(manager.managedListeners, managedListeners[i]);
+                managedListeners = manager.managedListeners;
+                if (managedListeners) {
+                    for (i = managedListeners.length; i--;) {
+                        managedListener = managedListeners[i];
+                        if (managedListener.item === me.observable && managedListener.ename === eventName &&
+                                managedListener.fn === fn && managedListener.scope === scope) {
+                            managedListeners.splice(i, 1);
+                        }
                     }
                 }
             }
@@ -371,6 +370,18 @@ Ext.define('Ext.util.Event', function() {
                                 continue;
                             }
                         }
+
+                        if (options.preventDefault) {
+                            e.preventDefault();
+                        }
+
+                        if (options.stopPropagation) {
+                            e.stopPropagation();
+                        }
+
+                        if (options.stopEvent) {
+                            e.stopEvent();
+                        }
                     }
 
                     args[len] = options;
@@ -438,21 +449,19 @@ Ext.define('Ext.util.Event', function() {
             //</debug>
 
             fn = scope[fn];
-        } else {
-            // If handler is a function we usually use the observable instance as the
-            // scope if no scope was specified.  There is one exception to this rule -
-            // if the user specified scope:'controller' we will use the controller as
-            // the execution scope if there is one.
-            if (namedScope && namedScope.isController) {
-                scope = (listener.caller || observable).resolveListenerScope(listener.defaultScope);
-                //<debug>
-                if (!scope) {
-                    Ext.Error.raise('Unable to dynamically resolve scope for "' + listener.ev.name + '" listener on ' + this.observable.id);
-                }
-                //</debug>
-            } else if (!scope || namedScope) {
-                scope = observable;
+        } else if (namedScope && namedScope.isController) {
+            // If handler is a function reference and scope:'controller' was requested
+            // we'll do our best to look up a controller.
+            scope = (listener.caller || observable).resolveListenerScope(listener.defaultScope);
+            //<debug>
+            if (!scope) {
+                Ext.Error.raise('Unable to dynamically resolve scope for "' + listener.ev.name + '" listener on ' + this.observable.id);
             }
+            //</debug>
+        } else if (!scope || namedScope) {
+            // If handler is a function reference we use the observable instance as
+            // the default scope
+            scope = observable;
         }
 
         // We can only ever be firing one event at a time, so just keep

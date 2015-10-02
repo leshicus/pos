@@ -1,10 +1,4 @@
-.idea
-.sass-cache
-ext
-ext/
-build
-.sencha
-.sencha/
+
 
 # Windows image file caches
 Thumbs.db
@@ -49,3 +43,9 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+.idea
+app/.sass
+app/ext
+app/build
+app/.sencha

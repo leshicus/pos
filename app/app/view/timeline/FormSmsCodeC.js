@@ -57,14 +57,15 @@ Ext.define('Office.view.timeline.FormSmsCodeC', {
                         user_id: Ext.util.Cookies.get('userId') || '',
                         username: Ext.util.Cookies.get('betzet_login') || '',
                         token: Server.getToken(),
-                        secondTime: true
+                        secondTime: false,
+                        printStake: true
                     }
                 },
                 doAction = function () {
                     // * напечатаем чек
                     window.open(Server.getUrl(objUrlXaction), '_blank');
                     // * закроем окно таймлайн
-                    var windowTimeline = Ext.ComponentQuery.query('#windowTimeline')[0],
+                    var windowTimeline = Ext.ComponentQuery.query('#windowSearch')[0],
                         gridtimeline = Ext.ComponentQuery.query('gridtimeline')[0],
                         fieldSearch = gridtimeline.down('#term'),
                         phone = gridtimeline.getViewModel().getData().thePhone.smsCodeSentTo;
@@ -72,7 +73,7 @@ Ext.define('Office.view.timeline.FormSmsCodeC', {
                         windowTimeline.close();
                     // * обновим список таймлан
                     gridtimeline.getViewModel().set('filters.term', phone);
-                    gridtimeline.store.rejectChanges(); // * они нам не нужны- все равно обновлять
+                    //gridtimeline.store.rejectChanges(); // * они нам не нужны- все равно обновлять
                     gridtimeline.getController().searchTimeline();
                 };
         }
@@ -83,7 +84,7 @@ Ext.define('Office.view.timeline.FormSmsCodeC', {
                 // * проверим правильность смс-кода
                 this.ckeckSmsCode(objUrlCheckSms, windowSms, doAction);
             } else {
-                Ext.Msg.alert('Ошибка', 'Не передан номер таймлайн');
+                Util.erMes('Не передан номер таймлайн');
             }
         }
     },
@@ -97,7 +98,7 @@ Ext.define('Office.view.timeline.FormSmsCodeC', {
                     var o = Ext.decode(response.responseText);
                     if (o.success) {
                         if (o.rows) {
-                            Ext.Msg.alert('Успех', 'Выплата ' + objUrlPayout.params['sum'] + 'р с ТЛ №' + objUrlPayout.params['slipId'] + ' произведена успешно. Остаток ' + o.rows.balance + 'р');
+                            Util.okMes('Выплата ' + objUrlPayout.params['sum'] + 'р с ТЛ №' + objUrlPayout.params['slipId'] + ' произведена успешно. Остаток ' + o.rows.balance + 'р');
 
                             if (isPrintable) {
                                 objUrlXaction.params['slipId'] = o.rows.sumSlipId;
@@ -113,17 +114,18 @@ Ext.define('Office.view.timeline.FormSmsCodeC', {
                                 mainController = Office.app.getController('Main');
                             mainController.onAddFilterVm(fieldSearch, null, null, null, true, gridTimeline.store, gridTimeline);
                         } else {
-                            Ext.Msg.alert('Ошибка', 'Не верный ответ от сервера');
+                            Util.erMes('Не верный ответ от сервера');
                         }
                     } else {
-                        Ext.Msg.alert('Ошибка', 'Снятие не проведено');
+                        Util.erMes('Снятие не проведено:<br>' + o.errors[0]);
                     }
                 } else {
-                    Ext.Msg.alert('Ошибка', 'Нет ответа от сервера');
+                    Util.erMes('Нет ответа от сервера');
                 }
             }
         });
     },
+
     ckeckSmsCode: function (objUrlCheckSms, windowSms, doAction) {
         Ext.Ajax.request({
             url: Server.getUrl(objUrlCheckSms),
@@ -137,13 +139,13 @@ Ext.define('Office.view.timeline.FormSmsCodeC', {
                             windowSms.close();
                             doAction();
                         } else {
-                            Ext.Msg.alert('Ошибка', 'Неверный смс-код');
+                            Util.erMes('Неверный смс-код');
                         }
                     } else {
-                        Ext.Msg.alert('Ошибка', 'Нет ответа от сервера');
+                        Util.erMes('Нет ответа от сервера:<br>' + o.errors[0]);
                     }
                 } else {
-                    Ext.Msg.alert('Ошибка', 'Нет ответа от сервера');
+                    Util.erMes('Нет ответа от сервера');
                 }
             }
         });
@@ -151,20 +153,55 @@ Ext.define('Office.view.timeline.FormSmsCodeC', {
 
     onClickCancel: function (button) {
         var windowSms = button.up('window'),
-            windowTimeline = Ext.ComponentQuery.query('#windowTimeline')[0],
-            gridtimeline = Ext.ComponentQuery.query('gridtimeline')[0];
+            windowTimeline = Ext.ComponentQuery.query('#windowSearch')[0],
+            gridtimeline = Ext.ComponentQuery.query('gridtimeline')[0],
+            form = Ext.ComponentQuery.query('formsmscode')[0],
+            vmForm = form.getViewModel(),
+            slipId = vmForm.get('theTimeline').id;
+
         windowSms.close();
         if (windowTimeline)
             windowTimeline.close();
+
         Ext.defer(function () {
             gridtimeline.getStore('timeline').rejectChanges();
-            gridtimeline.getStore('timeline').reload();
+
+            if (gridtimeline.getViewModel().get('filters.term'))    // * чтобы пустой запрос не отправлять
+                gridtimeline.getStore('timeline').reload();
         }, 10);
+
+        // * удалим таймлайн из базы данных
+        if(slipId){
+            var objUrlCancel = {
+                class: 'Pos_Timeline_Canceltimeline',
+                params: {
+                    slipId: slipId
+                }
+            };
+            Ext.Ajax.request({
+                url: Server.getUrl(objUrlCancel),
+                method: 'POST',
+                callback: function (opt, success, response) {
+                    if (response.responseText) {
+                        var o = Ext.decode(response.responseText);
+                        if (o.success) {
+                            Util.infoMes(o.children.mes);
+                        } else {
+                            Util.erMes(o.errors[0]);
+                        }
+                    } else {
+                        Util.erMes('Нет ответа от сервера');
+                    }
+                }
+            });
+        }
+
     },
+
     onEnter: function (field, e) {
         if (e.getKey() == e.ENTER) {
             // * нажмем кнопку ОК
-            Utilities.pressOkButton(field);
+            Util.pressOkButton(field);
         }
     }
 

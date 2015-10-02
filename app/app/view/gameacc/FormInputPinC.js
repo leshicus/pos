@@ -41,15 +41,15 @@ Ext.define('Office.view.gameacc.FormInputPinC', {
                     if (response.responseText) {
                         var o = Ext.decode(response.responseText);
                         if (o.success) {
-                            Utilities.toast('Успех', 'Снятие прошло успешно');
+                            Util.toast('Успех', 'Снятие прошло успешно');
                             vmGridgameacc.getStore('gameacc').reload();
                             var gridgameaction = Ext.ComponentQuery.query('gridgameaction')[0];
                             gridgameaction.getViewModel().getStore('gameaction').reload();
                         } else {
-                            Ext.Msg.alert('Ошибка', o.errorText);
+                            Util.erMes(o.errorText||o.errors[0]);
                         }
                     } else {
-                        Ext.Msg.alert('Ошибка', 'Нет ответа от сервера');
+                        Util.erMes('Нет ответа от сервера');
                     }
                 }
             });
@@ -57,9 +57,23 @@ Ext.define('Office.view.gameacc.FormInputPinC', {
             window.close();
         }
     },
+
     onClickCancel: function (button) {
         var window = button.up('window');
         window.close();
+    },
+
+    onEnter: function (field, e) {
+        if (e.getKey() == e.ENTER) {
+            var win = field.up('window'),
+                button = win.down('button[action=save]');
+            this.onClickSave(button);
+        }
+    },
+
+    onAfterRender: function (form) {
+        var pin = form.down('#pin');
+        pin.focus();
     }
 
 });

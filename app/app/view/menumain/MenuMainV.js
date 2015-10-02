@@ -25,24 +25,32 @@ Ext.define('Office.view.menumain.MenuMainV', {
     },
     listeners: {
         // * сразу открывать Смены после авторизации
-        render: 'afterRender'
+        render: 'afterRender',
+        //destroy: 'onDestroy'
     },
     initComponent: function () {
-        console.info('menumain init');
-        Utilities.initClassParams({
+        Util.initClassParams({
             scope: this,
-            params: []
+            params: [
+                'locale'
+            ]
         });
+
+        var vm = this.getViewModel(),
+            runner = new Ext.util.TaskRunner();
+        vm.set('taskRunner', runner);
+        vm.set('locale', Ux.locale.Manager.getCurrentLocale()['abbr']);
+
 
         // * верхнее левое меню развернутое в кнопки
         var responsiveFormulas = {
                 // * условие узкого экрана
                 getTallWidth: function (context) {
-                    return context.width < Utilities.widthResponsive;
+                    return context.width < Util.widthResponsive;
                 },
                 // * условие широкого экрана
                 getWideWidth: function (context) {
-                    return context.width >= Utilities.widthResponsive;
+                    return context.width >= Util.widthResponsive;
                 }
             },
             segmentedButtonTopLeft = Ext.create('Ext.button.Segmented', {
@@ -64,7 +72,11 @@ Ext.define('Office.view.menumain.MenuMainV', {
                         "border-width": "0px"
                         /*"border-right-width": "1px"*//*grey*/
                     },
-                    handler: 'onClickMenumain'
+                    handler: 'onClickMenumain',
+                    bind: {
+                        disabled: '{isGlobalSession}'
+                    },
+                    disabled: true
                 },
                 items: [
                     {
@@ -75,70 +87,87 @@ Ext.define('Office.view.menumain.MenuMainV', {
                         style: {
                             "border-width": "0px",
                             "border-left-width": "0px !important"
-                        }
+                        },
+                        disabled: false
                     },
                     {
-                        //text: 'Заполнение',
+                        //text: 'Ставки',
                         text: Ux.locale.Manager.get("menumain.fill"),
                         itemId: 'fill',
-                        glyph: Glyphs.get('fill')
+                        glyph: Glyphs.get('football')
                     },
                     {
                         //text: 'Ставки Таймлайн',
                         text: Ux.locale.Manager.get("menumain.timeline"),
                         itemId: 'timeline',
-                        glyph: Glyphs.get('list'),
-                        _use_ndfl:true
+                        glyph: Glyphs.get('list_1'),
+                        bind: {
+                            hidden: '{!getShowButtonTimeline}'
+                        }
                     },
                     {
                         //text: 'Игровые счета',
                         text: Ux.locale.Manager.get("menumain.gameacc"),
                         itemId: 'gameacc',
-                        glyph: Glyphs.get('list'),
-                        _use_ndfl:false
+                        glyph: Glyphs.get('list_1'),
+                        bind: {
+                            hidden: '{!getShowButtonGameacc}'
+                        }
                     },
                     {
                         //text: 'Принятые',
                         text: Ux.locale.Manager.get("menumain.accept"),
                         itemId: 'accept',
-                        glyph: Glyphs.get('thumbup')
+                        glyph: Glyphs.get('list')
                     },
                     {
                         //text: 'Клубные карты',
                         text: Ux.locale.Manager.get("menumain.card"),
                         itemId: 'card',
-                        glyph: Glyphs.get('card')
+                        glyph: Glyphs.get('card'),
+                        bind: {
+                            hidden: '{!getShowButtonCard}'
+                        }
                     },
                     {
                         //text: 'Выплаты',
                         text: Ux.locale.Manager.get("menumain.pay"),
                         itemId: 'pay',
-                        glyph: Glyphs.get('dollar')
+                        glyph: Glyphs.get('dollar'),
+                        //bind:{
+                        //    hidden:'{!getShowButtonPay}'
+                        //}
                     },
-                    {
-                        //text: 'Крысы',
-                        text: Ux.locale.Manager.get("menumain.rat"),
-                        itemId: 'rat',
-                        glyph: Glyphs.get('paw')
-                        /*style: {
-                         "border-width": "0px",
-                         "border-right-width": "0px !important"
-                         }*/
-                    },
-
+                    //{
+                    //    //text: 'Крысы',
+                    //    text: Ux.locale.Manager.get("menumain.rat"),
+                    //    itemId: 'rat',
+                    //    glyph: Glyphs.get('paw')
+                    //},
+                    //{
+                    //    //text: 'Крысы',
+                    //    text: Ux.locale.Manager.get("menumain.ratbets"),
+                    //    itemId: 'ratbets',
+                    //    glyph: Glyphs.get('paw')
+                    //},
                     {
                         //text: 'Панели',
                         text: Ux.locale.Manager.get("menumain.panels"),
                         itemId: 'panels',
                         glyph: Glyphs.get('desktop'),
-                        _user_in_club:true
+                        //_user_in_club:true,
+                        bind: {
+                            hidden: '{!getShowButtonPanel}'
+                        }
                     },
                     {
                         //text: 'Виртуальные заявки',
                         text: Ux.locale.Manager.get("menumain.virtual"),
                         itemId: 'virtual',
                         glyph: Glyphs.get('list'),
-                        _user_in_club:true
+                        bind: {
+                            hidden: '{!getShowButtonVirtual}'
+                        }
                     }
                 ]
             }),
@@ -156,14 +185,19 @@ Ext.define('Office.view.menumain.MenuMainV', {
                 },
                 scale: 'large',
                 cls: 'menumain',
-                style:{ // * через cls не получается
-                    'background-color':'#038D98',
-                    'border-width':0
+                style: { // * через cls не получается
+                    'background-color': '#038D98',
+                    'border-width': 0
                 },
                 text: 'Меню',
                 tooltip: 'Меню',
                 itemId: 'menu',
                 glyph: Glyphs.get('menu'),
+                defaults: {
+                    bind: {
+                        disabled: '{isGlobalSession}'
+                    }
+                },
                 menu: [
                     {
                         text: Ux.locale.Manager.get("menumain.session"),
@@ -177,40 +211,56 @@ Ext.define('Office.view.menumain.MenuMainV', {
                     {
                         text: Ux.locale.Manager.get("menumain.fill"),
                         itemId: 'fill',
-                        glyph: Glyphs.get('fill'),
+                        glyph: Glyphs.get('football'),
                         cls: 'menutopleft',
                         listeners: {
                             click: 'onClickMenumain'
-                        }
+                        },
+                        bind: {
+                            disabled: '{isGlobalSession}'
+                        },
+                        disabled: true
                     },
                     {
                         text: Ux.locale.Manager.get("menumain.timeline"),
                         itemId: 'timeline',
-                        glyph: Glyphs.get('list'),
+                        glyph: Glyphs.get('list_1'),
                         cls: 'menutopleft',
                         listeners: {
                             click: 'onClickMenumain'
                         },
-                        _use_ndfl:true
+                        bind: {
+                            hidden: '{!getShowButtonTimeline}',
+                            disabled: '{isGlobalSession}'
+                        },
+                        disabled: true
                     },
                     {
                         text: Ux.locale.Manager.get("menumain.gameacc"),
                         itemId: 'gameacc',
+                        glyph: Glyphs.get('list_1'),
+                        cls: 'menutopleft',
+                        listeners: {
+                            click: 'onClickMenumain'
+                        },
+                        bind: {
+                            hidden: '{!getShowButtonGameacc}',
+                            disabled: '{isGlobalSession}'
+                        },
+                        disabled: true
+                    },
+                    {
+                        text: Ux.locale.Manager.get("menumain.accept"),
+                        itemId: 'accept',
                         glyph: Glyphs.get('list'),
                         cls: 'menutopleft',
                         listeners: {
                             click: 'onClickMenumain'
                         },
-                        _use_ndfl:false
-                    },
-                    {
-                        text: Ux.locale.Manager.get("menumain.accept"),
-                        itemId: 'accept',
-                        glyph: Glyphs.get('thumbup'),
-                        cls: 'menutopleft',
-                        listeners: {
-                            click: 'onClickMenumain'
-                        }
+                        bind: {
+                            disabled: '{isGlobalSession}'
+                        },
+                        disabled: true
                     },
                     {
                         text: Ux.locale.Manager.get("menumain.card"),
@@ -219,7 +269,12 @@ Ext.define('Office.view.menumain.MenuMainV', {
                         cls: 'menutopleft',
                         listeners: {
                             click: 'onClickMenumain'
-                        }
+                        },
+                        bind: {
+                            hidden: '{!getShowButtonCard}',
+                            disabled: '{isGlobalSession}'
+                        },
+                        disabled: true
                     },
                     {
                         text: Ux.locale.Manager.get("menumain.pay"),
@@ -228,18 +283,38 @@ Ext.define('Office.view.menumain.MenuMainV', {
                         cls: 'menutopleft',
                         listeners: {
                             click: 'onClickMenumain'
-                        }
+                        },
+                        bind: {
+                            disabled: '{isGlobalSession}'
+                        },
+                        disabled: true
                     },
-                    {
-                        text: Ux.locale.Manager.get("menumain.rat"),
-                        itemId: 'rat',
-                        glyph: Glyphs.get('paw'),
-                        cls: 'menutopleft',
-                        listeners: {
-                            click: 'onClickMenumain'
-                        }
-                    },
-
+                    //{
+                    //    text: Ux.locale.Manager.get("menumain.rat"),
+                    //    itemId: 'rat',
+                    //    glyph: Glyphs.get('paw'),
+                    //    cls: 'menutopleft',
+                    //    listeners: {
+                    //        click: 'onClickMenumain'
+                    //    },
+                    //    bind: {
+                    //        disabled: '{isGlobalSession}'
+                    //    },
+                    //    disabled: true
+                    //},
+                    //{
+                    //    text: Ux.locale.Manager.get("menumain.ratbets"),
+                    //    itemId: 'ratbets',
+                    //    glyph: Glyphs.get('paw'),
+                    //    cls: 'menutopleft',
+                    //    listeners: {
+                    //        click: 'onClickMenumain'
+                    //    },
+                    //    bind: {
+                    //        disabled: '{isGlobalSession}'
+                    //    },
+                    //    disabled: true
+                    //},
                     {
                         text: Ux.locale.Manager.get("menumain.panels"),
                         itemId: 'panels',
@@ -248,7 +323,11 @@ Ext.define('Office.view.menumain.MenuMainV', {
                         listeners: {
                             click: 'onClickMenumain'
                         },
-                        _user_in_club:true
+                        bind: {
+                            hidden: '{!getShowButtonPanel}',
+                            disabled: '{isGlobalSession}'
+                        },
+                        disabled: true
                     },
                     {
                         text: Ux.locale.Manager.get("menumain.virtual"),
@@ -258,30 +337,34 @@ Ext.define('Office.view.menumain.MenuMainV', {
                         listeners: {
                             click: 'onClickMenumain'
                         },
-                        _user_in_club:true
+                        bind: {
+                            hidden: '{!getShowButtonVirtual}',
+                            disabled: '{isGlobalSession}'
+                        },
+                        disabled: true
                     }
                 ]
             }),
         // * верхнее правое меню развернутое в кнопки
             segmentedButtonTopRight = Ext.create('Ext.button.Segmented', {
                 cls: 'menumain1',
-                allowToggle:false,
+                allowToggle: false,
                 defaults: {
                     scale: 'large',
                     cls: 'menumain',
                     style: {
                         'border-width': 0,
-                        'box-shadow':0
+                        'box-shadow': 0
                         /*"border-right-width": "1px"*//*grey*/
                     },
                     handler: 'onClickMenumain'
                 },
                 items: [
                     {
-                        //text: 'info',
                         tooltip: Ux.locale.Manager.get("menumain.info"),
                         itemId: 'info',
                         glyph: Glyphs.get('info'),
+                        //defaults:{},// * не работает
                         menu: [
                             {
                                 text: 'Памятка по НДФЛ',
@@ -401,6 +484,48 @@ Ext.define('Office.view.menumain.MenuMainV', {
                                 hrefTarget: '_blank',
                                 glyph: Glyphs.get('pdf'),
                                 cls: 'pdf'
+                            },
+                            {
+                                text: 'Тестирование кассира',
+                                href: Server.getPrefix() + "/office/files/cashiers_test.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Инструкция к акции "Экспресс дня"',
+                                href: Server.getPrefix() + "/office/files/express-of-day.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Правила HYPER DICE (кубики)',
+                                href: Server.getPrefix() + "/office/files/hyperdice_rules.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Правила турнира "Колесо фортуны"',
+                                href: Server.getPrefix() + "/office/files/fortune_rules.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Правила "Турнира комбинаций"',
+                                href: Server.getPrefix() + "/office/files/combo_rules.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Программа лояльности "Спортивная лига"',
+                                href: Server.getPrefix() + "/office/files/loyality_promo.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
                             }
                         ]
                     },
@@ -437,7 +562,7 @@ Ext.define('Office.view.menumain.MenuMainV', {
             }),
             segmentedButtonBottomRight = Ext.create('Ext.button.Segmented', {
                 cls: 'menumain1',
-                allowToggle:false,
+                allowToggle: false,
                 defaults: {
                     scale: 'large',
                     cls: 'menumain',

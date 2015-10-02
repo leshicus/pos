@@ -75,7 +75,13 @@ Ext.define('Office.util.Glyphs', {
         desktop:'xf108',
         menu:'xf0c9',
         send:'xf1d8',
-        comments:'xf0e6'
+        comments:'xf0e6',
+        erase:'xf12d', // eraser
+        football:'xf1e3', // ball
+        file:'xf016', // one file
+        files:'xf0c5', // two files
+        flag:'xf11e', // finish flag
+        warning:'xf071' // warning
     },
 
     get  : function(glyph) {

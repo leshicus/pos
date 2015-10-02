@@ -33,12 +33,10 @@ Ext.define('Office.overrides.Filters', {
         }
     },
     onCheckChange: function (item, value) {
-        console.log('onCheckChange');
         // Locking grids must lookup the correct grid.
         var _item = item.up('grid') || item.up('treepanel'),
             grid = this.isLocked ? _item : this.grid,
             filter = this.getMenuFilter(grid.headerCt);
-        console.log(filter, value);
         filter.setActive(value);
     },
     clearFilters: function (autoFilter) {

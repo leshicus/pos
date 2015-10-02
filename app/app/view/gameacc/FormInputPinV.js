@@ -13,6 +13,9 @@ Ext.define('Office.view.gameacc.FormInputPinV', {
         labelWidth: 200,
         margin: 5
     },
+    listeners:{
+        afterrender:'onAfterRender'
+    },
     initComponent: function () {
         this.items = [
             {
@@ -21,7 +24,9 @@ Ext.define('Office.view.gameacc.FormInputPinV', {
                 itemId: 'pin',
                 maskRe:/^[0-9.]$/,
                 allowBlank:false,
-                msgTarget:'side'
+                listeners: {
+                    specialkey: 'onEnter'
+                }
             }
         ];
 

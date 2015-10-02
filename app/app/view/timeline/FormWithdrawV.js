@@ -14,6 +14,7 @@ Ext.define('Office.view.timeline.FormWithdrawV', {
         labelWidth: 150,
         margin: 5
     },
+
     initComponent: function () {
         this.items = [
             {
@@ -21,12 +22,13 @@ Ext.define('Office.view.timeline.FormWithdrawV', {
                 xtype: 'textfield',
                 itemId: 'sum',
                 allowBlank: false,
-                msgTarget: 'side',
+                //msgTarget: 'side',
                 bind: {
                     value: '{to_pay}'
                 },
                 listeners:{
-                    render: 'registerClickEvent'
+                    render: 'registerClickEvent',
+                    specialkey: 'onEnter'
                 }
             }
         ];

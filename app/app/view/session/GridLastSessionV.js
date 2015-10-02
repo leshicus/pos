@@ -25,7 +25,7 @@ Ext.define('Office.view.session.GridLastSessionV', {
         scope: 'controller'
     },
     initComponent: function () {
-        Utilities.initClassParams({
+        Util.initClassParams({
             scope: this,
             params: []
         });
@@ -44,7 +44,7 @@ Ext.define('Office.view.session.GridLastSessionV', {
             items: [
                 {
                     text: '№',
-                    dataIndex: 'id',
+                    dataIndex: 'number',
                     //itemId: 'id',
                     width: 80,
                     renderer: function (val) {
@@ -120,6 +120,64 @@ Ext.define('Office.view.session.GridLastSessionV', {
                     dataIndex: 'sum_at_close_time',
                     //itemId: 'sum_at_close_time',
                     width: 90
+                },
+                {
+                    xtype: 'actioncolumn',
+                    width:28,
+                    align: 'center',
+                    items: [
+                        {
+                            iconCls: 'icon-print',
+                            tooltip: 'Печать отчета по смене',// всплывающая подсказка
+                            handler: function (grid, rowIndex, colIndex, item, e) 
+                            { 
+                                var rec = grid.getStore().getAt(rowIndex);
+                                Ext.Msg.confirm('Подтверждение', 'Вы действительно хотите распечатать выписку по выбранной смене?', function (btn) {
+                                        if (btn == 'yes') 
+                                        {
+                                            var objUrl = {
+                                                class: 'Pos_Sessions_Print',
+                                                params: {
+                                                    id: rec.id,
+                                                    extended: false
+                                                }
+                                            };
+                                            window.open(Server.getUrl(objUrl), '_blank');
+                                        }
+                                    }
+                                );
+                            }
+                        }
+                    ]
+                },
+                {
+                    xtype: 'actioncolumn',
+                    width:28,
+                    align: 'center',
+                    items: [
+                        {
+                            iconCls: 'icon-print-extended',
+                            tooltip: 'Печать расширенного отчета по смене',// всплывающая подсказка
+                            handler: function (grid, rowIndex, colIndex, item, e) 
+                            { 
+                                var rec = grid.getStore().getAt(rowIndex);
+                                Ext.Msg.confirm('Подтверждение', 'Вы действительно хотите распечатать выписку по выбранной смене?', function (btn) {
+                                        if (btn == 'yes') 
+                                        {
+                                            var objUrl = {
+                                                class: 'Pos_Sessions_Print',
+                                                params: {
+                                                    id: rec.id,
+                                                    extended: true
+                                                }
+                                            };
+                                            window.open(Server.getUrl(objUrl), '_blank');
+                                        }
+                                    }
+                                );
+                            }
+                        }
+                    ]
                 }
             ]
         }

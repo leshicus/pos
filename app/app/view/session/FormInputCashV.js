@@ -33,7 +33,7 @@ Ext.define('Office.view.session.FormInputCashV', {
                         return true;
                     }
                 },
-                msgTarget:'side'
+                //msgTarget:'side'
             },
             {
                 fieldLabel: 'Примечание',

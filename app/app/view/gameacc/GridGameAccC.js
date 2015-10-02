@@ -9,7 +9,6 @@ Ext.define('Office.view.gameacc.GridGameAccC', {
             '#': {},
             'tool[type=refresh]': {
                 click: function (tool) {
-                    console.log('refresh');
                     var grid = tool.up('panel');
                     grid.store.reload();
                 }
@@ -20,7 +19,7 @@ Ext.define('Office.view.gameacc.GridGameAccC', {
                 /*load: function (store, arr, success, resp) {
                     var o = Ext.decode(resp._response.responseText);
                     if (!success) {
-                        Ext.MessageBox.alert('Ошибка', o.message);
+                        Util.erMes('Ошибка', o.message);
                     }
                 }*/
             }
@@ -72,7 +71,6 @@ Ext.define('Office.view.gameacc.GridGameAccC', {
                 win = new Ext.window.Window({
                     title: 'Внесение средств на игровой счет',
                     modal: true,
-                    closable: false,
                     constrain: true,
                     width: 360,
                     layout: {
@@ -82,7 +80,7 @@ Ext.define('Office.view.gameacc.GridGameAccC', {
                     items: [
                         forminputcash
                     ],
-                    buttons: Utilities.getButtonsSaveCancel({
+                    buttons: Util.getButtonsSaveCancel({
                         scope: forminputcash.getController(),
                         textSave: 'Внести сумму'
                     })
@@ -108,7 +106,6 @@ Ext.define('Office.view.gameacc.GridGameAccC', {
                     modal: true,
                     itemId:'windowOutput',
                     closable: false,
-                    constrain: true,
                     width: 360,
                     layout: {
                         type: 'vbox',
@@ -117,7 +114,7 @@ Ext.define('Office.view.gameacc.GridGameAccC', {
                     items: [
                         forminputcash
                     ],
-                    buttons: Utilities.getButtonsSaveCancel({
+                    buttons: Util.getButtonsSaveCancel({
                         scope: forminputcash.getController(),
                         textSave: 'Изъять сумму'
                     })

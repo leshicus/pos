@@ -9,6 +9,25 @@ div.x-border-layout-ct {
     background-color: rgba(255, 255, 255, 0.8);
 }
 
+/*gridgroupheader - гриды событий, слева*/
+/* заголовки сгруппированных гридов */
+.gridgroupheader .x-grid-group-hd {
+    background: #F5F5F5 !important;
+    font-weight: 700;
+    color: #000000 !important;
+}
+
+.gridgroupheader .x-grid-group-title {
+    font-weight: 700;
+    color: #000000 !important;
+    white-space: normal;
+}
+
+/* перенос текста внутри ячейки */
+.gridgroupheader .x-grid-cell-inner {
+    white-space: normal;
+}
+
 /* очертить модальное окно рамочкой */
 .x-window-default {
     border-color: #CECECE;
@@ -112,8 +131,9 @@ div.x-border-layout-ct {
 
 /* подпись лейбела */
 .menumain1 .x-form-item-label-default {
-    /*color: #157fcc !important;*/ /*grey*/
-    color: #F5F5F5 !important;/*aqua*/
+    /*color: #157fcc !important;*/
+    /*grey*/
+    color: #F5F5F5 !important; /*aqua*/
 }
 
 /*.menumain .x-btn-over.x-btn-default-large {
@@ -131,17 +151,20 @@ div.x-border-layout-ct {
     border-radius: 0;
 
 }
+
 .menumain .x-btn-default-toolbar-large {
     background-color: #038D98;
     -webkit-border-radius: 0;
     border-radius: 0;
     border-width: 0;
 }
+
 .menumain .x-btn-over.x-btn-default-toolbar-large {
     -webkit-border-radius: 0;
     border-radius: 0;
     border-width: 0;
 }
+
 .menumain1 .x-btn-default-toolbar-large {
     background-color: #038D98;
     -webkit-border-radius: 0;
@@ -151,15 +174,16 @@ div.x-border-layout-ct {
 
 .menumain1 .x-btn.x-btn-pressed.x-btn-default-toolbar-large {
     /*background-color: #c3c3c3;*//*grey*/
-    background-color: #005960;/*aqua*/
+    background-color: #005960; /*aqua*/
 }
 
 .menumain1 .x-btn-over.x-btn-default-toolbar-large {
     border-color: #BDBDBD;
     /*background-color: #d5d5d5;*//*grey*/
 }
-.menumain1 .x-btn.x-btn-menu-active.x-btn-default-toolbar-large, .x-btn.x-btn-pressed.x-btn-default-toolbar-large{
-    background-color:#005960;
+
+.menumain1 .x-btn.x-btn-menu-active.x-btn-default-toolbar-large, .x-btn.x-btn-pressed.x-btn-default-toolbar-large {
+    background-color: #005960;
 }
 
 .menumain2 .x-toolbar-default {
@@ -179,6 +203,7 @@ div.x-border-layout-ct {
     border-color: #F5F5F5;
     border-right-color: #BDBDBD;
     background-color: #F5F5F5;
+    padding: 0;
 }
 
 .eventtypes .x-btn-inner-default-medium {
@@ -199,12 +224,568 @@ div.x-border-layout-ct {
 .eventtypes .x-btn-default-toolbar-medium {
     -webkit-border-radius: 0;
     border-radius: 0;
-    border-color: #F5F5F5;
-    border-right-color: #CECECE;
-    background-color: #F5F5F5;
+    /* border-color: #F5F5F5;*/
+    border-color: #038D98;
+    /*border-right-color: #CECECE;*/
+    /*background-color: #F5F5F5;*/
+    background-color: #038D98;
 }
 
+.eventtypes .x-btn-inner-default-toolbar-medium {
+    color: #F5F5F5;
+}
+
+.eventtypes .x-panel-default-framed-outer-border-trl {
+    border-top-color: #038D98 !important;
+    border-top-width: 0px !important;
+    border-right-color: #038D98 !important;
+    /*border-right-width: 1px !important;*/
+    border-right-width: 0px !important;
+    border-left-width: 0px !important;
+    border-left-color: #038D98 !important;
+    padding: 0;
+    border-bottom-color: #CECECE !important;
+
+    border-bottom-width: 1px !important;
+}
+
+.eventtypes .x-btn.x-btn-pressed.x-btn-default-toolbar-medium {
+    border-color: #005960;
+    background-image: none;
+    background-color: #005960;
+}
+
+.eventtypes .x-toolbar-default {
+    /* border-color: #038D98 !important;*/
+   /* background-color: #038D98 !important;*/
+    padding: 0 !important;
+    /*padding: 2px 2px 2px 2px !important;*/
+    /*border-bottom-width: 1px !important;*/
+}
+
+.eventtypes .x-toolbar-default .x-toolbar-item {
+    margin: 0 !important;
+}
+
+.eventtypes .x-panel-default-outer-border-trl {
+    border-top-color: #F5F5F5 !important;
+}
+
+.grid-main-line .x-grid-with-col-lines .x-grid-cell {
+    padding: 0px !important;
+}
+
+.grid-main-line .x-grid-with-col-lines .x-grid-cell {
+    /*border-right: 0;*/
+}
+
+.grid-main-line .x-column-header-inner {
+    padding: 2px 2px 2px 2px;
+}
+
+.grid-main-line .x-grid-item-over {
+    background-color: white !important;
+}
+
+.grid-main-line .x-grid-with-row-lines .x-grid-item.x-grid-item-over {
+    border-color: white !important;
+}
+
+.grid-main-line .x-panel-body-default {
+    border-bottom-width: 1px !important;
+}
+
+/* закругленный курсор выделения */
+.grid-main-line .x-grid-item-focused .x-grid-cell-inner:before {
+    border-radius: 15px;
+}
+
+.grid-main-line .x-grid-cell-inner {
+    padding: 7px 5px 7px 5px;
+    white-space: normal;
+}
+
+.grid-main-line .x-grid-row .x-grid-cell-selected {
+    background-color: white;
+}
+
+/*размер кнопок табов*/
+.eventstab .x-tab.x-tab-active.x-tab-default {
+    padding: 6px 5px 6px 5px !important;
+}
+
+.eventstab .x-tab-default-top {
+    padding: 6px 5px 6px 5px !important;
+}
+
+.eventstab .x-docked-bottom {
+    border-top-width: 1px !important;
+}
+
+.eventstab .x-docked-top {
+    border-top-width: 1px !important;
+    border-bottom-width: 1px !important;
+}
+.eventstab .x-tab-icon-el-default.x-tab-glyph {
+    color: #A64747;
+}
+
+.eventstab .x-grid-with-row-lines .x-grid-item:nth-child(1){
+    border-width: 0;
+}
+
+.baskettab .x-tab.x-tab-active.x-tab-default {
+    padding: 6px 5px 6px 5px !important;
+}
+
+.baskettab .x-tab-default-top {
+    padding: 6px 5px 6px 5px !important;
+}
+
+.baskettab .x-docked-bottom {
+    border-top-width: 1px !important;
+    padding: 10px 0 0 0;
+}
+.baskettab .x-docked-top {
+    border-top-width: 1px !important;
+}
+.baskettab .x-tab-icon-el-default.x-tab-glyph {
+    color: #A64747;
+}
+.baskettab .x-toolbar-default .x-toolbar-item {
+    margin: 0 !important;
+}
 /* граница панели */
 .x-panel-default-framed {
     border-color: #CECECE !important;
+}
+
+/* заголовок панелей групп маркетов в Заполнении */
+.market-group-header > .x-panel-header-default-framed {
+    background-color: #C9E6FF;
+}
+
+.market-group-header > .x-panel-header-default,
+.market-header > .x-panel-header-default {
+    /*background-color: #757575; серый*/
+    background-color: #313131;
+
+}
+
+.market-group-header .x-panel-header-title-default {
+    color: #F5F5F5;
+}
+
+.market-header .x-panel-header-title-default {
+    color: #F5F5F5;
+}
+
+.market-header .x-grid-item-over {
+    background-color: white !important;
+}
+
+/*.market-header > .x-panel-header-default-framed {
+    background-color: #F0F8FF;
+}frame, border*/
+.market-header > .x-panel-header-default-horizontal.x-header-noborder {
+    /*background-color: #F0F8FF; */
+    /*background-color: #bdbdbd; серый*/
+    /*background-color: #3892D3;*/
+    background-color: #038D98;
+    /*border-bottom-left-radius: 10px;*/
+}
+
+.market-header .x-grid-cell-inner {
+    overflow: visible;
+    white-space: normal;
+    padding: 3px 5px 3px 5px;
+}
+
+.market-header .x-column-header-text {
+    white-space: normal;
+    line-height: 14px !important;
+}
+
+.market-header .x-column-header-inner {
+    /* padding-left: 1px;
+     padding-right: 1px;*/
+    padding: 2px 2px 2px 5px;
+}
+
+.market-header .x-title-text {
+    white-space: normal;
+    display: inline;
+}
+
+.market-group-header .x-panel-header-default-horizontal,
+.market-header .x-panel-header-default-horizontal {
+    padding: 3px 3px 3px 5px;
+}
+
+.market-header .x-panel-header-default-horizontal.x-header-noborder {
+    padding: 3px 3px 3px 5px;
+}
+
+/* цвет отмеченной ячейки */
+.market-header .x-grid-row .x-grid-cell-selected {
+    background-color: white;
+}
+
+/* закругленный курсор выделения */
+.market-header .x-grid-item-focused .x-grid-cell-inner:before {
+    border-radius: 10px;
+}
+
+.market-group-header .x-panel-default-outer-border-trl {
+   /* border-top-left-radius: 10px !important;
+    border-top-right-radius: 10px !important;*/
+    border-top-width: 0 !important;
+}
+
+/*.market-group-header .x-panel-default{
+    border-bottom-left-radius: 10px;
+}*/
+
+/* корзина- ячейка крестик- удалить ставку */
+.bet-cancel-cell .x-grid-cell-inner {
+    padding: 0 !important;
+}
+
+.bet-cancel-grid .x-grid-td {
+    vertical-align: middle !important;
+}
+
+.bet-cancel-grid .x-grid-cell-inner {
+    padding: 2px;
+}
+
+/*переворачивает заголовок панели на 180 градусов*/
+.leftHeaderPanel .x-panel-header-title-default > .x-title-text-default {
+    transform: rotate(180deg);
+    justify-content: center;
+    display: flex;
+}
+
+.topHeaderPanel .x-panel-header-title-default > .x-title-text-default {
+    justify-content: center;
+    display: flex;
+    transform: rotate(360deg);
+    color: #157fcc;
+}
+
+.topHeaderPanel > .x-panel-header-default-horizontal.x-header-noborder {
+    justify-content: center;
+    display: flex;
+    background-color: #f5f5f5;
+}
+
+.topHeaderPanel .x-panel-header-title-default > .x-title-text-default {
+    color: #157fcc;
+}
+
+.topHeaderPanel .x-column-header-inner {
+    /* padding-left: 1px;
+     padding-right: 1px;*/
+    padding: 2px 2px 2px 5px;
+}
+
+.topHeaderPanel .x-grid-cell-inner {
+    padding: 3px 5px 3px 5px;
+}
+
+/* границы ячеек таблицы ставок в купоне */
+table.bet tr td {
+    border-top: 1px solid #cecece;
+    border-left: 1px solid #cecece;
+}
+
+table.bet {
+    border-spacing: 0;
+    -moz-appearance: textfield;
+
+}
+
+table.bet tr:nth-child(2) {
+    background-color: white;
+}
+
+table.bet tr:nth-child(1) {
+    background-color: whitesmoke;
+}
+
+table.bet tr td:first-child {
+    border-left: 0;
+}
+
+table.bet tr td:nth-child(3) {
+    width: 60px;
+}
+
+input.bet::-webkit-inner-spin-button{
+    display: none;
+}
+/*table.bet tr:first-child td{border-top:0;}*/
+
+/* границы ячеек таблицы ставок в купоне - название команд */
+table.bet-teams {
+    border-spacing: 0;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+table.bet-teams tr td:first-child {
+    border-left: 0;
+}
+
+table.bet-express tr td {
+    border-top: 1px solid #cecece;
+    border-left: 1px solid #cecece;
+}
+
+table.bet-express {
+    border-spacing: 0;
+}
+
+table.bet-express tr:nth-child(1) {
+    background-color: whitesmoke;
+}
+
+table.bet-express td:nth-child(2) {
+    background-color: white;
+    /* border-top:0;*/
+}
+
+table.bet-express tr:nth-child(1) {
+    background-color: whitesmoke;
+    /*background-color: rgb(61, 61, 61);*/
+}
+
+table.bet-express tr td:first-child {
+    border-left: 0;
+}
+
+/*table.bet-express tr:first-child td{border-top:0;}*/
+
+table.bet-title tr td {
+    border-top: 1px solid #cecece;
+    border-left: 1px solid #cecece;
+    background-color: rgb(3, 141, 152);
+   /* background-color: rgb(61, 61, 61);*/
+}
+
+table.bet-title {
+    border-spacing: 0;
+}
+
+table.bet-title tr td:first-child {
+    border-left: 0;
+    /*border-top-left-radius: 13px;
+    border-top-right-radius: 13px;*/
+}
+
+input.bet {
+    font-weight: bold;
+    background-color: #9BE0FF;
+    border: 0;
+    width: 100%;
+    text-align: center;
+}
+
+span.bet {
+    font-weight: bold;
+    /*color:whitesmoke;*/
+}
+
+span.bet-title {
+    /*font-weight: bold;*/
+    color: whitesmoke;
+}
+
+.bet .x-form-text-default {
+    height: 19px;
+    min-height: 19px;
+    font-weight: 600;
+    text-align: center;
+    padding: 0;
+}
+
+.bet-bold {
+    font-weight: 600;
+}
+
+.bet-bold-blue {
+    font-weight: 600;
+    background-color: #9BE0FF;
+}
+
+/*.bbar-bet .x-toolbar-default{
+    padding: 6px 0 0 0;
+}
+.bbar-bet .x-toolbar-default .x-toolbar-item{
+    margin: 0;
+}*/
+
+/*.basket-grid .x-grid-with-row-lines .x-grid-item:not(:first-child){
+    border-top-width: thick;
+    *//*border-top-color: rgb(206, 206, 206);*//*
+    border-top-color: rgb(245, 245, 245);
+
+}*/
+.basket-grid .x-grid-cell-inner {
+    padding: 0;
+    /*padding: 3px 0 0 0;*/
+}
+
+.basket-grid .x-grid-td {
+    vertical-align: middle;
+}
+
+.basket-grid .x-grid-with-row-lines .x-grid-item:last-child {
+    border-bottom-width: 1px !important;
+}
+
+.basket-grid .x-grid-item-over {
+    background-color: white !important;
+}
+
+.basket-grid .x-grid-row .x-grid-cell-selected {
+    background-color: white;
+}
+
+.basket-grid .x-grid-item-focused .x-grid-cell-inner:before {
+    border: 0;
+}
+
+.basket-grid .x-grid-item-selected {
+    background-color: white;
+}
+
+.gridgroupheader .x-toolbar-default {
+    padding: 0 !important;
+}
+
+
+
+.gridgroupheader .x-toolbar-default .x-toolbar-item {
+    margin: 0 2px 0 0;
+}
+
+.market-table-title {
+    background-color: #038D98;
+    color: #F5F5F5;
+}
+
+.market-table-tr {
+    background-color: white;
+    /*border-top:1px solid #cecece;*/
+    /*border-left:1px solid #cecece;*/
+}
+
+.market-table-title-span {
+    font-weight: 300;
+    font-family: helvetica, arial, verdana, sans-serif;
+    font-size: 15px;
+    padding-left: 5px;
+}
+
+.market-table-td {
+    padding-left: 5px;
+    padding-right: 5px;
+    /*background-color: white;*/
+}
+
+/*.market-table-td-dayexpress{*/
+/*background-color:white;*/
+/*padding-left: 5px;*/
+/*padding-right: 5px;*/
+/*}*/
+
+table.market-table tr td {
+    /*border-top:1px solid #cecece;*/
+    border-bottom: 1px solid #cecece;
+    /*border-left: 1px solid #cecece;*/
+}
+
+table.market-table tr td:nth-child(1) {
+    border-left: 1px solid #cecece;
+}
+
+table.market-table tr:nth-child(n+2) td {
+    border-right: 1px solid #cecece;
+}
+
+table.market-table {
+    border-spacing: 0;
+}
+
+table.market-table tr:nth-child(2) {
+    /*background-color: white;*/
+}
+
+table.market-table tr:nth-child(1) {
+    /*background-color: whitesmoke;*/
+}
+
+table.market-table tr td:first-child {
+    border-left: 0;
+}
+
+
+
+
+table.market-table-dc tr td {
+    /*border-top:1px solid #cecece;*/
+    border-bottom: 1px solid #cecece;
+    border-left: 1px solid #cecece;
+}
+
+/*table.market-table tr td:nth-child(1) {*/
+    /*border-left: 1px solid #cecece;*/
+/*}*/
+
+/*table.market-table-dc tr:nth-child(n+2) td {
+    border-right: 1px solid #cecece;
+}*/
+
+table.market-table-dc {
+    border-spacing: 0;
+}
+
+table.market-table-dc tr td:first-child {
+    border-left: 0;
+}
+
+.market-table-columnname {
+    background-color: #F5F5F5;
+    color: #157fcc;
+}
+
+.market-table-td-in-basket {
+    padding-left: 5px;
+    padding-right: 5px;
+    background: rgb(255, 251, 184);
+}
+
+/*.market-table-td-in-basket-dayexpress{*/
+/*padding-left: 5px;*/
+/*padding-right: 5px;*/
+/*background: rgb(255, 251, 184);*/
+/*}*/
+
+/* пустая ячейка в комбике */
+.my-boundlist-item-menu {
+    padding: 0 6px;
+    line-height: 22px;
+    cursor: pointer;
+    cursor: hand;
+    position: relative;
+    zoom: 1;
+    border-width: 1px;
+    border-style: dotted;
+    border-color: white;
+}
+
+.my-boundlist-item-menu:hover {
+    background: #D6E8F6;
+    border-color: #D6E8F6;
 }

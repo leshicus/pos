@@ -27,7 +27,7 @@ Ext.define('Office.view.gameacc.GridGameActionV', {
         this.getViewModel().set('player_id', '');
         this.getViewModel().set('username', Ext.util.Cookies.get('betzet_login'));*/
 
-        Utilities.initClassParams({
+        Util.initClassParams({
             scope: this,
             params: [
                 'filters.player_id'

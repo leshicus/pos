@@ -11,6 +11,8 @@ Ext.define('Ext.util.CollectionKey', {
     ],
     isCollectionKey: true,
 
+    observerPriority: -200,
+
     config: {
         collection: null,
 
@@ -331,7 +333,7 @@ Ext.define('Ext.util.CollectionKey', {
         }
     },
 
-    applyProperty: function (property) {
+    updateProperty: function(property) {
         var root = this.getRootProperty();
 
         this.getKey = function (item) {
@@ -356,5 +358,9 @@ Ext.define('Ext.util.CollectionKey', {
 
     updateCollection: function (collection) {
         collection.addObserver(this);
+    },
+
+    clone: function() {
+        return new Ext.util.CollectionKey(this.getCurrentConfig());
     }
 });

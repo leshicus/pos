@@ -111,7 +111,7 @@ Ext.define('Ext.event.publisher.Dom', {
 
         me.initHandlers();
 
-        Ext.onReady(me.onReady, me);
+        Ext.onInternalReady(me.onReady, me);
 
         me.callParent();
     },
@@ -265,18 +265,10 @@ Ext.define('Ext.event.publisher.Dom', {
     getPropagatingTargets: function(target) {
         var currentNode = target,
             targets = [],
-            parentNode, el, id;
+            parentNode;
 
         while (currentNode) {
-            id = currentNode.id;
-
-            if (id) {
-                el = Ext.cache[id];
-                if (el) {
-                    targets.push(el);
-                }
-            }
-
+            targets.push(currentNode);
             parentNode = currentNode.parentNode;
 
             if (!parentNode) {
@@ -310,12 +302,23 @@ Ext.define('Ext.event.publisher.Dom', {
 
         ln = targets.length;
 
+        // We will now proceed to fire events in both capture and bubble phases.  You
+        // may notice that we are looping all potential targets both times, and only
+        // firing on the target if there is an Ext.Element wrapper in the cache.  This is
+        // done (vs. eliminating non-cached targets from the array up front) because
+        // event handlers can add listeners to other elements during propagation.  Looping
+        // all the potential targets ensures that these dynamically added listeners
+        // are fired.  See https://sencha.jira.com/browse/EXTJS-15953
+
         // capture phase (top-down event propagation).
         if (me.captureSubscribers[eventName]) {
             for (i = ln; i--;) {
-                me.fire(targets[i], eventName, e, false, true);
-                if (e.isStopped) {
-                    break;
+                el = Ext.cache[targets[i].id];
+                if (el) {
+                    me.fire(el, eventName, e, false, true);
+                    if (e.isStopped) {
+                        break;
+                    }
                 }
             }
         }
@@ -324,10 +327,12 @@ Ext.define('Ext.event.publisher.Dom', {
         // stopPropagation during capture phase cancels entire bubble phase
         if (!e.isStopped && me.bubbleSubscribers[eventName]) {
             for (i = 0; i < ln; i++) {
-                el = targets[i];
-                me.fire(targets[i], eventName, e, false, false);
-                if (e.isStopped) {
-                    break;
+                el = Ext.cache[targets[i].id];
+                if (el) {
+                    me.fire(el, eventName, e, false, false);
+                    if (e.isStopped) {
+                        break;
+                    }
                 }
             }
         }
@@ -345,7 +350,7 @@ Ext.define('Ext.event.publisher.Dom', {
                 } else if (capture) {
                     event = event.captures;
                 } else if (direct) {
-                    event = event.directs
+                    event = event.directs;
                 }
 
                 // yes, this second null check for event is necessary - one of the
@@ -423,8 +428,7 @@ Ext.define('Ext.event.publisher.Dom', {
     doDirectEvent: function(e, capture) {
         var me = this,
             currentTarget = e.currentTarget,
-            timeStamp = e.timeStamp,
-            currentTarget;
+            timeStamp = e.timeStamp;
 
         e = new Ext.event.Event(e);
 
@@ -518,16 +522,15 @@ Ext.define('Ext.event.publisher.Dom', {
 
         // prevent emulated pointerover, pointerout, pointerenter, and pointerleave
         // events from firing when triggered by touching the screen.
-        return (me.blockedPointerEvents[type] && e.pointerType !== 'mouse')
-        ||
+        return (me.blockedPointerEvents[type] && e.pointerType !== 'mouse') ||
             // prevent compatibility mouse events from firing on devices with pointer
             // events - see comment on blockedCompatibilityMouseEvents for more details
             // The time from when the last pointer event fired until when compatibility
             // events are received varies depending on the browser, device, and application
             // so we use 1 second to be safe
             (me.blockedCompatibilityMouseEvents[type] &&
-                (now - self.lastScreenPointerEventTime < 1000))
-        ||
+                (now - self.lastScreenPointerEventTime < 1000)) ||
+
             (Ext.supports.TouchEvents && e.self.mouseEvents[e.type] &&
             // some browsers (e.g. webkit on Windows 8 with touch screen) emulate mouse
             // events after touch events have fired.  This only seems to happen when there
@@ -553,6 +556,7 @@ Ext.define('Ext.event.publisher.Dom', {
             // side because the difference in coordinates can sometimes be up to 6px.
             Math.abs(e.pageX - self.lastTouchStartX) < 15 &&
             Math.abs(e.pageY - self.lastTouchStartY) < 15 &&
+
             // in the majority of cases, the emulated mousedown is observed within
             // 5ms of touchend, however, to be certain we avoid a situation where a
             // gesture handler gets executed twice we use a threshold of 1000ms.  The

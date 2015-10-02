@@ -18,6 +18,15 @@
     background: rgb(255, 200, 200);
 }
 
+.bg-red-ratcoef {
+    background: rgb(247, 71, 71);
+    color:white;
+}
+.bg-black-ratcoef {
+    background: rgb(49, 49, 49);
+    color:white;
+}
+
 .bg-red-lt {
     background: rgb(255, 225, 225);
 }
@@ -68,3 +77,8 @@
     border-color: #cecece;
     background-color: #F5F5F5 !important;
 }
+/* цвет ставки, находящейся в купоне */
+.bg-in-basket {
+    background: rgb(255, 251, 184);
+}
+

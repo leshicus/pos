@@ -3,24 +3,31 @@ Ext.define('Office.view.card.FormCardV', {
     requires: [
         'Ext.form.Panel',
         'Ext.layout.container.Column',
-        'Office.view.card.FormCardC'
+        'Office.view.card.FormCardC',
+        'Office.view.timeline.FormUserSearchV'
     ],
     xtype: 'formcard',
     controller: 'formcard',
     height: 520,
     width: 700,
+    listeners: {
+        afterrender: 'onAfterRender'
+    },
     initComponent: function () {
-        var tabIndex = 0;
+        var  vmForm = this.getViewModel(),
+        selected = vmForm.getData().theClient;
 
         this.items = [
             {
                 xtype: 'fieldset',
+                style:'float:left;',
                 title: 'Штрих-код',
                 margin: 5,
+                width: 340,
                 defaults: {
                     enableKeyEvents: true,
                     margin: 2,
-                    margin: '0 0 10 0'
+                    margin: '2 0 10 0'
                 },
                 items: [
                     {
@@ -30,6 +37,27 @@ Ext.define('Office.view.card.FormCardV', {
                         name: 'barcode',
                         itemId: 'barcode',
                         bind: '{theClient.barcode}'
+                    }
+                ]
+            },
+            {
+                xtype: 'fieldset',
+                title: 'Выбрать игрока',
+                margin: '5 5 10 5',
+                width: 345,
+                layout: {
+                    type: 'hbox'
+                },
+                defaults: {
+                    enableKeyEvents: true
+                },
+                items: [
+                    {
+                        xtype: 'button',
+                        text: 'Выбрать из списка игроков',
+                        margin: '2 20 10 20',
+                        disabled: (selected && selected.id > 0) ? true : false,
+                        handler: 'onChooseUser'
                     }
                 ]
             },
@@ -49,7 +77,7 @@ Ext.define('Office.view.card.FormCardV', {
                         fieldLabel: 'Фамилия',
                         labelWidth: 100,
                         allowBlank: false,
-                        msgTarget: 'side',
+                        //msgTarget: 'side',
                         flex: 3,
                         margin: '2 2 10 2',
                         name: 'lastname',
@@ -62,7 +90,7 @@ Ext.define('Office.view.card.FormCardV', {
                         labelWidth: 40,
                         flex: 2,
                         allowBlank: false,
-                        msgTarget: 'side',
+                        //msgTarget: 'side',
                         margin: '2 20 2 20',
                         name: 'firstname',
                         itemId: 'firstname',
@@ -106,31 +134,38 @@ Ext.define('Office.view.card.FormCardV', {
                                 uncheckedValue: '0',
                                 name: 'is_resident',
                                 itemId: 'is_resident',
-                                bind: '{theClient.is_resident}'
-                                //handler: 'convertCkeckboxValue'
+                                bind: '{theClient.is_resident}',
+                                //handler: 'makePasserRequired',
+                                listeners: {
+                                    el: { // * + логика в onAfterRender
+                                        click: 'makePasserRequired' // * так лихо закручено, чтобы ловить именно кликание по чекбоксу, а не программное изменение
+                                    }
+                                }
                             },
                             {
                                 xtype: 'textfield',
                                 fieldLabel: 'Серия',
                                 labelWidth: 50,
-                                width: 120,
-                                allowBlank: false,
-                                msgTarget: 'side',
+                                width: 150,
+                                //allowBlank: false,
+                                //msgTarget: 'side',
                                 margin: '2 20 2 20',
                                 name: 'passer',
                                 itemId: 'passer',
                                 /* listeners:{
                                  change:'onPasSerChange'
                                  }*/
-                                bind: '{theClient.passer}'
+                                bind: {
+                                    value: '{theClient.passer}'
+                                }
                             },
                             {
                                 xtype: 'textfield',
                                 fieldLabel: 'Номер',
                                 labelWidth: 50,
                                 width: 150,
-                               // allowBlank: false,
-                                msgTarget: 'side',
+                                allowBlank: false,
+                                //msgTarget: 'side',
                                 margin: 2,
                                 name: 'pasnom',
                                 itemId: 'pasnom',
@@ -155,7 +190,7 @@ Ext.define('Office.view.card.FormCardV', {
                                 xtype: 'textarea',
                                 fieldLabel: 'Выдан',
                                 allowBlank: false,
-                                msgTarget: 'side',
+                                //msgTarget: 'side',
                                 labelWidth: 100,
                                 name: 'passport_issuer',
                                 itemId: 'passport_issuer',
@@ -219,7 +254,7 @@ Ext.define('Office.view.card.FormCardV', {
                         labelWidth: 100,
                         flex: 1,
                         allowBlank: false,
-                        msgTarget: 'side',
+                        //msgTarget: 'side',
                         //editable: false,
                         name: 'address',
                         itemId: 'address',
@@ -228,7 +263,7 @@ Ext.define('Office.view.card.FormCardV', {
                     {
                         xtype: 'button',
                         icon: null,
-                        itemId:'buttonKladr',
+                        itemId: 'buttonKladr',
                         glyph: Glyphs.get('edit'),
                         width: 30,
                         xtype: 'button',
@@ -255,7 +290,6 @@ Ext.define('Office.view.card.FormCardV', {
                         labelWidth: 100,
                         width: '200',
                         margin: '2 2 10 2',
-                        allowBlank: false,
                         name: 'mobile_phone',
                         itemId: 'mobile_phone',
                         bind: '{theClient.mobile_phone}'
@@ -289,7 +323,7 @@ Ext.define('Office.view.card.FormCardV', {
                 ]
             }
         ];
-        this.buttons = Utilities.getButtonsSaveCancel({
+        this.buttons = Util.getButtonsSaveCancel({
             scope: this.getController()
         });
         this.callParent();

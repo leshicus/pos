@@ -6,7 +6,21 @@ Ext.define('Office.view.session.FormPrintLineM', {
     alias: 'viewmodel.formprintline',
     stores: {
         sport: {
-            model: new Office.model.SportM,
+            fields: ['id', 'value', 'checked', 'iconCls'],
+            proxy: {
+                type: 'ajax',
+                url: Server.getUrl({
+                    class: 'Pos_Filters_Sport',
+                    token: '{token}',
+                    params: {
+                        mode: 'office'
+                    }
+                }),
+                reader: {
+                    type: 'json',
+                    rootProperty: 'sportfilter.types'
+                }
+            },
             storeId: 'sport',
             autoLoad: false
         }

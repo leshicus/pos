@@ -2,12 +2,13 @@ Ext.define('Office.view.session.FormStartSessionV', {
     extend: 'Ext.form.Panel',
     requires: [
         'Office.view.session.FormStartSessionC',
-        'Office.view.menumain.MenuMainM'
+        'Office.view.session.GridCurrentM'
+        //'Office.view.menumain.MenuMainM'
     ],
     xtype: 'formstartsession',
     controller: 'formstartsession',
     viewModel: {
-        type: 'menumain'
+        type: 'gridcurrent'
     },
     layout: {
         type: 'vbox',
@@ -18,11 +19,11 @@ Ext.define('Office.view.session.FormStartSessionV', {
         margin: 5
     },
     initComponent: function () {
-        var vm = this.getViewModel(),
-            menumain = Ext.ComponentQuery.query('menumain')[0],
-            vmMenumain = menumain.getViewModel();
-
-        vm.set('theSession', vmMenumain.getData().theSession);
+        //var vm = this.getViewModel(),
+        //    menumain = Ext.ComponentQuery.query('menumain')[0],
+        //    vmMenumain = menumain.getViewModel();
+        //
+        //vm.set('theSession', vmMenumain.getData().theSession);
 
         this.items = [
             {
@@ -38,8 +39,11 @@ Ext.define('Office.view.session.FormStartSessionV', {
                 xtype: 'textfield',
                 itemId: 'operator_fullname',
                 allowBlank:false,
-                msgTarget:'side',
-                validator: this.getController().onOperatorFullname
+                //msgTarget:'side',
+                validator: this.getController().onOperatorFullnam,
+                bind:{
+                    disabled:'{!showOperatorFio}'
+                }
             },
             {
                 fieldLabel: 'Текущая сумма в кассе',

@@ -1,7 +1,8 @@
 Ext.define('Office.view.session.GridPaySlipC', {
     extend: 'Ext.app.ViewController',
     requires: [
-        'Office.view.session.GridDetailTLV'
+        'Office.view.session.GridDetailTLV',
+        'Office.view.session.GridDetailPlayerAccountsV'
     ],
     alias: 'controller.gridpayslip',
     listen: {
@@ -13,23 +14,22 @@ Ext.define('Office.view.session.GridPaySlipC', {
     },
 // * загрузка данных о ставках к выплате (Смены)
     loadPaySlipData: function () {
-        console.info('loadPaySlipData');
-
-        var now = new Date(),
-            year = now.getFullYear(),
-            month = ('0' + (now.getMonth())).slice(-2),
-            todayDay = now.getDate();
-
         var gridpayslip = this.getView(),
             dateTo = Ext.Date.format(new Date(), 'Y-m-d'),
-            dateFrom = [year, month, todayDay + 1].join('-'),
-            objUrl = {
-                class: 'Pos_Sessions_Fillcashreport',
-                params: {
-                    dateFrom: dateFrom,
-                    dateTo: dateTo
-                }
-            };
+            dateFrom = new Date();
+
+        // * получаем первое число месяца
+        dateFrom.setDate(dateFrom.getDate() - 30);
+        dateFrom = Ext.Date.format(dateFrom, 'Y-m-d');
+
+        var objUrl = {
+            class: 'Pos_Sessions_Fillcashreport',
+            params: {
+                dateFrom: dateFrom,
+                dateTo: dateTo
+            }
+        };
+
         // * не понимаю, почему здесь ругается, что типа ф-ия mask не существует
         if (gridpayslip && gridpayslip.mask === 'function') {
             gridpayslip.mask('Загружаем...');
@@ -42,20 +42,21 @@ Ext.define('Office.view.session.GridPaySlipC', {
                     if (gridpayslip && gridpayslip.mask === 'function') {
                         gridpayslip.unmask();
                     }
-                    console.info('successCashReport');
                     var payslip = Ext.decode(response.responseText);
                     if (typeof payslip.success != 'undefined') {
-                        Utilities.toast('Внимание', 'Данные по ставкам к выплате не загружены');
+                        Util.toast('Внимание', 'Данные по ставкам к выплате не загружены');
                     } else {
-                        gridpayslip.getViewModel().set({thePaySlip: payslip});
+                        Ext.defer(function () {   // * иногда не успевает создаться
+                            if (gridpayslip.getViewModel())
+                                gridpayslip.getViewModel().set({thePaySlip: payslip});
+                        }, 100, this);
                     }
                 },
                 failure: function (response) {
                     if (gridpayslip) {
                         gridpayslip.unmask();
                     }
-                    console.info('failureCashReport');
-                    Utilities.toast('Внимание', 'Не загружены данные о ставках к выплате: ошибка сервера');
+                    Util.toast('Внимание', 'Не загружены данные о ставках к выплате: ошибка сервера');
                 },
                 method: 'POST',
                 scope: this
@@ -74,7 +75,6 @@ Ext.define('Office.view.session.GridPaySlipC', {
         Ext.Ajax.request({
             url: Server.getUrl(objUrl),
             success: function (response) {
-                console.info('success getDetailTL');
                 var o = Ext.decode(response.responseText),
                     countSubTransaction = o.countSubTransaction,
                     countTL = o.countTL,
@@ -86,7 +86,6 @@ Ext.define('Office.view.session.GridPaySlipC', {
                     win = new Ext.window.Window({
                         title: 'Детали по изъятию таймлайн',
                         modal: true,
-                        closable: false,
                         constrain: true,
                         glyph: Glyphs.get('list'),
                         cls: 'detail',
@@ -117,7 +116,7 @@ Ext.define('Office.view.session.GridPaySlipC', {
                                 value: o.sumAllSubTransaction
                             }
                         ],
-                        buttons: Utilities.getButtonCancel({
+                        buttons: Util.getButtonCancel({
                             textCancel: 'Закрыть',
                             scope: this
                         })
@@ -125,7 +124,6 @@ Ext.define('Office.view.session.GridPaySlipC', {
                 win.show();
             },
             failure: function (response) {
-                console.info('failure getDetailTL');
                 Ext.toast({
                     html: 'Не загружены данные о смене: ошибка сервера',
                     title: 'Внимание',
@@ -136,7 +134,74 @@ Ext.define('Office.view.session.GridPaySlipC', {
             method: 'POST',
             scope: this
         });
-
-
+    },
+    onDetailsAccounts: function (btn) {
+        var objUrl = {
+            class: 'Pos_Sessions_Getavgdataofcurrentsession'
+        };
+        Ext.Ajax.request({
+            url: Server.getUrl(objUrl),
+            success: function (response) {
+                var o = Ext.decode(response.responseText),
+                    countSubTransaction = o.countSubTransaction,
+                    countTL = o.countTL,
+                    sessionId = o.sessionId,
+                    sumAllSubTransaction = o.sumAllSubTransaction,
+                    griddetailplayeraccounts = Ext.create('Office.view.session.GridDetailPlayerAccountsV', {
+                        margin: 0
+                    }),
+                    win = new Ext.window.Window({
+                        title: 'Детали по игровым счетам',
+                        modal: true,
+                        closable: false,
+                        glyph: Glyphs.get('list'),
+                        cls: 'detail',
+                        width: 550,
+                        layout: {
+                            type: 'vbox',
+                            align: 'stretch'
+                        },
+                        defaults: {
+                            margin: '0 5 5 5',
+                            labelWidth: 200
+                        },
+                        items: [
+                            griddetailplayeraccounts,
+                            {
+                                xtype: 'displayfield',
+                                fieldLabel: 'Смена',
+                                value: o.sessionId
+                            },
+                            {
+                                xtype: 'displayfield',
+                                id: 'countOperation',
+                                fieldLabel: 'Количество операций',
+                                value: o.countSubTransaction
+                            },
+                            {
+                                xtype: 'displayfield',
+                                id: 'totalSum',
+                                fieldLabel: 'Сумма (общая)',
+                                value: o.sumAllSubTransaction
+                            }
+                        ],
+                        buttons: Util.getButtonCancel({
+                            textCancel: 'Закрыть',
+                            scope: this
+                        })
+                    });
+                win.show();
+            },
+            failure: function (response) {
+                Ext.toast({
+                    html: 'Не загружены данные о смене: ошибка сервера',
+                    title: 'Внимание',
+                    width: 200,
+                    align: 't'
+                })
+            },
+            method: 'POST',
+            scope: this
+        });
     }
 });

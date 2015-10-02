@@ -10,30 +10,36 @@ Ext.define('Office.view.timeline.GridTimelineV', {
         type: 'gridtimeline'
     },
     columnLines: true,
-    flex: 1, // * растягивает по верт до низу
-    title: 'Таймлайн',
     frame: true,
-    resizable:true,
+    resizable: true,
     viewConfig: {
         stripeRows: true,
-        enableTextSelection: true
+        enableTextSelection: true,
+        getRowClass: function (record, index, rowParams, store) { // * класс для строки грида
+            if (record.get('other_cash') == true) return 'blocked-card-row';
+        }
     },
     glyph: Glyphs.get('list_1'),
     cls: 'gridtimeline',
-    bind: '{timeline}',
+    bind: {
+        store: '{timeline}',
+        title: 'Таймлайн{get_fio}'
+    },
     listeners: {
         cellclick: 'onCellclick',
+        afterrender:'onAfterRender',
         scope: 'controller'
     },
     initComponent: function () {
-        Utilities.initClassParams({
+        Util.initClassParams({
             scope: this,
             params: [
                 'filters.term',
                 'filters.includeArchieved',
                 'fio',
                 'passport',
-                'phone'
+                'phone',
+                'resident'
             ]
         });
         var fieldSearch = Ext.create('Ext.form.field.Text', {
@@ -41,23 +47,22 @@ Ext.define('Office.view.timeline.GridTimelineV', {
             width: 200,
             enableKeyEvents: true,
             _fireEventOnEnter: true,
+            selectOnFocus: true,
             itemId: 'term',
             listeners: {
-                specialkey: 'onEnter'
+                specialkey: 'onEnter',
+                change: 'onChangeTerm'
             },
-            bind:{
-                value:'{filters.term}'
+            bind: {
+                value: '{filters.term}'
             },
             triggers: {// * значек лупы
                 one: {
-                    cls: 'x-form-search-trigger'
+                    cls: 'x-form-search-trigger',
+                    handler: 'onPressLoupe'
                 }
             }
         });
-
-        // * устанавливает начальное значение поля "поиск таймлайн"
-        //Debug.setGridPaySlipId(fieldSearch, 'phone_number');
-        Debug.setPhone(this.getViewModel(), 'filters.term');
 
         this.columns = {
             defaults: {
@@ -72,14 +77,12 @@ Ext.define('Office.view.timeline.GridTimelineV', {
                 {
                     text: '№',
                     dataIndex: 'id',
-                    //itemId: 'id',
-                    width: 70
+                    width: 60
                 },
                 {
                     text: 'Тип',
                     dataIndex: 'type',
-                    //itemId: 'type',
-                    width: 130,
+                    width: 70,
                     renderer: function (val) {
                         switch (val) { //todo slip-status
                             case '5':
@@ -92,37 +95,37 @@ Ext.define('Office.view.timeline.GridTimelineV', {
                     }
                 },
                 {
-                    text: 'Дата создания',
+                    text: 'Дата расчета',
                     dataIndex: 'timeline_close_datetime',
-                    //itemId: 'date_time',
-                    width: 180
+                    width: 150
                 },
                 {
-                    text: 'На начало',
+                    text: 'Внесено',
                     dataIndex: 'stake',
-                    //itemId: 'patronymic_name',
-                    width: 130,
+                    width: 100,
                     renderer: Ext.util.Format.numberRenderer('0,0.00')
                 },
                 {
                     text: 'В игре',
                     dataIndex: 'in_game_sum',
-                    //itemId: 'patronymic_name',
-                    width: 130,
+                    width: 100,
                     renderer: Ext.util.Format.numberRenderer('0,0.00')
                 },
                 {
                     text: 'Остаток',
                     dataIndex: 'to_pay',
-                    //itemId: 'patronymic_name',
-                    width: 130,
+                    width: 100,
                     renderer: Ext.util.Format.numberRenderer('0,0.00')
                 },
                 {
                     text: 'Статус',
                     dataIndex: 'status_text',
-                    //itemId: 'patronymic_name',
-                    width: 130
+                    width: 110
+                },
+                {
+                    text: 'Касса',
+                    dataIndex: 'cash_info',
+                    flex: 1
                 }
             ]
         }
@@ -144,40 +147,40 @@ Ext.define('Office.view.timeline.GridTimelineV', {
                 uncheckedValue: false,
                 boxLabel: 'Архивные',
                 flex: 1,
-                bind:{
-                    value:'{filters.includeArchieved}'
+                bind: {
+                    value: '{filters.includeArchieved}'
                 }
             }
 
         ];
-        this.bbar = [
-            {
-                xtype: 'displayfield',
-                itemId: 'displayFio',
-                fieldLabel: 'ФИО',
-                labelWidth: 50,
-                margin: '0 20 0 0',
-                bind:'{fio}',
-                style: {
-                    'color': "rgb(39, 127, 204) !important"
-                }
-            },
-            {
-                xtype: 'displayfield',
-                itemId: 'displayPassport',
-                fieldLabel: 'Паспорт',
-                labelWidth: 70,
-                bind:'{passport}',
-                margin: '0 20 0 0'
-            },
-            {
-                xtype: 'displayfield',
-                itemId: 'displayPhone',
-                fieldLabel: 'Телефон',
-                bind:'{phone}',
-                labelWidth: 80
-            }
-        ];
+        //this.bbar = [
+        //    {
+        //        xtype: 'displayfield',
+        //        itemId: 'displayFio',
+        //        fieldLabel: 'ФИО',
+        //        labelWidth: 50,
+        //        margin: '0 20 0 0',
+        //        bind:'{fio}',
+        //        style: {
+        //            'color': "rgb(39, 127, 204) !important"
+        //        }
+        //    },
+        //    {
+        //        xtype: 'displayfield',
+        //        itemId: 'displayPassport',
+        //        fieldLabel: 'Паспорт',
+        //        labelWidth: 70,
+        //        bind:'{passport}',
+        //        margin: '0 20 0 0'
+        //    },
+        //    {
+        //        xtype: 'displayfield',
+        //        itemId: 'displayPhone',
+        //        fieldLabel: 'Телефон',
+        //        bind:'{phone}',
+        //        labelWidth: 80
+        //    }
+        //];
 
         this.tools = [
             {

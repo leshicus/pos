@@ -18,7 +18,7 @@ Ext.define('Office.view.session.GridDetailTLV', {
     sortableColumns: false,
     bind: '{detailtl}',
     initComponent: function () {
-        Utilities.initClassParams({
+        Util.initClassParams({
             scope: this,
             params: [
             ]

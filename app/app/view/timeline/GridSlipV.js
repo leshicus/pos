@@ -12,13 +12,12 @@ Ext.define('Office.view.timeline.GridSlipV', {
     },
     columnLines: true,
     rowLines: true,
-    //flex: 1,
-    height:200,
     title: 'Параметры таймлайна',
     rootVisible: false,
     _collapsed: true,
     viewConfig: {
         stripeRows: true,
+        loadMask: false, // * чтобы сообщение loading не показывалось
         enableTextSelection: true
     },
     //enableLocking: true, // * глючит с деревьями
@@ -31,7 +30,7 @@ Ext.define('Office.view.timeline.GridSlipV', {
          2) и timelineId тоже самое, но это сделаем уже в контроллере
          */
 
-        Utilities.initClassParams({
+        Util.initClassParams({
             scope: this,
             params: ['filters.timelineId']
         });
@@ -71,7 +70,7 @@ Ext.define('Office.view.timeline.GridSlipV', {
                     dataIndex: 'result_text',
                     //itemId: 'result_text',
                     width: 130,
-                    renderer: Utilities.renderResult
+                    renderer: Util.renderResult
                 },
                 {
                     text: 'Совершена',

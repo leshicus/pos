@@ -43,7 +43,7 @@ Ext.define('Office.view.card.GridCardV', {
          1) itemId: 'user' пока в фамилии, имени и паспорте.
          */
 
-        Utilities.initClassParams({
+        Util.initClassParams({
             scope: this,
             params: [
                 'filters.userid',
@@ -79,18 +79,18 @@ Ext.define('Office.view.card.GridCardV', {
                 bind: '{barcode_check}',
                 listeners: {
                     specialkey: 'onEnterBarcodeInfo'
-                },
-                triggers: {// * значек лупы
-                    one: {
-                        cls: 'x-form-search-trigger'
-                    }
                 }
+                //triggers: {// * значек лупы
+                //    one: {
+                //        cls: 'x-form-search-trigger'
+                //    }
+                //}
             });
 
         // * устанавливает начальное значение поля "Фамилия"
-        Debug.setCardFio(this.getViewModel(), 'filters.lastname');
+        //Debug.setCardFio(this.getViewModel(), 'filters.lastname');
         // * устанавливает начальное значение поля "Проверить штрих-код"
-        Debug.setBarcode(this.getViewModel(), 'barcode_check');
+        //Debug.setBarcode(this.getViewModel(), 'barcode_check');
 
         this.columns = {
             defaults: {
@@ -232,10 +232,13 @@ Ext.define('Office.view.card.GridCardV', {
                     width: 70,
                     renderer: function (val, meta, rec) {
                         meta.align = 'center';
-                        if (rec.get('card_status') != 1) {
-                            //return '<span role="button" class="fa fa-lock" style="color: crimson" data-qtip="Заблокирована"></span>';
-                        } else {
+                        if (rec.get('card_status') === "0") {
+                            return '<span role="button" class="fa fa-lock" style="color: crimson" data-qtip="Заблокирована"></span>';
+                        } else if (rec.get('card_status') == 1) {
                             return '<span role="button" class="fa fa-check" style="color: green" data-qtip="Действующая"></span>';
+                        }
+                        else {
+                            return '';
                         }
                     }
                 }

@@ -172,6 +172,10 @@ Ext.define('Ext.form.field.Picker', {
             doc = Ext.getDoc();
             collapseIf = me.collapseIf;
             picker.setMaxHeight(picker.initialConfig.maxHeight);
+            
+            if (me.matchFieldWidth) {
+                picker.width = me.bodyEl.getWidth();
+            }
 
             // Show the picker and set isExpanded flag. alignPicker only works if isExpanded.
             picker.show();
@@ -188,7 +192,8 @@ Ext.define('Ext.form.field.Picker', {
                 destroyable: true
             });
             
-            Ext.on('resize', me.alignPicker, me);
+            // Buffer is used to allow any layouts to complete before we align
+            Ext.on('resize', me.alignPicker, me, {buffer: 1});
             me.fireEvent('expand', me);
             me.onExpand();
         }
@@ -201,18 +206,11 @@ Ext.define('Ext.form.field.Picker', {
      * @protected
      */
     alignPicker: function() {
-        var me = this,
-            bodyElWidth,
-            picker = me.getPicker();
+        if (!this.isDestroyed) {
+            var picker = this.getPicker();
 
-        if (me.isExpanded) {
-            if (me.matchFieldWidth) {
-                bodyElWidth = me.bodyEl.getWidth();
-                // Auto the height (it will be constrained by min and max width) unless there are no records to display.
-                picker.setWidth(bodyElWidth);
-            }
-            if (picker.isFloating()) {
-                me.doAlign();
+            if (picker.isVisible() && picker.isFloating()) {
+                this.doAlign();
             }
         }
     },
@@ -273,8 +271,10 @@ Ext.define('Ext.form.field.Picker', {
      */
     collapseIf: function(e) {
         var me = this;
-        
-        if (!me.isDestroyed && !e.within(me.bodyEl, false, true) && !me.owns(e.target)) {
+
+        // If what was mousedowned on is outside of this Field, and is not focusable, then collapse.
+        // If it is focusable, this Field will blur and collapse anyway.
+        if (!me.isDestroyed && !e.within(me.bodyEl, false, true) && !me.owns(e.target) && !Ext.fly(e.target).isFocusable()) {
             me.collapse();
         }
     },
@@ -289,9 +289,11 @@ Ext.define('Ext.form.field.Picker', {
             picker = me.picker;
 
         if (!picker) {
+            me.creatingPicker = true;
             me.picker = picker = me.createPicker();
             // For upward component searches.
             picker.ownerCmp = me;
+            delete me.creatingPicker;
         }
 
         return me.picker;

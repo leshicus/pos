@@ -28,8 +28,7 @@ Ext.define('Ext.grid.filters.filter.SingleFilter', {
             }
 
             // TODO: What do we mean by value === null ?
-            // An `active` config must take precedence over a `value` config.
-            me.active = (config.active != undefined) ? config.active : value !== undefined;
+            me.active = me.getActiveState(config, value);
 
             // Now we're acting on user configs so let's not futz with any assumed settings.
             filter = me.createFilter({
@@ -45,9 +44,6 @@ Ext.define('Ext.grid.filters.filter.SingleFilter', {
         if (me.active) {
             me.setColumnActive(true);
         }
-
-        // Perform any preprocessing now.
-        me.preprocess();
 
         me.filter = filter;
     },

@@ -17,13 +17,13 @@ Ext.define('Office.view.common.GridSummaryV', {
                 text:'Группа',
                 dataIndex:'groid',
                 width:90,
-                //renderer:App.util.Utilities.streamGridColumnRenderer
+                //renderer:App.util.Util.streamGridColumnRenderer
             },
             {
                 text:'Предмет',
                 dataIndex:'subjectid',
                 flex:1,
-                //renderer:App.util.Utilities.streamGridColumnRenderer
+                //renderer:App.util.Util.streamGridColumnRenderer
             }
         ];
 

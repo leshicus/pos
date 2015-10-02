@@ -1,0 +1,38 @@
+{
+    "bets": [
+        {
+            "id": "127548-coeff_ODDS_FT_0ODDS_H",
+            "event_id": 127548,
+            "tournament_id": 1187,
+            "cf_id": 35682817,
+            "cf_value": 1.62,
+            "odds_id": 35682823,
+            "type": "live",
+            "short_name": "\u04441-5.5",
+            "outcome_mnemonic_name": "coeff_ODDS_FT_0ODDS_H",
+            "odds_outcome_mnemonic_name": "coeff_ODDS_FT_0ODDS",
+            "created": 1443094186,
+            "possible_winning": 162,
+            "replaced": false,
+            "value": 100,
+            "min": 100,
+            "max": 8024,
+            "bonus": 0,
+            "order": 6,
+            "event_name": "\u0428\u0432\u0435\u0446\u0438\u044f U17 - \u041c\u0430\u043b\u044c\u0442\u0430 U17",
+            "event_rolled_id": 7468,
+            "time": "2015-09-24 14:00:00+03:00"
+        }
+    ],
+    "state": {
+        "multi_value": 0,
+        "system_value": 0,
+        "system_variants": "1 X",
+        "system_variants_value": "1",
+        "total_cf_value": "1.62",
+        "total_possible_winning": 162,
+        "total_value": 100,
+        "type": "single",
+        "bonus_type": null
+    }
+}

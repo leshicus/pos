@@ -31,14 +31,14 @@ Ext.define('Office.view.session.FormInputCashC', {
                         if (response.responseText) {
                             var o = Ext.decode(response.responseText);
                             if (o.success) {
-                                Utilities.toast('Успех', 'Операция внесения прошла успешно');
+                                Util.toast('Успех', 'Операция внесения прошла успешно');
                                 var gridcurrent = Ext.ComponentQuery.query('gridcurrent')[0];
                                 gridcurrent.getController().reloadGrids();
                             } else {
-                                Ext.Msg.alert('Ошибка', o.message);
+                                Util.erMes(o.message||o.errors[0]);
                             }
                         } else {
-                            Ext.Msg.alert('Ошибка', 'Нет ответа от сервера');
+                            Util.erMes('Нет ответа от сервера');
                         }
                     }
                 });
@@ -64,14 +64,14 @@ Ext.define('Office.view.session.FormInputCashC', {
                         if (response.responseText) {
                             var o = Ext.decode(response.responseText);
                             if (o.success) {
-                                Utilities.toast('Успех', 'Операция изъятия прошла успешно');
+                                Util.toast('Успех', 'Операция изъятия прошла успешно');
                                 var gridcurrent = Ext.ComponentQuery.query('gridcurrent')[0];
                                 gridcurrent.getController().reloadGrids();
                             } else {
-                                Ext.Msg.alert('Ошибка', o.message);
+                                Util.erMes(o.message||o.errors[0]);
                             }
                         } else {
-                            Ext.Msg.alert('Ошибка', 'Нет ответа от сервера');
+                            Util.erMes('Нет ответа от сервера');
                         }
                     }
                 });

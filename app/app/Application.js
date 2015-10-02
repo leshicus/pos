@@ -5,13 +5,18 @@ Ext.define('Office.Application', {
         /* 'Ext.state.CookieProvider',
          'Ext.state.LocalStorageProvider'*/
 
-        'Office.util.Utilities',
+        'Office.util.Util',
+        'Office.view.fill.UtilMarkets',
+        'Office.view.pay.Status',
+        'Office.util.TaskF',
+        // 'Office.view.fill.coeff.CoefShowModes',
+        'Office.view.fill.coeff.ApplyChangedData',
         'Office.util.Server',
         'Office.util.Filters',
         'Office.util.Setup',
         'Office.util.Debug',
         'Office.util.Gui',
-
+        //'Office.util.ClientWS',
         //'Office.util.JsonPStorageProvider',
         //  'Office.util.AjaxStorageProvider',
 
@@ -26,11 +31,12 @@ Ext.define('Office.Application', {
         'Ux.locale.override.extjs.TreePanel',
         'Office.overrides.NavigationModel', // * исправление комбо, нельзя нажать первую запись
         'Office.overrides.Table', // * мой багфикс, какая-то ошибка выскакивала в гриде
-        'Office.overrides.ActionGlyphs', // * возможность размещать глифы в tools
         'Office.overrides.TreeView', // * возможность размещать глифы в tools
         'Office.overrides.Combo', // лечение пропадание значения из комбика при forceSelection
-        //'Office.overrides.TreeStore', // * отправлять номер страницы на сервер и др. параметры для пэйджинга
-        // 'Office.overrides.Panel'
+        'Office.overrides.TreeStore', // * отправлять номер страницы на сервер и др. параметры для пэйджинга
+        'Office.overrides.Panel',
+        'Office.overrides.LocalStore',
+        'Office.overrides.BufferedRenderer' // * лечит грид, который после рефреша имеет отступ сверху при скроллинге
     ],
     name: 'Office',
 
@@ -45,6 +51,11 @@ Ext.define('Office.Application', {
     stores: [],
 
     launch: function () {
+        // * багфиксы
+        // * Исправление бага 43 Хрома, когда смещалось отображение textfield
+        if (Ext.isChrome && Ext.chromeVersion === 43)
+            Ext.getBody().addCls('chrome-43');
+
         // * какого шрифта у нас будут глифы
         Ext.setGlyphFontFamily('FontAwesome');
 
@@ -63,9 +74,7 @@ Ext.define('Office.Application', {
             tpl: Office.util.Server.getLocalization(),
             type: 'ajax'
         });
-        var me = this,
-            callbackLocale = function () {
-                console.info('callbackLocale');
+        var callbackLocale = function () {
                 var Setup = Office.util.Setup;
                 Setup.init();
             };
@@ -74,7 +83,7 @@ Ext.define('Office.Application', {
 
         // * указываю явно как отображать разделитель тысячных, и дробной части.
         // * В противном случае они меняются в зависимости от языка
-        Ext.util.Format.thousandSeparator  = " ";
-        Ext.util.Format.decimalSeparator  = ".";
+        Ext.util.Format.thousandSeparator = " ";
+        Ext.util.Format.decimalSeparator = ".";
     }
 });

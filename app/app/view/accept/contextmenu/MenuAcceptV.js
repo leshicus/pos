@@ -12,8 +12,6 @@ Ext.define('Office.view.accept.contextmenu.MenuAcceptV', {
         disabled:true
     },
     initComponent: function () {
-        console.log('MenuacceptV init');
-
         this.items = [
             {
                 text: 'Печать',
@@ -47,6 +45,5 @@ Ext.define('Office.view.accept.contextmenu.MenuAcceptV', {
             }
         ]
         this.callParent(arguments);
-        console.log('MenuacceptV end');
     }
 });

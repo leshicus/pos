@@ -21,7 +21,7 @@ Ext.define('Office.view.card.FormKladrV', {
         hideTrigger: true
     },
     initComponent: function () {
-        Utilities.initClassParams({
+        Util.initClassParams({
             scope: this,
             params: [
                 'filters.zip',
@@ -140,7 +140,7 @@ Ext.define('Office.view.card.FormKladrV', {
                 editable: false
             }
         ];
-        this.buttons = Utilities.getButtonsSaveCancel({
+        this.buttons = Util.getButtonsSaveCancel({
             scope: this.getController()
         });
         this.callParent();

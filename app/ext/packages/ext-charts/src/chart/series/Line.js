@@ -174,7 +174,7 @@ Ext.define('Ext.chart.series.Line', {
         markerConfig: {
             type: 'circle',
             radius: 4,
-            'fill': '#f00'
+            '#face': '#f00'
         }
      </code></pre>
 
@@ -484,7 +484,7 @@ Ext.define('Ext.chart.series.Line', {
             
             //skip undefined values
             if (typeof yValue === 'undefined' || (typeof yValue === 'string' && !yValue)) {
-                //<debug warn>
+                //<debug>
                 if (Ext.isDefined(Ext.global.console)) {
                     Ext.global.console.warn("[Ext.chart.series.Line]  Skipping a store element with an undefined value at ", record, xValue, yValue);
                 }

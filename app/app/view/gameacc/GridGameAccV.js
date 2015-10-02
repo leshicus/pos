@@ -32,7 +32,7 @@ Ext.define('Office.view.gameacc.GridGameAccV', {
         /*        this.getViewModel().set('token', Server.getToken());
          this.getViewModel().set('user_id', '');
          this.getViewModel().set('username', Ext.util.Cookies.get('betzet_login'));*/
-        Utilities.initClassParams({
+        Util.initClassParams({
             scope: this,
             params: [
                 'filters.user_id',

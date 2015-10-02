@@ -12,7 +12,6 @@ Ext.define('Office.view.session.GridCurrentC', {
             '#': {},
             'tool[type=refresh]': {
                 click: function (tool) {
-                    console.log('refresh');
                     /*  var mainController = Office.app.getController('Main'),
                      gridcurrent = this.getView(),
                      gridpayslip = gridcurrent.up('container').down('gridpayslip'),
@@ -36,6 +35,50 @@ Ext.define('Office.view.session.GridCurrentC', {
         },
         store: {}
     },
+
+    onAfterrender: function (grid) {
+        grid.columns[0].setWidth(250);
+
+        // * проверяю, если данные не загрузились, то попробовать еще раз
+        // * не знаю как по-другому
+        //var vm = grid.getViewModel();
+        //if (!vm.getData().theSession) {
+        //    Ext.defer(function () {
+        //        var menumain = Ext.ComponentQuery.query('menumain')[0],
+        //            vmMenumain = menumain.getViewModel(),
+        //            vm = grid.getViewModel();
+        //        if (vm)
+        //            vm.set('theSession', vmMenumain.getData().theSession);
+        //    }, 2000);
+        //}
+        //
+        var menumain = Ext.ComponentQuery.query('menumain')[0],
+            vmMenumain = menumain.getViewModel();
+
+        menumain.getController().loadSessionData();
+
+        //if(vmMenumain.get('globals').use_ndfl)
+        //{
+        //    this.hiddenProperties = ["sessionAcceptedPerSessionWithoutAccounts",
+        //        "sessionAcceptedPerSessionForAccounts",
+        //        "sessionPaidPerSession",
+        //        "sessionPaidPerSessionWithoutAccounts",
+        //        "sessionPaidPerSessionForAccounts"];
+        //}
+        //else
+        //{
+        //    this.hiddenProperties = ["acceptedPerSessionWithoutTL",
+        //        "acceptedPerSessionForTL",
+        //        "paidPerSessionWithTLPOs",
+        //        "paidPerSession",
+        //        "cashMovementTLOutput",
+        //        "cachierFullname"];
+        //}
+        grid.store.filterBy(menumain.getController().filterGridCurrent, this);
+        // grid.getView().refresh();
+    },
+
+    // * отчет по смене
     onPrintSession: function () {
         var objUrl = {
             class: 'Pos_Sessions_Print',
@@ -46,6 +89,8 @@ Ext.define('Office.view.session.GridCurrentC', {
         };
         window.open(Server.getUrl(objUrl), '_blank');
     },
+
+    // * Расширенный отчет по смене
     onPrintSessionExtended: function () {
         var objUrl = {
             class: 'Pos_Sessions_Print',
@@ -56,6 +101,7 @@ Ext.define('Office.view.session.GridCurrentC', {
         };
         window.open(Server.getUrl(objUrl), '_blank');
     },
+
     // * обновить значения во всех гридах
     reloadGrids: function () {
         var menumain = Ext.ComponentQuery.query('menumain')[0],
@@ -64,18 +110,20 @@ Ext.define('Office.view.session.GridCurrentC', {
             gridlastsession = Ext.ComponentQuery.query('gridlastsession')[0],
             callback = function (session) {
                 //Ext.defer(function () {
-                    gridcurrent.getViewModel().set({
-                        theSession: session
-                    });
-                    //gridcurrent.getViewModel().notify();
+                gridcurrent.getViewModel().set({
+                    theSession: session
+                });
+                //gridcurrent.getViewModel().notify();
                 //}, 10);
             };
 
         gridpayslip.getController().loadPaySlipData();
+        //console.info('reloadGrids');
         menumain.getController().loadSessionData(callback);
         //gridlastsession.store.load();
         gridlastsession.getViewModel().getStore('lastsession').load();
     },
+
     // * завершить смену
     onCloseSession: function (btn) {
         var menumain = Ext.ComponentQuery.query('menumain')[0],
@@ -86,7 +134,6 @@ Ext.define('Office.view.session.GridCurrentC', {
                         win = new Ext.window.Window({
                             title: 'Завершение смены',
                             modal: true,
-                            closable: false,
                             constrain: true,
                             width: 360,
                             layout: {
@@ -106,7 +153,7 @@ Ext.define('Office.view.session.GridCurrentC', {
                                     format: 'Y-m-d H:i:s'
                                 }
                             ],
-                            buttons: Utilities.getButtonsSaveCancel({
+                            buttons: Util.getButtonsSaveCancel({
                                 scope: gridclosesession.getController(),
                                 textSave: 'Завешить смену'
                             })
@@ -114,19 +161,27 @@ Ext.define('Office.view.session.GridCurrentC', {
                     win.show();
                 }, 10);
             };
+
         menumain.getController().loadSessionData(callback); // * сначала всегда обновляем данные по сессии
     },
+
     // * начать смену
     onStartSession: function (btn) {
         var menumain = Ext.ComponentQuery.query('menumain')[0],
+            theSession = menumain.getViewModel().get('theSession'),
             me = this,
             callback = function (session, scope) {
                 Ext.defer(function () {
-                    var formstartsession = Ext.create('Office.view.session.FormStartSessionV'),
+                    var formstartsession = Ext.create('Office.view.session.FormStartSessionV', {
+                            viewModel: {
+                                data: {
+                                    theSession: theSession
+                                }
+                            }
+                        }),
                         win = new Ext.window.Window({
                             title: 'Начать новую смену',
                             modal: true,
-                            closable: false,
                             constrain: true,
                             width: 360,
                             layout: {
@@ -136,7 +191,7 @@ Ext.define('Office.view.session.GridCurrentC', {
                             items: [
                                 formstartsession
                             ],
-                            buttons: Utilities.getButtonsSaveCancel({
+                            buttons: Util.getButtonsSaveCancel({
                                 scope: formstartsession.getController(),
                                 textSave: 'Начать смену'
                             })
@@ -144,14 +199,17 @@ Ext.define('Office.view.session.GridCurrentC', {
                     win.show();
                 }, 10);
             };
+        //console.info('onStartSession');
         menumain.getController().loadSessionData(callback);
     },
+
     // * если указан handler, то вызывается он
     // * если указан listeners:onButtonClick и _handler, то вызывается _handler, но только если начата смена
     onButtonClick: function (button) {
         var menumain = Ext.ComponentQuery.query('menumain')[0],
             funcName = button._handler,
             func = this[funcName];
+        //console.info('onButtonClick');
         menumain.getController().loadSessionData(func, button);
     },
     // * внести
@@ -163,7 +221,6 @@ Ext.define('Office.view.session.GridCurrentC', {
                 win = new Ext.window.Window({
                     title: 'Внести',
                     modal: true,
-                    closable: false,
                     constrain: true,
                     width: 360,
                     layout: {
@@ -173,7 +230,7 @@ Ext.define('Office.view.session.GridCurrentC', {
                     items: [
                         forminputcash
                     ],
-                    buttons: Utilities.getButtonsSaveCancel({
+                    buttons: Util.getButtonsSaveCancel({
                         scope: forminputcash.getController(),
                         textSave: 'Внести сумму'
                     })
@@ -193,7 +250,6 @@ Ext.define('Office.view.session.GridCurrentC', {
                         win = new Ext.window.Window({
                             title: 'Изъять',
                             modal: true,
-                            closable: false,
                             constrain: true,
                             width: 360,
                             layout: {
@@ -203,7 +259,7 @@ Ext.define('Office.view.session.GridCurrentC', {
                             items: [
                                 forminputcash
                             ],
-                            buttons: Utilities.getButtonsSaveCancel({
+                            buttons: Util.getButtonsSaveCancel({
                                 scope: forminputcash.getController(),
                                 textSave: 'Изъять сумму'
                             })
@@ -211,6 +267,7 @@ Ext.define('Office.view.session.GridCurrentC', {
                     win.show();
                 }, 10);
             };
+        //console.info(onOutputCash);
         menumain.getController().loadSessionData(callback);
     }
 });

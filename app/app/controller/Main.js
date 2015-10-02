@@ -1,7 +1,7 @@
 Ext.define('Office.controller.Main', {
     extend: 'Ext.app.Controller',
     requires: [
-        //'Office.util.Utilities'
+
     ],
     stores: [],
     init: function () {
@@ -12,7 +12,8 @@ Ext.define('Office.controller.Main', {
                     /*onHeaderFilter : 'onAddFilter',
                      onClearHeaderFilter:'onClearFilter'*/
 
-                }
+                },
+
             },
             component: {
                 // * очистка полей по нажатию Delete
@@ -20,6 +21,32 @@ Ext.define('Office.controller.Main', {
                     specialkey: function (field, e) {
                         if (e.getKey() == e.DELETE) {
                             field.reset();
+                        }
+                    }
+                },
+
+                // * при изменении значения в поле формы, меняется соответствующее значение в record формы
+                // * from: https://www.sencha.com/forum/showthread.php?181203-Automatically-update-record-when-form-values-change
+                'form field': {
+                    change: function(field, newValue, oldValue) {
+                        // Update record when form field values change
+                        var form = field.up('form');
+                        var record = form.getRecord();
+                        var name = field.getName();
+                        var value;
+
+                        if(record && record.get(name) !== 'undefined') {
+                            if(field.getXType() == 'radiofield' && field.up('radiogroup')) {
+                                // This is a radiofield inside of a radiogroup
+                                value = field.up('radiogroup').getValue();
+                                if(typeof value[name] != 'object') value = value[name];
+                                else return;
+                            } else {
+                                // Ordinary field
+                                value = newValue;
+                            }
+                            // Update record with new value
+                            record.set(name, value);
                         }
                     }
                 }
@@ -39,44 +66,52 @@ Ext.define('Office.controller.Main', {
                          }
                          }, this);
                          }else{
-                         Utilities.toast('Неизвестная ошибка','Раздел не загружен.');
+                         Util.toast('Неизвестная ошибка','Раздел не загружен.');
                          }
                          }*/
                         this.askLogoutIfAccessDenied(store);
                     }
                 }
             }
-        })
+        });
+
     },
     askLogoutIfAccessDenied: function (store, recs, result) {
-        var responseText = store.proxy.reader.rawData;
-        return this.confirmLogoutMessage(responseText);
+        if (store.proxy) {
+            var responseText = store.proxy.reader.rawData;
+            return this.confirmLogoutMessage(responseText);
+        }
+        return true;
     },
     confirmLogoutMessage: function (responseText) {
-        if(responseText){
+        if (responseText) {
             if (responseText.success == false || responseText.status == false) {
-                var str = 'Раздел не загружен.<br>Вероятно кто-то еще зашел в систему под вашим пользователем.<br>Авторизоваться заново?';
-                if (responseText.message.indexOf(Utilities.arrAuthFail[0]) != -1
-                    || responseText.message.indexOf(Utilities.arrAuthFail[1]) != -1) {
-                    Ext.Msg.confirm('Ошибка авторизации', str, function (button) {
-                        if (button == 'yes') {
-                            Office.util.Setup.logout();
-                        }
-                    }, this);
-                } else {
-                    Utilities.toast('Неизвестная ошибка', 'Раздел не загружен.');
+                var str = 'Раздел не загружен.<br>Вероятно кто-то еще зашел в систему под вашим пользователем.<br>Авторизоваться заново?',
+                    mes = responseText.message,
+                    errors = responseText.errors;
+                if (mes) {
+                    if (responseText.message.indexOf(Util.arrAuthFail[0]) != -1
+                        || responseText.message.indexOf(Util.arrAuthFail[1]) != -1) {
+                        Ext.Msg.confirm('Ошибка авторизации', str, function (button) {
+                            if (button == 'yes') {
+                                Office.util.Setup.logout();
+                            }
+                        }, this);
+                    } else {
+                        Util.toast('Неизвестная ошибка', 'Раздел не загружен.');
+                    }
+                }
+                if (errors) {
+                    Util.erMes(errors[0]);
+                    //Util.erMes(JSON.stringify(errors));
                 }
                 return false;
-            } else /*if (responseText.success == true)*/ {
+            }else{
                 return true;
-            } /*else {
-             Utilities.toast('Неизвестная ошибка', 'Нет ответа от сервера.');
-             return false;
-             }*/
-        }/*else{
-         Utilities.toast('Неизвестная ошибка', 'Нет ответа от сервера.');
-         return false;
-         }*/
+            }
+        }else{
+            return false;
+        }
     },
 
     onClearFilterVm: function (field, e, store, grid) {
@@ -125,11 +160,11 @@ Ext.define('Office.controller.Main', {
             var arrValue = filterValue.split('x');
             Ext.Array.each(arrValue, function (paramValue, index) {
                 var paramName = index == 0 ? 'slipId' : 'code',
-                    newFilter = Utilities.count(paramValue) > 1 ? paramValue.join(',') : paramValue; // * преобр. массива в строку через запятую
+                    newFilter = Util.count(paramValue) > 1 ? paramValue.join(',') : paramValue; // * преобр. массива в строку через запятую
                 Filters.setFiltersVm(null, paramName, newFilter, grid);
             }, this);
         } else {
-            var newFilter = Utilities.count(filterValue) > 1 ? filterValue.join(',') : filterValue; // * преобр. массива в строку через запятую
+            var newFilter = Util.count(filterValue) > 1 ? filterValue.join(',') : filterValue; // * преобр. массива в строку через запятую
             Filters.setFiltersVm(null, parameter, newFilter, grid);
         }
 
@@ -161,13 +196,15 @@ Ext.define('Office.controller.Main', {
         var filters = Ext.encode(grid.getViewModel().getData().filters);
         //filters = Filters.getFilters(section),
         //objFilters = this.convertArrayToObject(filters);
-        Utilities.storeLoad(store, filters, null, null, null, grid);
+        Util.storeLoad(store, filters, null, null, null, grid);
     },
+
     // * фильтры берутся из VM
-    storeLoadVm: function (grid, successFn) {
+    storeLoadVm: function (grid, successFn,failureFn) {
         var filters = Ext.encode(grid.getViewModel().getData().filters),
             store = grid.store;
-        Utilities.storeLoad(store, filters, null, successFn, null, grid);
+        setTimeout(Util.storeLoad(store, filters, null, successFn, failureFn, grid),500);
+
     },
     /*
      // * преобразование массива в объект
@@ -207,7 +244,6 @@ Ext.define('Office.controller.Main', {
             Ext.Object.each(filters, function (item) {
                 // * в случае с полем cbDateFrom (Совершена - Дата с) не очищаем его, а устанавливаем на текущую дату. Для удобства.
                 if (grid.getXType() == 'gridaccept' && item == 'cbDateFromMade') {
-                    console.info(dateToday);
                     vm.set('filters.' + item, dateToday);
                 } else {
                     vm.set('filters.' + item, null);
@@ -216,7 +252,7 @@ Ext.define('Office.controller.Main', {
         }
 
         if (grid) {
-            Utilities.storeLoad(grid.store, filters);
+            Util.storeLoad(grid.store, filters);
         }
         // * нужно во всех сторах с полем checked проставить 0
         var stores = vm.getData();
@@ -272,7 +308,7 @@ Ext.define('Office.controller.Main', {
     },
     // * раскрывает содержимое ячейки (нужно когда длинный текст не помещается в ячейке)
     onCelldblclick: function (cell, td, cellIndex, record, tr, rowIndex, e) {
-        Utilities.cellWrap(td);
+        Util.cellWrap(td);
     }
 
 });

@@ -18,7 +18,6 @@ Ext.define('Office.view.session.GridLastSessionC', {
             },
             'tool[type=refresh]': {
                 click: function (tool) {
-                    console.log('refresh');
                     var grid = tool.up('panel');
                     grid.store.reload();
                 }
@@ -29,7 +28,7 @@ Ext.define('Office.view.session.GridLastSessionC', {
                 /* load: function (store, arr, success, resp) {
                     var o = Ext.decode(resp._response.responseText);
                     if (!success) {
-                        Ext.MessageBox.alert('Ошибка', o.message);
+                        Util.erMes('Ошибка', o.message);
                     }
                 }*/
             }

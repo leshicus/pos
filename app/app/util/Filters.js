@@ -7,7 +7,7 @@ Ext.define('Office.util.Filters', {
     stringToday: Ext.Date.format(this.dateDefault, 'Y-m-d'),
 
     constructor: function () {
-        console.info('Filters init');
+        console.log('Filters init');
 
         //console.info(this,this.filters,this.filters.length);
         if (!this.filters.length) {
@@ -35,8 +35,7 @@ Ext.define('Office.util.Filters', {
             );
             // * Выплаты
             this.filters['pay'] = Array(
-                {id: 'xaction', value: 'getSlipInfo'},
-                {id: 'displayUser', value: true}
+                {id: 'xaction', value: 'getSlipInfo'}
             );
             // * Крысы
             this.filters['rat'] = Array(
@@ -95,7 +94,6 @@ Ext.define('Office.util.Filters', {
         var vm = grid.getViewModel()
             filters = vm.get('filters');
         if (Ext.Object.getSize(filters) > 0 && id) {
-            console.info();
             if(typeof filters[id] == Array){
                 grid.getViewModel().set('filters.'+ id, filters[id].push(value));
             }else{
@@ -121,7 +119,7 @@ Ext.define('Office.util.Filters', {
                 superclassSuperclassXtype = item.superclass.superclass.xtype,
             // * чтобы выбрать контейнеры- column и fieldset
                 filterArr = (superclassXtype == 'container' || superclassXtype == 'headercontainer' || superclassSuperclassXtype == 'headercontainer' ) ? item.items.items : item;
-            if (Office.util.Utilities.count(filterArr) > 0) { // * не пустой контейнер, либо единичный элемент
+            if (Office.util.Util.count(filterArr) > 0) { // * не пустой контейнер, либо единичный элемент
                 Ext.Array.each(filterArr, function (item) {
                     //console.info(item,filterArr,superclassXtype,superclassSuperclassXtype);
                     arrOut.push(item);

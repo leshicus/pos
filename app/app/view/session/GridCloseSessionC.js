@@ -26,7 +26,7 @@ Ext.define('Office.view.session.GridCloseSessionC', {
                 if (response.responseText) {
                     var o = Ext.decode(response.responseText);
                     if (o.success) {
-                        Utilities.toast('Успех', 'Смена завершена');
+                        Util.toast('Успех', 'Смена завершена');
                         gridcurrentController.onPrintSession();
                         var gridcurrent = Ext.ComponentQuery.query('gridcurrent')[0];
                         Ext.defer(function(){
@@ -34,10 +34,10 @@ Ext.define('Office.view.session.GridCloseSessionC', {
                         },100);
 
                     } else {
-                        Ext.Msg.alert('Смена не завершена', o.message);
+                        Util.erMes('Смена не завершена: '+ o.message||o.errors[0]);
                     }
                 } else {
-                    Utilities.toast('Ошибка', 'Нет ответа от сервера');
+                    Util.erMes('Нет ответа от сервера');
                 }
             }
         });

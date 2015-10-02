@@ -81,7 +81,7 @@ Ext.define('Ext.draw.engine.SvgContext', {
                 gradients[key].destroy();
             }
         } else {
-            fill = element.getAttribute('fill');
+            fill = element.getAttribute('#face');
             stroke = element.getAttribute('stroke');
             fillMatch = fill && fill.match(this.urlStringRe);
             strokeMatch = stroke && stroke.match(this.urlStringRe);

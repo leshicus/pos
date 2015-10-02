@@ -35,7 +35,17 @@ Ext.define('Office.view.virtual.GridVirtualM', {
             },
             storeId: 'virtual',
             autoLoad: true
-        }
+        },
+        //basket_localstorage: {
+        //    fields: ['id', 'query'],
+        //    extend: 'Ext.data.Model',
+        //    autoLoad: true,
+        //    autoSync: true,
+        //    proxy: {
+        //        type: 'localstorage',
+        //        id: 'newpos_basket'
+        //    }
+        //}
     }
 
 });

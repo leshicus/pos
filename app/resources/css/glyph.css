@@ -382,3 +382,8 @@
     color: rgb(29, 143, 255);
     font-size: 30px;
 }
+
+/* иконки в табах */
+.x-tab-icon-el-default.x-tab-glyph{
+    opacity: 1;
+}

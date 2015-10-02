@@ -6,50 +6,6 @@ Ext.define('Office.view.timeline.contextmenu.MenuTimelineC', {
     ],
     alias: 'controller.menutimeline',
 
-    control: {
-        /*'#': {
-         click: function (menu, button) {
-         console.info(arguments);
-         var gridtimeline = Ext.ComponentQuery.query('gridtimeline')[0],
-         selection = gridtimeline.getSelectionModel().getSelection()[0],
-         slipId = selection.get('id'),
-         user_id = Ext.util.Cookies.get('userId'),
-         userLogin = Ext.util.Cookies.get('betzet_login'),
-         userToken = Ext.util.Cookies.get('betzet_token'),
-         itemId = button.getItemId(),
-         type,
-         objUrl = {
-         class: 'Pos_Pageprinter_Print',
-         params: {
-         slipId: slipId,
-         code: '0',
-         user_id: user_id || '',
-         username: userLogin || '',
-         token: Server.getToken(),
-         secondTime: true
-         }//todo сделать запрос смс кода вначале
-         };
-         switch (itemId) {
-         case 'menuBill':
-         type = 'printStake';
-         break;
-         case 'menuHist':
-         type = 'printHistory';
-         break;
-         case 'menuBalance':
-         type = 'printBalance';
-         break;
-         case 'menuWithdraw':
-         type = 'printPayment';
-         break;
-         }
-         objUrl.params[type] = true;
-         window.open(Server.getUrl(objUrl), '_blank');
-         }
-         },*/
-
-    },
-
     // * форма отправки смс
     showFormSms: function (phone, button, slipId) {
         var itemId = button.getItemId(),
@@ -104,16 +60,18 @@ Ext.define('Office.view.timeline.contextmenu.MenuTimelineC', {
                     type: 'vbox',
                     align: 'stretch'
                 },
+                defaultButton: 'code',
                 items: [
                     formsmscode
                 ],
-                buttons: Utilities.getButtonsSaveCancel({
+                buttons: Util.getButtonsSaveCancel({
                     scope: formsmscode.getController(),
                     textSave: 'Отправить'
                 })
             });
         win.show();
     },
+
     // * нажали пункт контекстного меню с печатью
     onClickButtonPrint: function (button) {
         var gridtimeline = Ext.ComponentQuery.query('gridtimeline')[0],
@@ -137,16 +95,17 @@ Ext.define('Office.view.timeline.contextmenu.MenuTimelineC', {
                         if (o.result)
                             me.showFormSms(o.result, button, slipId);
                         else
-                            Ext.Msg.alert('Ошибка', 'Сервер не прислал номер телефона');
+                            Util.erMes('Сервер не прислал номер телефона');
                     } else {
-                        Ext.Msg.alert('Ошибка', 'Не верный код');
+                        Util.erMes('Не верный код:<br>'+ o.errors[0]);
                     }
                 } else {
-                    Ext.Msg.alert('Ошибка', 'Нет ответа от сервера');
+                    Util.erMes('Нет ответа от сервера');
                 }
             }
         });
     },
+
     // * нажали пункт контекстного меню с частичным снятием
     onClickButtonWithdraw: function (button) {
         var gridtimeline = Ext.ComponentQuery.query('gridtimeline')[0],
@@ -163,11 +122,11 @@ Ext.define('Office.view.timeline.contextmenu.MenuTimelineC', {
             }),
             win = new Ext.window.Window({
                 modal: true,
-                closable: false,
                 constrain: true,
                 title: 'Частиное снятие c ТЛ ' + slipId,
                 width: 480,
                 itemId: 'windowWithdraw',
+                defaultButton: 'sum',
                 layout: {
                     type: 'vbox',
                     align: 'stretch'
@@ -201,6 +160,55 @@ Ext.define('Office.view.timeline.contextmenu.MenuTimelineC', {
                 ]
             });
         win.show();
+    },
 
+    // * нажали пункт контекстного меню с пополнением
+    onClickButtonPayin: function (button) {
+        var gridtimeline = Ext.ComponentQuery.query('gridtimeline')[0],
+            selection = gridtimeline.getSelectionModel().getSelection()[0],
+            slipId = selection.get('id'),
+            to_pay = selection.get('to_pay'),
+            formWithdraw = Ext.create('Office.view.timeline.FormWithdrawV', {
+                viewModel: {
+                    data: {
+                        slipId:slipId,
+                        to_pay:''
+                        //to_pay:to_pay
+                    }
+                }
+            }),
+            win = new Ext.window.Window({
+                modal: true,
+                closable: false,
+                title: 'Пополнение ТЛ ' + slipId,
+                width: 480,
+                itemId: 'windowWithdraw',
+                defaultButton: 'sum',
+                layout: {
+                    type: 'vbox',
+                    align: 'stretch'
+                },
+                items: [
+                    formWithdraw
+                ],
+                buttons: [
+                    {
+                        text: 'Подтвердить',
+                        glyph: Glyphs.get('save'),
+                        scale: 'medium',
+                        scope: formWithdraw.getController(),
+                        handler: 'onClickPayin'
+                    },
+                    '->',
+                    {
+                        text:  'Отмена',
+                        glyph: Glyphs.get('cancel'),
+                        scale: 'medium',
+                        scope: formWithdraw.getController(),
+                        handler: 'onClickCancel'
+                    }
+                ]
+            });
+        win.show();
     }
 });

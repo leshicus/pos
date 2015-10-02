@@ -61,11 +61,6 @@ Ext.define('Office.view.card.GridCardM', {
                         barcode: '{filters.barcode}'
                     }
                 }),
-                /*api: {
-                 create: Ext.util.Format.format(Server.getBarCode(),'{token}','{filters.user}'),
-                 read: Ext.util.Format.format(Server.getBarCode(),'{token}','{filters.user}'),
-                 update: Ext.util.Format.format(Server.getBarCode(),'{token}','{filters.user}')
-                 },*/
                 reader: {
                     type: 'json',
                     limit:100,
@@ -78,7 +73,10 @@ Ext.define('Office.view.card.GridCardM', {
                 }
             },
             storeId: 'card',
-            autoLoad: false
+            autoLoad: false,
+            listeners: {
+                load:'onLoadCard'
+            }
         }
     }
 

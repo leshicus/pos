@@ -30,21 +30,19 @@ Ext.define('Office.view.chat.FormMessageC', {
             //url: Ext.util.Format.format(Server.chatmes(), userid, groupid, vmMes.getData().login),
             url: Server.getUrl(objUrl),
             success: function (response) {
-                console.info('success');
                 try {
                     var o = Ext.decode(response.responseText);
                 } catch (e) {
-                    Ext.MessageBox.alert('Ошибка', o.message);
+                    Util.erMes(o.message);
                 }
                 if (!o.success) {
-                    Ext.MessageBox.alert('Ошибка', 'Ошибка отправки сообщения');
+                    Util.erMes('Ошибка отправки сообщения');
                 } else {
                     gridChatMes.store.reload();
                 }
             },
             failure: function (response) {
-                console.info('failure');
-                Ext.MessageBox.alert('Ошибка', 'Ошибка отправки сообщения');
+                Util.erMes('Ошибка отправки сообщения');
             }
         });
     }

@@ -4,7 +4,7 @@
  * A collection of useful static methods to deal with numbers
  * @singleton
  */
-Ext.Number = new function() {
+Ext.Number = (new function() { // jshint ignore:line
 // @define Ext.lang.Number
 // @define Ext.Number
 // @require Ext
@@ -78,7 +78,7 @@ Ext.Number = new function() {
          * "exclusive" bound.
          * @param {Boolean} [options.wrap=true] Wraps negative numbers backwards from the
          * end of the array. Passing `false` simply clips negative index values at 0.
-         * @returns {Number[]} The normalized `[begin, end]` array where `end` is now
+         * @return {Number[]} The normalized `[begin, end]` array where `end` is now
          * exclusive such that `length = end - begin`. Both values are between 0 and the
          * given `length` and `end` will not be less-than `begin`.
          */
@@ -237,19 +237,20 @@ Ext.Number = new function() {
         },
 
         /**
-         * The sign function.
-         * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/sign
-         * @param x {Number} A number.
-         * @returns {Number} The sign of a number, indicating whether the number is positive, negative or zero.
+         * Returns the sign of the given number. See also MDN for Math.sign documentation
+         * for the standard method this method emulates.
+         * @param {Number} x The number.
+         * @return {Number} The sign of the number `x`, indicating whether the number is
+         * positive (1), negative (-1) or zero (0).
          */
         sign: function (x) {
-            if (isNaN(x)) {
-                return NaN;
-            } else if (x === 0) {
+            x = +x; // force to a Number
+
+            if (x === 0 || isNaN(x)) {
                 return x;
-            } else {
-                return (x > 0 ? 1 : -1);
             }
+
+            return (x > 0) ? 1 : -1;
         },
 
         /**
@@ -287,7 +288,7 @@ Ext.Number = new function() {
         /**
          * Returns a random integer between the specified range (inclusive)
          * @param {Number} from Lowest value to return.
-         * @param {Number} to Highst value to return.
+         * @param {Number} to Highest value to return.
          * @return {Number} A random integer within the specified range.
          */
         randomInt: function (from, to) {
@@ -317,4 +318,4 @@ Ext.Number = new function() {
     Ext.num = function() {
         return ExtNumber.from.apply(this, arguments);
     };
-};
+}());

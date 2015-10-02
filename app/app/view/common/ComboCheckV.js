@@ -1,9 +1,9 @@
 // * комбик с чекбоксами
-// * Внимание!!!: элемент с id = 0 (или -1) рассмативаем как [Все]
+// * Внимание!!!: элемент с id = 0 (или -1) рассматриваем как [Все]
 Ext.define('Office.view.common.ComboCheckV', {
     extend: 'Ext.container.Container',
     requires: [
-        'Office.util.Utilities'
+        'Office.util.Util'
     ],
     xtype: 'combocheck',
     layout: {
@@ -56,6 +56,7 @@ Ext.define('Office.view.common.ComboCheckV', {
                 emptyText: this.emptyText,
                 displayField: this.displayField,
                 valueField: this.valueField,
+                viewModel: this.viewModel,
                 editable: this.editable,
                 fieldLabel: this.fieldLabel,
                 _checkField: this._checkField,
@@ -66,26 +67,30 @@ Ext.define('Office.view.common.ComboCheckV', {
                 _func: this._func,
                 listeners: {
                     change: function (combo, arrNew, arrOld) {
+                        arrNew = arrNew || [];
+                        arrOld = arrOld || [];
+
                         var checkField = combo._checkField,
-                            store = combo.getStore();
+                            store = combo.store;
 
                         // * вычислим разность между новым  и старым массивами отмеченных значений
-                        // * с разностью поступим так: если новый массив длиннее, то установим cheked=true, иначе cheked=false
+                        // * с разностью поступим так: если новый массив длиннее, то установим checked=true, иначе checked=false
                         var arrDif = Array();
-                        if (arrNew.length > arrOld.length) {
+                        if ((arrOld && (arrNew.length > arrOld.length))
+                            || !arrOld) {
                             Ext.Array.each(arrNew, function (item, i) {
-                                if (!Utilities.in_array(item, arrOld, true))
+                                if (!Util.in_array(item, arrOld, true))
                                     arrDif.push(item);
                             });
                         } else {
                             Ext.Array.each(arrOld, function (item, i) {
-                                if (!Utilities.in_array(item, arrNew, true))
+                                if (!Util.in_array(item, arrNew, true))
                                     arrDif.push(item);
                             });
                         }
 
                         // * обратим значение для отмеченного поля
-                        if (Utilities.in_array("0", arrDif, true) || Utilities.in_array("-1", arrDif, true)) { // * если выделен пункт Все, то поведение отличается
+                        if (Util.in_array("0", arrDif, true) || Util.in_array("-1", arrDif, true)) { // * если выделен пункт Все, то поведение отличается
                             // * заморозим ивенты
                             combo.suspendEvent('change');
                             // * проставим/снимем чекеры
@@ -102,11 +107,13 @@ Ext.define('Office.view.common.ComboCheckV', {
                         } else {
                             Ext.Array.each(arrDif, function (item, i) {
                                 var rec = store.findRecord(combo.valueField, item, 0, false, true, true),
-                                    val = rec.get(checkField);
-                                rec.set(checkField, !val);
+                                    id = rec.get('id'),
+                                    flag = Util.in_array(id, arrNew);
+                                rec.set(checkField, flag);
                             });
                         }
-                        if(combo._func){
+                        
+                        if (combo._func) {
                             combo._func(combo, arrNew, arrOld);
                         }
                     }
@@ -116,4 +123,9 @@ Ext.define('Office.view.common.ComboCheckV', {
 
         this.callParent();
     }
+
+    //getStore: function () {
+    //    var combo = this.down('combo');
+    //    return combo.store;
+    //}
 });

@@ -15,19 +15,27 @@ Ext.define('Office.view.virtual.GridVirtualV', {
     frame: true,
     controller: 'gridvirtual',
     viewConfig: {
-        stripeRows: true
+        stripeRows: true,
+        loadMask: false // * чтобы сообщение loading не показывалось
     },
     /*glyph: Glyphs.get('virtual'),
     cls: 'gridvirtual',*/
     bind: '{virtual}',
+    listeners:{
+      render:'onRender'
+    },
     initComponent: function () {
-        Utilities.initClassParams({
+        Util.initClassParams({
             scope: this,
             params: [
                 'filters.short_number',
                 'filters.place_id'
             ]
         });
+
+        // * создаю taskRunner- менеджер заданий для данного раздела
+        Util.createTaskRunner(this);
+
         var short_number = Ext.create('Ext.form.field.Text', {
                 _fireEventOnEnter: true, // * change event будет работать только по нажатию на Enter
                 itemId: 'bidNum',
@@ -36,9 +44,9 @@ Ext.define('Office.view.virtual.GridVirtualV', {
                     specialkey: 'onEnter'
                 }
             }),
-            clubId = Ext.create('Ext.form.field.Text', {
+            placeId = Ext.create('Ext.form.field.Text', {
                 _fireEventOnEnter: true,
-                itemId: 'clubId',
+                itemId: 'placeId',
                 bind:'{filters.place_id}',
                 listeners: {
                     specialkey: 'onEnter'
@@ -70,15 +78,15 @@ Ext.define('Office.view.virtual.GridVirtualV', {
                 },
                 {
                     text: 'Номер игровой<br>консоли',
-                    dataIndex: 'club_id',
-                    itemId: 'club_id',
-                    width: 110,
+                    dataIndex: 'place_id',
+                    itemId: 'place_id',
+                    width: 120,
                     defaults: {
                         enableKeyEvents: true,
                         margin: 2
                     },
                     items: [
-                        clubId
+                        placeId
                     ]
                 },
                 {
@@ -101,10 +109,10 @@ Ext.define('Office.view.virtual.GridVirtualV', {
                     width: 150
                 },
                 {
-                    text: 'Открыть<br>заявку',
+                    text: 'Отправить<br>в купон',
                     dataIndex: 'is_copy_to_coupon',
                     itemId: 'copyToCoupon',
-                    width: 70,
+                    width: 85,
                     renderer: 'clickCopyToCoupon'
                     /*items: [{
                         getGlyph: function(v, meta, rec) {

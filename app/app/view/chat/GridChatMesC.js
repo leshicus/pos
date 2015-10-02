@@ -9,7 +9,6 @@ Ext.define('Office.view.chat.GridChatMesC', {
             '#': {},
             'tool[type=refresh]': {
                 click: function (tool) {
-                    console.log('refresh');
                     var grid = tool.up('panel');
                     grid.store.reload();
                 }
@@ -20,7 +19,7 @@ Ext.define('Office.view.chat.GridChatMesC', {
                 load: function (store, arr, success, resp) {
                    /* var o = Ext.decode(resp._response.responseText);
                     if (!success) {
-                        Ext.MessageBox.alert('Ошибка', o.message);
+                        Util.erMes('Ошибка', o.message);
                     }else{
                         // * скроллинг на последнюю запись
                         var gridChatMes = Ext.ComponentQuery.query('gridchatmes')[0];

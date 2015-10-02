@@ -1,0 +1,698 @@
+ru:
+  live:
+    head: Live ставки
+    filter: Фильтр событий
+    events: События
+    favorites: Избранные
+    bets: Ставки
+    my_bets: Мои ставки
+
+  line:
+    head: Топ событий
+
+  locale:
+    NUMBER_FORMATS:
+      CURRENCY_SYM: ''
+
+  time:
+    formats:
+      news: '%H:%M:%S.%2N'
+      line: 'DD MMM.'
+    span: Период времени
+    days: '{{days}} дней'
+    day_n: '{{days}} дня'
+    day: 1 день
+    hours: '{{hours}} часов'
+    hour_n: '{{hours}} часа'
+    hour: 1 час
+
+  cancel: Отмена
+  OK: OK
+
+  coeffs:
+    fora:
+      1: ФОРА 1
+      2: ФОРА 2
+    total:
+      tl: ТМ
+      tg: ТБ
+
+  event_info:
+    close: Закрыть
+
+  parts:
+    part: 'Партия'
+    time: 'Тайм'
+    set: 'Сет'
+    half: 'Половина'
+    quarter: 'Четверть'
+    period: 'Период'
+    overtime: Доп. время
+
+  markets:
+    other_score: 'Другой счёт, больше {{goal}}-х'
+    more_than: Over {{number}}
+    time_ge15: Каждый тайм больше 1.5 голов
+    time_le15: Каждый тайм меньше 1.5 голов
+    main:
+      pass: Проход
+      outcome: 'Победа с уч.ОТ и бул.'
+      pass_home: 'Пройдет {H}'
+      pass_away: 'Пройдет {A}'
+      noDraw: Результат, основное время
+      win: Победитель
+      draw: Ничья
+      oneWinDraw: '{{team}} (победа) или Ничья'
+      twoWin: '{H} (победа) или {A} (победа)'
+      win_home: '{{team}} (победа)'
+      victory_style: Разница в счете и стиль победы
+      to_nil: Всухую
+      one_goal: в 1 гол
+      two_goals: в 2 гола
+      three_goals: в 3 гола
+      volitional: Волевая
+      draw_wg: Результативная ничья
+      time_match: Тайм + Матч (результат 1-го тайма и всего матча)
+      first_half: Матч + 1-я половина (результат 1-й половины и всего матча)
+      victory_or_draw: Победа или ничья
+      result:
+        title: Итог
+        home_win_main_time: Победа хозяев в основное время
+        away_win_main_time: Победа гостей в основное время
+        home_win_overtime: Победа хозяев в овертайме
+        away_win_overtime: Победа гостей в овертайме
+        home_win_penalty: Победа хозяев по пенальти
+        away_win_penalty: Победа гостей по пенальти
+      points: Набранные очки
+      place_in_group: Место в группе
+      place_in_tournament: Место на турнире
+      places:
+        2: Второе
+        3: Третье
+        4: Четвертое
+        '1-3': С первого по третье
+      reach_home: Хозяева выйдут из группы
+      reach_quarterfinal: Выход в четвертьфинал
+      reach_semifinal: Выход в полуфинал
+      reach_final: Выход в финал
+#
+    soccer:
+      home_fh_win: '{H} (победа в 1 тайме) + {H} (победа в матче)'
+      home_fh_draw: '{H} (победа в 1 тайме) + Ничья в матче'
+      home_fh_lose: '{H} (победа в 1 тайме) + {A} (победа в матче)'
+      draw_fh_home_win: 'Ничья (в 1 тайме) + {H} (победа в матче)'
+      draw_fh_draw: 'Ничья (в 1 тайме) + Ничья в матче'
+      draw_fh_home_lose:  'Ничья (в 1 тайме) + {A} (победа в матче)'
+      away_fh_win: '{A} (победа в 1 тайме) + {A} (победа в матче)'
+      away_fh_draw: '{A} (победа в 1 тайме) + Ничья в матче'
+      away_fh_lose: '{A} (победа в 1 тайме) + {H} (победа в матче)'
+      w_more_goals: Тайм с большим количеством голов
+      f_time: 1 тайм
+      s_time: 2 тайм
+      same: Поровну
+      outcome_total: Исход матча + тотал голов
+      home_win_l25: '{H} (победа) + тотал голов меньше 2.5'
+      home_win_g25: '{H} (победа) + тотал голов больше 2.5'
+      home_no_lose_l25: '{H} не проиграет + тотал голов меньше 2.5'
+      home_no_lose_g25: '{H} не проиграет + тотал голов больше 2.5'
+      away_win_l25: '{A} (победа) + тотал голов меньше 2.5'
+      away_win_g25: '{A} (победа) + тотал голов больше 2.5'
+      away_no_lose_l25: '{A} не проиграет + тотал голов меньше 2.5'
+      away_no_lose_g25: '{A} не проиграет + тотал голов больше 2.5'
+      draw_l25: Ничья + тотал голов меньше 2.5
+      draw_g25: Ничья + тотал голов больше 2.5
+      oc_times: Исход, таймы
+      both_times: Победа в обоих таймах
+      one_time: Победа хотя бы в одном из таймов
+      draw_one_time: Ничья хотя бы в одном из таймов
+#
+    basketball:
+      home_fh_win: '{H} (победа в 1-й половине) + {H} (победа в матче)'
+      home_fh_draw: '{H} (победа в 1-й половине) + Ничья в матче'
+      home_fh_lose: '{H} (победа в 1-й половине) + {A} (победа в матче)'
+      draw_fh_home_win: 'Ничья (в 1-й половине) + {H} (победа в матче)'
+      draw_fh_draw: 'Ничья (в 1-й половине) + Ничья в матче'
+      draw_fh_home_lose:  'Ничья (в 1-й половине) + {A} (победа в матче)'
+      away_fh_win: '{A} (победа в 1-й половине) + {A} (победа в матче)'
+      away_fh_draw: '{A} (победа в 1-й половине) + Ничья в матче'
+      away_fh_lose: '{A} (победа в 1-й половине) + {H} (победа в матче)'
+    table_tennis:
+      part_victory: 'Победа в {{part}}-й партии'
+    tennis:
+      set_victory: 'Победа в {{part}}-м сете'
+      winners_by_set_and_games: 'Победа в {{set}}-м сете по геймам'
+      winner_by_set_and_game: 'Победа в {{game}}-м гейме, {{set}}-м сете'
+      tiebreak: тайбрейк
+      winners_in_game: 'Победа в гейме'
+      winners_in_game_: 'Победа в {{game}}-м гейме'
+      exact_score_by_set: Точный счет, {{set}}-й сет
+    volleyball:
+      part_victory: 'Победа в {{part}}-й партии'
+    baseball:
+      inning: '{{half}} иннинг {{service}}'
+      service_1: верх
+      service_2: низ
+#
+    outcomes:
+      time: 'Исход, {{part}}-й тайм'
+      set: 'Исход, {{part}}-й сет'
+      period: 'Исход, {{part}}-й период'
+      half: 'Исход, {{part}}-я половина'
+      part: 'Исход, {{part}}-я партия'
+      quarter: 'Исход, {{part}}-я четверть'
+#
+    home_victory: '{H} (победа)'
+    away_victory: '{A} (победа)'
+    draw: Ничья
+    win_nil: '{{team}} (победа) или ничья'
+    any_victory: '{H} (победа) или {A} (победа)'
+    home_victory_one_ball_or_draw: '{H} победа в 1 мяч или ничья'
+    away_victory_one_ball_or_draw: '{A} победа в 1 мяч или ничья'
+    exact_score: Точный счет
+    exact_time: 'Точный счёт, {{time}}-й тайм'
+    total_time: 'Тотал голов, {{time}}-й тайм'
+    total_statistics_time: 'Тотал, {{time}}-й тайм'
+    add_time: Дополнительное время
+    added_time: Будет ли дополнительное время
+    removal: 'Удаление'
+    removal_will: 'Будет ли удаление'
+#
+    penalty: 'Пенальти'
+    penalty_will: 'Будут ли пенальти'
+#
+    fora:
+      victory: Победа с учётом форы
+      points: Фора матча по очкам
+      time: 'Победа с учётом форы, {{part}}-й тайм'
+      set: 'Победа с учётом форы, {{part}}-й сет'
+      period: 'Победа с учётом форы, {{part}}-й период'
+      quarter: 'Победа с учётом форы, {{part}}-я четверть'
+      half: 'Победа с учётом форы, {{part}}-я половина'
+      part: 'Победа с учётом форы, {{part}}-я партия'
+      part_: 'Победа с учётом форы, {{part}}-я партия (возможная)'
+#      fora: ФОРА
+#
+    totals:
+      frames: 'Тотал фреймов'
+      frames_: 'Тотал фреймов, {{team}}'
+      goals: 'Тотал голов'
+      goals_: 'Тотал голов, {{team}}'
+      goals_times: Тотал голов, таймы
+      goals_period: 'Тотал голов, {{part}}-й период'
+      goals_quarter: 'Тотал голов, {{part}}-я четверть'
+      goals_half: 'Тотал очков, {{part}}-я половина'
+      goals_part: 'Тотал {{part}}-й партии по очкам'
+      games: Тотал геймов
+      games_: 'Тотал {{part}}-го сета по геймам'
+      sets: Количество сетов
+      rans: Тотал ранов
+      points: Тотал очков
+      points_: 'Тотал очков, {{team}}'
+      points_half: 'Тотал очков, {{part}}-я половина'
+      points_part_: 'Тотал очков, {{team}}, {{part}}-я партия'
+      points_quarter: 'Тотал очков, {{part}}-я четверть'
+      points_half_: 'Тотал очков, {{team}}, {{part}}-я половина'
+#      match: Тотал матча по очкам
+#      ha_goals: 'Тотал голов хозяев/гостей'
+#      ha_games: 'Тотал геймов хозяев/гостей'
+      medals: 'Тотал медалей'
+#      ha_angular: 'Тотал угловых хозяев/гостей'
+#      ha_yellow_card: 'Тотал желтых карточек хозяев/гостей'
+      rounds: 'Тотал раундов'
+      total: 'Тотал'
+      total_: 'Тотал, {{team}}'
+    goals:
+      goals: Голы
+      will_score: Забьёт
+      score_time: 'Забьёт, {{part}}-й тайм'
+      score_period: 'Забьёт, {{part}}-й период'
+      score_times: Забьёт в обоих таймах
+      score_periods: Забьёт в обоих периодах
+      score_1_goal: 'Забьёт ровно 1 гол'
+      score_2_goals: 'Забьёт ровно 2 гола'
+      both: Обе команды
+      nobody: Никто
+      score_both: Забьют
+      score_both_time: 'Забьют, {{part}}-й тайм'
+      score_both_period: 'Забьют, {{part}}-й период'
+      score_both_times: Голы в обоих таймах
+      score_both_periods: Забьют в обоих периодах
+      next: Следующий гол
+#      next_: Следующий гол ({{number}}-й)
+      exact: Точное количество голов в матче
+      none: Нет голов
+      range: 'От {{from}} до {{to}} голов'
+      more: 7 и более голов
+      first_last: Первый/последний гол
+      first: 'Первый гол {{team}}'
+      last: 'Последний гол {{team}}'
+      whos_first: Кто первым забьёт гол
+      whos_last: Кто последним забьёт гол
+      goal_will: 'Будет гол'
+      goals_in_time: 'Будет гол, {{part}}-й тайм'
+#
+      score_all_goals: Всего голов (ровно)
+      will_be_scored: 'Будет забито {{goal}} гол(-ов)'
+      will_be_scored_more: 'Будет забито {{goal}} и более голов'
+      score_goals_interval: 'Количество голов'
+      score_goals_interval_from_to: 'Будет забито от {{from}} до {{to}}'
+      score_goals_interval_from: 'Будет забито более {{from}}'
+      score_all_goals_time: 'Всего голов в {{part}} тайме (ровно)'
+      score_all_goals_period: 'Всего голов в {{part}} периоде (ровно)'
+      first_goal:
+        title: 'Время, когда забьют первый гол ({{interval}})'
+        interval: 'С {{from}} по {{to}} минуту'
+        none: Гола не будет
+#      players: Игроки
+#      player_score: '{{player}} забьёт'
+      goals_done: 'Забитые голы'
+      goals_missed: 'Пропущенные голы'
+#
+    statistics:
+      exact: Точное количество в матче
+      none: Нет
+      range: 'От {{from}} до {{to}}'
+      more: 7 и более
+
+  auth:
+    authorization: Авторизация
+    login: войти
+    exit: выйти
+    login1: Войти
+    exit1: Выйти
+    user_title: 'Здравствуйте, {{username}}'
+#    replenish: пополнить
+    close: Закрыть
+#    verify: Подтвердить\
+    get_code: 'Получить код'
+    sending_sms: Отправка SMS...
+    resend_sms:  Повторная отправка пароля...
+    send_again: Отправить снова
+    sms_code: Код из SMS
+    register: Регистрация
+    register_succesfull: Вы успешно зарегистрированы!
+    registration_confirm: Подтверджение телефонного номера
+    registration_confirm_desc: На ваш телефонный номер был выслан СМС-код подтверждения. Пожалуйста, введите код в окно ниже и нажмите "Завершить регистрациию"
+    registration_success_info: 'Ваш логин для входа в систему: {{login}}'
+    registration_verify: 'Завершить регистрациию'
+    rules: Правила поведения в клубе
+    i_agree: Я соглашаюсь со всеми правилами клуба "Восход"; подтверждаю, что мне есть 18 лет.
+    your_pn: Номер вашего телефона
+    or: ИЛИ
+    your_login: Ваш Логин
+    your_password: Пароль
+    your_old_password: Ваш старый пароль
+    your_re_password: Повторите пароль
+    history: История
+    settings: Настройки
+    forget_password: Забыли пароль?
+    restore: Восстановление пароля
+    restore1: Восстановить
+    restored: Пароль восстановлен
+    password_changed: Пароль изменен
+
+
+    hint:
+      valid_phone: Введите реальный номер телефона
+      valid_code: Введите код, присланный на Ваш номер телефона
+    error:
+      invalid_data: Неправильные данные
+      invalid_phone: Введён некорректный номер телефона!
+      invalid_login: Введён некорректный логин!
+      user_not_found: Пользователь с таким номером телефона не найден
+      wrong_code: 'Введён код, не соответствующий отправленному по SMS'
+      server: Ошибка на сервере
+      phone_not_set: Не заполнено поле телефон
+
+      required:
+        first_name: Необходимо заполнить поле Имя
+        last_name: Необходимо заполнить поле Фамилия
+        phone: Необходимо заполнить поле Телефон
+        password: Необходимо заполнить поле Пароль
+        confirm_password: Необходимо заполнить поле Подтверждение пароля
+        email: Необходимо заполнить поле E-mail
+        agrement: Необходимо согласиться с правилами и положениями
+
+
+  filter_events:
+    count: 'Список событий [ {{count}} ]'
+
+  coupon:
+    coupon: Купон
+    selected: Выбрано
+    single: Одиночные
+    system_of: 'Система {{betsInSystem}} из {{betsCount}}'
+    express: Экспресс
+    system: система
+    player: Игрок
+    bet: Ставка
+    bet_bonus: '(Бонус x{{bonus}} = {{cfBonusValue}})'
+    bets:
+      BETTING_CHANGED: 'Кф. изменился:'
+      COEFFICIENT_CHANGED: 'Кф. изменился:'
+      BETTING_CLOSED: 'Кф. закрылся и событие было удалено из купона:'
+      BETTING_CLOSED_APPEND: 'попробуйте поставить на это событие позже'
+      COPY_BONUS_ERROR: 'Нельзя копировать бонусные ставки'
+    possible_winning: Возможный выигрыш
+    total_bet: Общая сумма ставки
+    place_bet: Поставить
+    create_virtual_coupon: Оформить заявку
+    reset: Очистить
+    serie_by: Серия ставок по
+    result_cf: Итоговый КФ
+    cf: Кф
+    of: из
+    nono: Нет
+    cancel: Отменить
+    close: Закрыть
+    waiting: Ожидание
+    event_exists: В купоне уже присутствует событие на такую пару команд!
+    server_error: Ошибка сервера
+    unknown_error: Неизвестная ошибка
+    no_money: Не хватает средств для совершение ставки.
+    no_time_rats: До забега крыс осталось меньше 10 секунд! Ставки на этот забег запрещены.
+    pasport: "Заполните паспортные данные игрока, анонимные ставки запрещены"
+    out_of_limits: Ставка не соответствует лимиту! Вы действительно хотите совершить ставку?
+    total_so_much: "Итоговый коэффициент превышает максимально допустимый {{max_coeff}}. Постановка ставки невозможна!"
+    total_so_much_message: "Итоговый коэффициент превышает максимально допустимый {{max_coeff}}."
+    max_count_variants: "Достигнуто максимальное количество вариантов системы {{max_count_variants}}. Постановка ставки невозможна!"
+    max_count_variants_message: "Достигнуто максимальное количество вариантов системы {{max_count_variants}}."
+    error:
+      title: Ошибка купона
+      server_error: Ошибка сервера
+      wrong_sum: Неправильная сумма
+      timeline_not_found: Таймлайн не выбран
+      olympic_dependencies: В купоне присутствуют, связанные с этим собитием, события
+      max_events: Достигнуто максимальное количество событий в купоне.
+      cf_not_found: Коэффициент не найден
+      dependent_selections: Связанные события
+      dependent_selections_message: В купоне присутствуют связанные события. Что вы хотите сделать?
+      cant_switch: "Переключение купона невозможно. В купоне присутствуют одинары, поставленные на одно событие."
+      betting_closed: Ставки запрещены
+      event_not_found: Событие не найдено
+      sum_limit: Сумма ставки превышает Ваш баланс
+      no_sum: Не передана сумма
+    tournament: Турнир
+
+    change: ЗАМЕНИТЬ
+    remove: Удалить
+    singles: ОДИНАРЫ
+    system_type: 'Система {{value}} из {{values}}'
+    system_variants: 'Вариантов: '
+    client_search: Поиск клиентов
+    timeline_outlet: Ставка Таймлайн создана не в этом клубе.
+    place: 'Сделать ставку'
+    bet_placed: Ставка поставлена
+    bet_placed_description: Ваша ставка поставлена
+
+  server_error: Ошибка сервера
+
+  sports:
+    group:
+      1: Популярные
+      2: Игры с мячом
+      3: Остальное
+      4: Олимпиада
+      5: Паралимпиада
+
+  templates:
+    stopped: ост.
+    break: перерыв
+    total: ИТОГ
+    match_not_started: не начался
+    removals: 'Удаления {{removals}}'
+    penalty: 'Пен. {{penalty}}'
+
+    match_over: Матч окончен
+    betting_closed: Прием ставок приостановлен
+
+    more: Больше
+    less: Меньше
+    yes_: Да
+    no_: Нет
+    even_odd: Чёт/Нечет
+    even: Чёт
+    odd: Нечет
+    minutes: мин.
+    event_search: Поиск событий
+    login: Войти
+    num: №
+    sport: Спортставки
+
+    regular_time: основное время
+    overtime: дополнительное время
+
+    all_kind: Все виды
+
+  widgets:
+    title: Идет сейчас
+    soccer:
+      no_events: Матч скоро начнется
+      finished: Матч окончен
+      break: Перерыв
+      part: тайм
+    rats:
+      title1: ЗАБЕГ
+      title2: ПОСЛЕДНИЕ ЗАБЕГИ
+      not_found: Забеги скоро начнутся
+      messages:
+        canceled: Забег отменен
+      places:
+        1: 1 место
+        2: 2 место
+        3: 3 место
+
+  blocks:
+    results:
+      favorites: Избранные
+      yesterday: Вчера
+      today: Сегодня
+      live: Результаты Live
+      prematch: Результаты. Все виды.
+      title: Результаты
+
+    prematch:
+      compare_cf_button: Сравнение КФ
+      filter_sport_all_sports: Все виды
+      filter_sports_reset: Очистить
+
+    games:
+      title: Игры
+      play: Играть
+
+    top7:
+      title: Топ 7
+      button: Все топ события
+
+    news:
+      title: Новости
+      tabs:
+        sport: Спорт
+        club: Клуб
+
+    header:
+      statistic: Статистика
+      results: Результаты
+      results_live: Результаты Live
+      help: Помощь
+      events: Линия
+      live: Live
+      games: Игры
+      ToTo8: ToTo8
+      best: Лучшая букмекерка рунета
+      search: Поиск события
+      laki: Лаки9
+
+    footer:
+      registered_information: '© 2013-%{year}. Пари Клуб BET RUN'
+
+  market_groups:
+    main: Основные
+    times: Таймы
+    totals: Тоталы
+    foras: Форы
+    goals: Голы
+    other: Другое
+    halfs: Половины
+    quarters: Четверти
+    periods: Периоды
+    parties: Партии
+
+  timeline:
+    tl: 'ТЛ '
+    title: '№ {{timeline_id}}'
+    name: Таймлайн
+    calculated_date: Дата расчета
+    status: Статус
+    start_balance: На начало
+    inplay_balance: В игре
+    balance: Баланс
+    types:
+      '5': Спорт
+      '6': Гейм
+    statuses:
+      '-1': Закрыт
+      '0': Не определён
+      '1': Активный
+      '2': Оконченный
+      '3': Проигрышный
+      '4': Закрыт
+      '5': Архив
+  bet:
+    not_found: Ваша история ставок пуста
+    date: Дата
+    name: Название
+    cf: КФ
+    result: Результат
+    sum: Сумма, Руб.
+    stake: Ставка
+    win: Выигрыш
+    payout: Выплата, Руб.
+    express: 'Экспресс ({{betsCount}})'
+    single: Одинар
+    system: 'Система {{betsInSystem}} из {{betsCount}}'
+    express_info: '№{{number}} Экспресс. Итоговый КФ: {{coefficient}}'
+    open: Открыть
+    close: Свернуть
+    statuses:
+      'all': Все
+      '-1': Проигрыш
+      '0': Возврат
+      '1': Победа
+      '2': Ожидается #В игре
+      '3': Не определена
+      '4': Полупроигрыш
+      '5': Полувыигрыш
+      '6': Ожидается
+      '7': Отклонена
+      '8': Удалена
+      '9': Просрочена
+      '10': Выкуплена
+      '11': Фикс. возврат
+      '999': ""
+      'undefined': Не определена
+
+  football:
+    cr: Угловой, {{command}}
+    fl: Фол, {{command}}
+    goals: Гол, {{command}}
+    of: Офсайд, {{command}}
+    outs: Аут, {{command}}
+    rc: Красная карточка, {{command}}
+    yc: Желтая карточка, {{command}}
+
+
+  profile:
+    menu:
+      groups:
+        history: История
+        operations: Операции
+        others: Прочее
+      settings: Настройки
+      bets-history: История ставок
+      account-history: История счета
+      sessions-history: История сеансов
+      replenish: Ввод средств
+      transfer: Вывод средств
+    settings:
+      personal: Общие
+      login: Логин (Номер счета)
+      timezone: Часовой пояс
+      dopCF: Сравнение коэффициентов
+      dopCF_checkbox: Показывать коэффициенты других букмекерских контор на выбранный исход
+
+      security: Безопасность
+      logout: Выход из системы
+      time:
+        5min: 5 мин.
+        30min: 30 мин.
+        1hour: 1 час
+        never: Никогда
+      last_session: Последний сеанс
+      session_history: История сеансов
+
+      personal1: Личные данные
+      name_surname: Имя и Фамилия
+      sex_title: Пол
+      sex:
+        0: Не выбрано
+        1: Мужской
+        2: Женский
+      birthday: Дата рождения
+      country: Страна
+      change: Изменить
+      rss: Получать рассылку от BetRun
+
+      password:
+        change: Изменение пароля
+        change1: Изменить пароль
+        input: Необходимо ввести пароль
+        length_min: Пароль должен быть не менее 6 символов
+        length_max: Пароль должен быть не более 12 символов
+        different: Пароли не совпадают
+
+      email:
+        title: E-mail
+        change: Изменение E-mail
+        change1: Изменить E-mail
+        new_email: Новый E-mail
+        confirm: Подтверждение E-mail
+        changed: E-mail успешно изменен
+        required: E-mail обязателен для заполнения
+        invalid: E-mail невалидный
+
+      phone:
+        title: Номер телефона
+        change: Изменение телефона
+        change1: Изменить телефон
+        new_phone: Новый телефон
+        confirm: Подтверждение смены телефона
+        sms_code_from_old_phone: СМС код, присланный на старый номер
+        sms_code_from_new_phone: СМС код, присланный на новый номер
+        changed: Телефонный номер успешно изменен
+        input: Необходимо ввести мобильный телефон
+        text: Мы просим указать номер нового мобильного телефона. На оба (текущий и новый) телефона придут смс с кодом, которые необходимо ввести на следующем шаге.
+
+      empty_field: Не выбрано
+
+    account_history:
+      title: История счета
+      account: Счет
+      not_found: Операций нет
+      date: Дата
+      interface: Интерфейс
+      operation: Операция
+      amount: Сумма
+      balance: Баланс
+      from_site: Сайт
+      from_mobile: Мобильное приложение
+
+      operation_all: Все
+      operation_payout: Выигрыш
+      operation_stake: Ставка
+      operation_transfer: Вывод средств
+      operation_replenishment: Пополнение
+      operation_withdrawal: Вывод средств
+      operation_return: Возврат
+
+      operation_id_payout: '#{{slip_id}}'
+      operation_id_stake: '#{{slip_id}}'
+      operation_id_transfer: '#{{transaction_id}}'
+      operation_id_replenishment: '#{{transaction_id}}'
+      operation_id_withdrawal: '#{{transaction_id}}'
+      operation_id_return: '#{{slip_id}}'
+
+    bets_history:
+      title: История ставок
+      period: Период
+      show: Показать
+
+    sessions_history:
+      title: История сеансов
+      not_found: Сессий пользователя не найдено
+      date: Дата
+      ip: IP адрес
+
+
+
+

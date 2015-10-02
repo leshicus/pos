@@ -183,11 +183,11 @@ Ext.define('Ux.locale.Manager', {
 
     // * Русский, English
     getLanguageText : function(val) {
-        return Utilities.findByKey(this._locales, 'abbr', val)['text'] ;
+        return Util.findByKey(this._locales, 'abbr', val)['text'] ;
     },
     // * текущая локаль
     getCurrentLocale : function() {
-        return Utilities.findByKey(this._locales,'text', this.getLanguage()) ;
+        return Util.findByKey(this._locales,'text', this.getLanguage()) ;
     },
 
     isLocalable : function(me, config) {
