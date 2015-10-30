@@ -19,6 +19,14 @@ Ext.define('Office.view.fill.live.GridEventLiveV', {
     hideHeaders: true,
     viewConfig: {
         preserveScrollOnRefresh: true,
+        //getRowClass: function (record, index, rowParams, store) { // * класс для строки грида
+        //    if (record.get('_fantom')){
+        //        if(index == 0)
+        //            return 'first-rats-row';
+        //        if(index == 1)
+        //            return 'second-rats-row';
+        //    }
+        //},
         listeners: {
             // * сохранение скролбара коэффициентов после обновления. По-другому сделать не получалось.
             // * правда скролбар дергается
@@ -36,6 +44,7 @@ Ext.define('Office.view.fill.live.GridEventLiveV', {
     },
     features: [{
         ftype: 'grouping',
+        id:'groupFeatureId',
         // groupHeaderTpl: '{name}',
         // * сортировка по sport_id
         groupHeaderTpl: [
@@ -83,7 +92,9 @@ Ext.define('Office.view.fill.live.GridEventLiveV', {
                 'locale',
                 'line_version',
                 'filters.cbSport',
-                'filters.filterEvent'
+                'filters.filterEvent',
+                'filters.filterDate',
+                'filters.filterTime'
             ]
         });
 
@@ -111,11 +122,12 @@ Ext.define('Office.view.fill.live.GridEventLiveV', {
         this.tbar = [
             {
                 xtype: 'combocheck',
-                emptyText: 'Вид спорта',
+                emptyText: 'Спорт',
                 //emptyText: '\uF0b0 Вид спорта',
                 itemId: 'cbSport',
                 editable: false,
                 queryMode: 'local',
+                width: 110,
                 displayField: 'name',
                 valueField: 'id',
                 padding:'5 0 0 0',
@@ -125,15 +137,14 @@ Ext.define('Office.view.fill.live.GridEventLiveV', {
                     value: '{filters.cbSport}',
                     disabled:'{disableFastInputField}'
                 },
-                flex: 1,
+               // flex: 1,
                 _func: function (combo, n) {
                     me.controller.onAddFilter(combo, n);
                 }
             },
-
             {
                 xtype: 'textfield',
-                emptyText: 'Фильтр по имени',
+                emptyText: 'Событие',
                 flex: 1,
                 enableKeyEvents: true,
                 itemId: 'filterEvent',
@@ -153,9 +164,47 @@ Ext.define('Office.view.fill.live.GridEventLiveV', {
                 //        cls: 'x-form-search-trigger'
                 //    }
                 //}
+            },
+            {
+                xtype: 'datefield',
+                emptyText: 'дата',
+                width: 75,
+                format: 'd.m',
+                enableKeyEvents: true,
+                itemId: 'filterDate',
+                listeners: {
+                   // keydown: 'onKeydown',
+                    change: 'onKeydown'
+                },
+                style: {
+                    top: '0!important' // * убирает какой-то непонятный отступ сверху для текстового поля
+                },
+                bind: {
+                    value: '{filters.filterDate}',
+                    disabled:'{disableFastInputField}'
+                }
+            },
+            {
+                xtype: 'timefield',
+                emptyText: 'время',
+                width: 75,
+                format: 'H:i',
+                enableKeyEvents: true,
+                editable:false,
+                itemId: 'filterTime',
+                listeners: {
+                    // keydown: 'onKeydown',
+                    change: 'onKeydown'
+                },
+                style: {
+                    top: '0!important' // * убирает какой-то непонятный отступ сверху для текстового поля
+                },
+                bind: {
+                    value: '{filters.filterTime}',
+                    disabled:'{disableFastInputField}'
+                }
             }
         ]
-
 
         this.columns = {
             defaults: {
@@ -167,7 +216,7 @@ Ext.define('Office.view.fill.live.GridEventLiveV', {
                     text: 'id',
                     dataIndex: '_date_base',
                     width: 65,
-                    renderer: 'dateText'
+                    renderer: 'dateText' // * не только рендерит, но в крысах и удаляет ставки из купона
                 },
                 {
                     text: 'Событие',

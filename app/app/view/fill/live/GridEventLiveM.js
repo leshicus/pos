@@ -1,13 +1,13 @@
 Ext.define('Office.view.fill.live.GridEventLiveM', {
     extend: 'Ext.app.ViewModel',
-   // extend: 'Ext.app.ViewModel',
+    // extend: 'Ext.app.ViewModel',
     requires: [
         // 'Office.view.menumain.MenuMainM'
     ],
     alias: 'viewmodel.grideventlive',
     data: {
-        activeTabEventId:'',
-        firstFillFromLocal:1 // * для первоначальной загрузки из хранилища при создании грида (последующие будут при нажатии пункта меню Ставки)
+        activeTabEventId: '',
+        firstFillFromLocal: 1 // * для первоначальной загрузки из хранилища при создании грида (последующие будут при нажатии пункта меню Ставки)
     },
     stores: {
         rawdata: {
@@ -38,8 +38,24 @@ Ext.define('Office.view.fill.live.GridEventLiveM', {
             //groupField: 'sport_id',
             storeId: 'eventstore',
             listeners: {
-                datachanged: 'onEventStoreChange'
-            }
+                datachanged: 'onEventStoreChange',
+                // load:'onEventStoreLoad'
+            },
+            _defaults: [
+                {
+                    tournament_name: 'Стол 1',
+                    id: 1,
+                    _fantom:true,
+                    _event_name: '<br><span style="color:#58CD87;font-size: 57px;">Стол 1</span>'
+                    //_event_name: '<br><span style="color:#626262;font-size: 57px;">Стол 1</span>'
+                },
+                {
+                    tournament_name: 'Стол 2',
+                    id: 2,
+                    _fantom:true,
+                    _event_name: '<br><span style="color:#64BDFC;font-size: 57px;">Стол 2</span>'
+                }
+            ]
         },
         // * chained store, только для отображения в гриде
         eventstore_chained: {

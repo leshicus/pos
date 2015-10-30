@@ -789,3 +789,15 @@ table.market-table-dc tr td:first-child {
     background: #D6E8F6;
     border-color: #D6E8F6;
 }
+
+/* чтобы обычные кнопки выглядели как кнопки тулбара */
+.button-like-toolbar .x-btn-icon-el-default-small.x-btn-glyph{
+    color: #666666;
+}
+.button-like-toolbar .x-btn-inner-default-small{
+    color: #666666;
+}
+.button-like-toolbar .x-btn-default-small{
+    border-color: #C8C8C8;
+    background-color: #E5E5E5!important;
+}

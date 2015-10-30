@@ -30,6 +30,8 @@ Ext.define('Office.view.menumain.MenuMainC', {
         'Office.view.panels.GridParamV',
 
         'Office.view.virtual.GridVirtualV',
+        'Office.view.scheduleforgamefield.GridScheduleforgamefieldV',
+        'Office.view.players.GridPlayersV',
 
         'Office.view.chat.GridChatGroupV',
         'Office.view.chat.GridChatUserV',
@@ -149,7 +151,7 @@ Ext.define('Office.view.menumain.MenuMainC', {
                     gridlastsession = Ext.ComponentQuery.query('gridlastsession')[0],
                     container_2 = Ext.ComponentQuery.query('#session_container_2')[0],
                     container_1 = Ext.ComponentQuery.query('#session_container_1')[0],
-                    container = Ext.ComponentQuery.query('#session_container_1')[0];
+                    container = Ext.ComponentQuery.query('#session_container')[0];
 
                 if (!gridcurrent)
                     gridcurrent = Ext.create('Office.view.session.GridCurrentV', {
@@ -222,14 +224,14 @@ Ext.define('Office.view.menumain.MenuMainC', {
                 } else {
                     // * переключим вкладку в Событиях, если нужно
                     var localStorage = Ext.util.LocalStorage.get('newpos'),
-                        activeEventTab = parseInt(localStorage.getItem('activeEventTab')),
+                        activeEventTab = parseInt(localStorage.getItem('activeEventTab')) || 0,
                         tabpanel = panel.down('#eventstab');
 
                     tabpanel.setActiveItem(activeEventTab);
 
                     // * для того, чтобы ставки, сделанные из Виртуальных заявок и Принятых появились
                     var gridEvent = Ext.ComponentQuery.query('grideventlive')[activeEventTab];
-                    if (gridEvent.getStore().count())
+                    if (gridEvent && gridEvent.getStore().count())
                         BasketF.fillBasketFromLocal(gridEvent, 0);
                 }
 
@@ -441,6 +443,36 @@ Ext.define('Office.view.menumain.MenuMainC', {
                 try {
                     menumain.removeAll(Util.AUTO_DESTROY_ON_REMOVE);
                     menumain.add(gridVirtual);
+                } catch (e) {
+                    Util.erMes(e.message);
+                }
+                break;
+            case 'scheduleforgamefield':
+                var gridScheduleforgamefield = Ext.ComponentQuery.query('gridscheduleforgamefield')[0];
+
+                if (!gridScheduleforgamefield)
+                    gridScheduleforgamefield = Ext.create('Office.view.scheduleforgamefield.GridScheduleforgamefieldV', {
+                        margin: '10 0 0 0'
+                    });
+
+                try {
+                    menumain.removeAll(Util.AUTO_DESTROY_ON_REMOVE);
+                    menumain.add(gridScheduleforgamefield);
+                } catch (e) {
+                    Util.erMes(e.message);
+                }
+                break;
+            case 'players':
+                var gridPlayers = Ext.ComponentQuery.query('gridplayers')[0];
+
+                if (!gridPlayers)
+                    gridPlayers = Ext.create('Office.view.players.GridPlayersV', {
+                        margin: '10 0 0 0'
+                    });
+
+                try {
+                    menumain.removeAll(Util.AUTO_DESTROY_ON_REMOVE);
+                    menumain.add(gridPlayers);
                 } catch (e) {
                     Util.erMes(e.message);
                 }

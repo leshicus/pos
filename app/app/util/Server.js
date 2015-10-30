@@ -677,7 +677,7 @@ Ext.define('Office.util.Server', {
     //},
     pos_printline: function () {
         return this.getPrefix() + '/api/?command=pos_printline&format=html&params={"timezone":"Europe/Moscow",' +
-        '"mode":"{0}","from_date":"{1}","to_date":"{2}","sport":"{3}"}';
+        '"mode":"{0}","from_date":"{1}","to_date":"{2}","sport":"{3}", "tournament": "{4}"}';
     },
     pos_printline_day_express: function () {
         return this.getPrefix() + '/api/?command=pos_printline&format=html&params={"timezone":"Europe/Moscow",' +

@@ -89,6 +89,17 @@ Ext.define('Office.view.fill.basket.GridBasketExpressV', {
                     listeners: {
                         change: function (c, n, o) {
                             Ext.defer(function () {
+                                var fill = Ext.ComponentQuery.query('#main')[0],
+                                    vm = fill.getViewModel(),
+                                    storeBasket = vm.getStore('basket');
+
+                                // * сохраним значение выбранной системы в system_value каждой записи
+                                //storeBasket.suspendEvent('update');
+                                storeBasket.each(function (item) {
+                                    item.set('system_value',n);
+                                });
+                                //storeBasket.resumeEvent('update');
+
                                 // * отправим ставки на монитор игрока
                                 MonitorF.sendBetsToMonitor();
                             }, 100, this);
@@ -151,7 +162,7 @@ Ext.define('Office.view.fill.basket.GridBasketExpressV', {
                                     cls: 'bet',
                                     maskRe: /^[0-9.]$/, // * не дает ввести иные символы
                                     itemId: 'betEditor',
-                                    selectOnFocus: true,
+                                   // selectOnFocus: true,
                                     listeners: {
                                         specialkey: 'onKeyPressAmount',
                                         change: 'onChangeAmount'// * костыль, потому что при первичном редактировании поля при автофокусе не сохраняются данные :(((

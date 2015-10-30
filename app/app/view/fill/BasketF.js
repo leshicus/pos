@@ -33,9 +33,10 @@ Ext.define('Office.view.fill.BasketF', {
         // * возьмем ставки из локального хранилища
         if (storeBasketLocal && storeBasketLocal.count() && grid) {
             storeBasketLocal.each(function (record) {
-                var data = record.get('query');
+                var dataOld = record.get('query'),
+                    data = Util.cloneObject(dataOld);
 
-                if (data) {
+                if (data&& data.type == activeTabEvent) {
                     var event = grid.getViewModel().getStore('eventstore').findRecord('event_id', data.event_id, 0, false, true, true);
 
                     if (event) {
@@ -43,14 +44,17 @@ Ext.define('Office.view.fill.BasketF', {
 
                         if (!arrCoef) { // * указанный кэф закончился- попробуем подобрать преемника
                             arrCoef = UtilMarkets.cf(event.getData(), data.outcome_mnemonic_name);
+
+//console.info(dataOld.coefId);
+                            // * удалим закончившийся кэф из локального хранилища
+                            delete dataOld;
                         }
 //todo подбирать новые кф в купоне по мнемонике для ставок, полученных из Принятые::Копировать не получается, т.к. там нет мнемоник- outcome_mnemonic_name (а в Виртуальныъ заявках- есть)
                         if (arrCoef) {
                             multi_value = data.multi_value;
                             system_value = data.system_value;
 
-                            if (!this.existsInBasket(data)
-                                && data.type == activeTabEvent) {// * чтобы в купон не добавлялись ставки из локального хранилища, которые не соответствуют выделенной вкладке линия/лайв
+                            if (!this.existsInBasket(data)) {// * чтобы в купон не добавлялись ставки из локального хранилища, которые не соответствуют выделенной вкладке линия/лайв
 
                                 if (!data.created) // * по этому признаку я отделяю записи созданные из раздела Виртуальные заявки и Принятые от тех, что созданы в разделе Ставки
                                     arrToDelete.push(record);
@@ -62,8 +66,13 @@ Ext.define('Office.view.fill.BasketF', {
                             }
                         } else {// * Кф закрылся
                             Util.warnMes('Кф ' + data.coefName + ' закрыт, и не добавлен в купон.');
+
+                            // * удалим закончившийся кэф из локального хранилища
+                            delete dataOld;
                         }
                     }
+                }else{
+                    countStoreBasketLocal--;
                 }
             }, this);
 
@@ -74,13 +83,13 @@ Ext.define('Office.view.fill.BasketF', {
             if (multi_value > 0) {
                 recBasketSum.set('amount', multi_value);
                 Ext.defer(function () {// * стор system не поспевает
-                    if (basket_count < countStoreBasketLocal) { // * если не все ставки системы доехали до купона (какие-то кэфы закрылись и не были подобраны аналоги), то ранг системы будем сбрасывать
-                        var systemErr = system_value + ' из ' + countStoreBasketLocal;
-                        Util.erMes('Не возможно создать систему \"' + systemErr + '\" - некоторые Кф закрылись');
-                        system_value = 1;
-                    }
+                    if (system_value > 1) {
+                        if (basket_count < countStoreBasketLocal) { // * если не все ставки системы доехали до купона (какие-то кэфы закрылись и не были подобраны аналоги), то ранг системы будем сбрасывать
+                           // var systemErr = system_value + ' из ' + countStoreBasketLocal;
+                           // Util.erMes('Не возможно создать систему \"' + systemErr + '\" - некоторые Кф закрылись');
+                            system_value = 1;
+                        }
 
-                    if (system_value) {
                         var recSystem = storeSystem.getAt(system_value - 1);
                         if (recSystem)
                             comboSystem.select(parseInt(system_value));
@@ -300,12 +309,18 @@ Ext.define('Office.view.fill.BasketF', {
 
     // * обновить гриды в купоне, а то там старые значения в input зависают
     refreshBasketGrids: function () {
+       // console.log('refreshBasketGrids');
         var fill = Ext.ComponentQuery.query('#main')[0],
             tabpanel = fill.down('#tabpanelBet'),
-            arrGrid = tabpanel.query('gridpanel');
-        arrGrid.forEach(function (item) {
-            item.getView().refresh();
-        });
+            arrGrid = tabpanel.query('gridpanel'),
+            vm = fill.getViewModel(),
+            storeBasket = vm.getStore('basket');
+
+
+            arrGrid.forEach(function (item) {
+                item.getView().refresh();
+            });
+
     },
 
     // * обновить область кэфов
@@ -352,14 +367,35 @@ Ext.define('Office.view.fill.BasketF', {
     //    }, 100, this);
     //},
 
-    // * сохраним отправляемые кэфы в отдельное свойство, чтобы они хоть где-то остались, в случае изменения
-    saveArrCoef: function (storeBasket) {
+    // * сохраним отправляемые кэфы в отдельное свойство, чтобы они хоть где-то остались, в случае изменения (изменения )
+    saveArrCoef: function () {
+        var fill = Ext.ComponentQuery.query('#main')[0],
+            vm = fill.getViewModel(),
+            storeBasket = vm.getStore('basket');
+
+        storeBasket.suspendEvent('update');
         storeBasket.each(function (item) {
             item.set('arrCoefSent', Util.cloneObject(item.get('arrCoef')));
             item.set('coefIdSent', item.get('arrCoef')[0]);
 
             item.set('arrBasisSent', Util.cloneObject(item.get('arrBasis')));
             item.set('basisIdSent', item.get('arrBasis')[0]);
+        }, this);
+        storeBasket.resumeEvent('update');
+    },
+
+    // * сохраним отправляемые кэфы в отдельное свойство, чтобы они хоть где-то остались, в случае изменения (изменения от веб-сокетов)
+    saveArrCoefBeforeUpdate: function () {
+        var fill = Ext.ComponentQuery.query('#main')[0],
+            vm = fill.getViewModel(),
+            storeBasket = vm.getStore('basket');
+
+        storeBasket.each(function (item) {
+            item.set('arrCoefOld', Util.cloneObject(item.get('arrCoef')));
+            item.set('coefIdOld', item.get('arrCoef')[0]);
+
+            item.set('arrBasisOld', Util.cloneObject(item.get('arrBasis')));
+            item.set('basisIdOld', item.get('arrBasis')[0]);
         }, this);
     },
 
@@ -370,7 +406,7 @@ Ext.define('Office.view.fill.BasketF', {
             storeBasket = vm.getStore('basket'),
             betType = this.getBetType();
 
-        this.saveArrCoef(storeBasket);
+        this.saveArrCoef();
 
         var arrBets = this.getArrBetsAmount(storeBasket, betType);
 
@@ -555,7 +591,7 @@ Ext.define('Office.view.fill.BasketF', {
                             if (resp.key) { // * первичный check, когда приходит key и delay
                                 vm.set('queueKey', resp.key);
 
-                                if (resp.delay && !BasketF.isDayExpress()) {
+                                if (resp.delay/* && !BasketF.isDayExpress()*/) {
                                     // * показать окно с обратным отсчетом delay
                                     _this.showDelayWindow(resp.delay, resp.key);
                                 } else {
@@ -583,6 +619,8 @@ Ext.define('Office.view.fill.BasketF', {
                             _this.basketResponseError(resp);
                         } else if (resp.status == 'removed') { // * удалили ставку из очереди
                             Util.warnMes('Ставка отменена');
+                        } else if (resp.status == 'fallback') { // * демон очереди не запущен, прием ставки по старому протоколу
+                            BasketF.getMaxMin('BasketF.basketPrerequest()');
                         } else {
                             Util.warnMes(resp.status);
                         }
@@ -594,13 +632,17 @@ Ext.define('Office.view.fill.BasketF', {
         } else {
             Util.erMes('Нет ставок для постановки');
 
-            this.refreshBasketStore(storeBasket);
+            this.cleanBasketStore();
         }
     },
 
     // * удалить не актуальные ставки из купона - те, чей кф поменялся и стал 0
     // * или нет соответствующего кэфа в eventstore todo
-    refreshBasketStore: function (storeBasket) {
+    cleanBasketStore: function () {
+        var fill = Ext.ComponentQuery.query('#main')[0],
+            vm = fill.getViewModel(),
+            storeBasket = vm.getStore('basket');
+
         storeBasket.each(function (item) {
             if (item) {
                 var arrCoef = item.get('arrCoef');
@@ -719,7 +761,7 @@ Ext.define('Office.view.fill.BasketF', {
 
                             if (cf_id) {
                                 cf_valueFormatted = '<span role="button" style="font-weight: 600;color:green;">' + cf_value + '</span>';
-                                str += 'Кф. изменился: ' + _this.getClosedBetText(old_cf_id) + ' \u2192 ' + '(' + cf_valueFormatted + '). ';
+                                str += 'Кф. изменился: ' + _this.getClosedBetText(old_cf_id) + ' \u2192 ' + '(' + cf_valueFormatted + '). '; //todo иногда не ставится исходный кэф 02102015
 
                                 // * поменяем исходный кэф, на тот, что пришел
                                 BasketF.changeOriginalCoef(old_cf_id, cf_id, cf_value);
@@ -772,7 +814,6 @@ Ext.define('Office.view.fill.BasketF', {
             } else if (resp.basket_response.message == Util.WRONG_CASH_OR_CLUB) { // * таймлайн принят в другой кассе
                 Util.erMes('Ставка Таймлайн создана не в этом клубе.');
             } else {
-                console.info(resp);
                 Util.erMes(resp.basket_response.message);
             }
         } else {
@@ -885,7 +926,7 @@ Ext.define('Office.view.fill.BasketF', {
             system_value = vmExpress.get('system_value');
 
         // * сохраним coefId в свойство coefSentId
-        this.saveArrCoef(storeBasket);
+        this.saveArrCoef();
 
         var arrBets = this.getArrBetsAmount(storeBasket, betType);
 
@@ -1028,7 +1069,7 @@ Ext.define('Office.view.fill.BasketF', {
             system_value = vmExpress.get('system_value'),
             _this = this;
 
-        this.saveArrCoef(storeBasket);
+        this.saveArrCoef();
 
         var arrBets = this.getArrBetsAmount(storeBasket, betType);
 

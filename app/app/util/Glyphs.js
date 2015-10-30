@@ -72,7 +72,6 @@ Ext.define('Office.util.Glyphs', {
         rouble:'xf158',
         history:'xf1da',
         arrow_right:'xf061',
-        desktop:'xf108',
         menu:'xf0c9',
         send:'xf1d8',
         comments:'xf0e6',
@@ -81,7 +80,8 @@ Ext.define('Office.util.Glyphs', {
         file:'xf016', // one file
         files:'xf0c5', // two files
         flag:'xf11e', // finish flag
-        warning:'xf071' // warning
+        warning:'xf071', // warning
+        refresh: 'xf021',
     },
 
     get  : function(glyph) {

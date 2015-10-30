@@ -23,11 +23,14 @@ Ext.define('Office.view.fill.coeff.ApplyChangedData', {
                 if (tournaments && tournaments.length) { // * имеются турниры
                     var arrEventOut = this.getMatchdataTournaments(tournaments, false, grid);
                     if (arrEventOut.length) {
-                        this.applyDiffs(grid, arrEventOut);
+                        if (grid.getItemId() == 'rats') {
+                            ApplyChangedData.loadDataToFantomRecords(arrEventOut, grid);
+                        } else {
+                            this.applyDiffs(grid, arrEventOut);
+                        }
 
                         // * обновим купон, если требуется
                         this.updateBasket(arrEventOut);
-                        //BasketF.refreshBasketGrids();
 
                         // * если уже были показаны кэфы (выделено событие), то нужно перепоказать их
                         if (selection && grid.getItemId() == BasketF.getActiveTabEventId()) {// * данная вкладка выделена
@@ -49,17 +52,21 @@ Ext.define('Office.view.fill.coeff.ApplyChangedData', {
     // * первоначальная загрузка данных по кэфам и событиям (matchdata) - загрузка из rawstore в eventsrore
     loadMatchdataData: function (objData, curLineVers, grid) {
         var vmLive = grid.getViewModel(),
-            eventstore = vmLive.getStore('eventstore');
+            eventstore = vmLive.getStore('eventstore'),
+            arrResp = [];
         if (objData) {
             var tournaments = objData['tournaments'];
             if (tournaments && tournaments.length) { // * имеются турниры
                 var arrEventOut = this.getMatchdataTournaments(tournaments, true, grid);
                 if (arrEventOut.length) {
-                    eventstore.loadData(arrEventOut);
+                    if (grid.getItemId() == 'rats') {
+                        this.loadDataToFantomRecords(arrEventOut, grid);
+                    } else {
+                        eventstore.loadData(arrEventOut);
+                    }
 
                     // * обновим купон, если требуется
                     this.updateBasket(arrEventOut);
-                    // BasketF.refreshBasketGrids();
                 }
             }
             vmLive.set('line_version', curLineVers);
@@ -112,18 +119,26 @@ Ext.define('Office.view.fill.coeff.ApplyChangedData', {
     updateBasket: function (arrEventOut) {
         var fill = Ext.ComponentQuery.query('#main')[0],
             vm = fill.getViewModel(),
-            storeBasket = vm.getStore('basket');
+            storeBasket = vm.getStore('basket'),
+            arrToDelete = [],
+            arrResp = [];
 
         // * перебор пришедших событий
         Ext.Array.each(arrEventOut, function (obj) {
             var cs = Util.cloneObject(obj['cs']),
                 cse = Util.cloneObject(obj['cse']),
-                arrToDelete = [];
+                objChanged = {};
 
             Ext.Object.merge(cs, cse);// * чтобы не делать 2 цикла, отдельно по cs & cse
 
             storeBasket.each(function (item) {
-                if (item.get('event_id') == obj['event_id']) {
+                // console.info(arguments);
+
+                //if (item.get('event_id') == obj['id'])
+                //    console.info(obj);
+
+                if (item.get('event_id') == obj['event_id']
+                    || item.get('event_id') == obj['id']) {
                     Ext.Object.each(cs, function (key, val) {
                         var arrCoef = item.get('arrCoef'),
                             basketCoefTypeId = arrCoef[1],
@@ -133,9 +148,26 @@ Ext.define('Office.view.fill.coeff.ApplyChangedData', {
 
                         // * coefId меняется, но coefTypeId не меняется
                         if (basketCoefTypeId && changedCoefTypeId == basketCoefTypeId.toString()) {
-                            if (val[2] == 0) {
+                            if (val[2] == 0
+                                && !Util.in_array(item.get('coefId'), Ext.Array.pluck(Ext.Array.pluck(arrToDelete, 'data'), 'coefId'))) {
                                 arrToDelete.push(item);
+
+                                objChanged = {
+                                    message: 'BETTING_CLOSED',
+                                    cf_id: arrCoef[0]
+                                };
+                                arrResp.push(objChanged);
                             } else {
+                                //objChanged = {
+                                //    message: 'COEFFICIENT_CHANGED',
+                                //    cf_id: arrCoef[0],
+                                //    data: {
+                                //        cf_id: val[0],
+                                //        cf_value: val[2]
+                                //    }
+                                //};
+                                //arrResp.push(objChanged);
+
                                 arrCoef[0] = val[0];
                                 arrCoef[3] = arrCoef[2];
                                 arrCoef[2] = val[2];
@@ -145,6 +177,16 @@ Ext.define('Office.view.fill.coeff.ApplyChangedData', {
                         }
 
                         if (basketBasisTypeId && changedCoefTypeId == basketBasisTypeId.toString()) {
+                            //objChanged = {
+                            //    message: 'COEFFICIENT_CHANGED',
+                            //    cf_id: arrBasis[0],
+                            //    data: {
+                            //        odds_id: val[0],
+                            //        odds_value: val[2]
+                            //    }
+                            //};
+                            //arrResp.push(objChanged);
+
                             arrBasis[0] = val[0];
                             arrBasis[3] = arrBasis[2];
                             arrBasis[2] = val[2];
@@ -154,9 +196,35 @@ Ext.define('Office.view.fill.coeff.ApplyChangedData', {
                     }, this);
                 }
             }, this);
+        }, this);
 
+        // * отправим на монитор изменившиеся значения по ставкам
+        if (arrResp.length) {
+            MonitorF.sendChangedBetsToMonitor(arrResp, 1);
+        }
+
+        Ext.defer(function () {
             if (arrToDelete.length) {
                 storeBasket.remove(arrToDelete);
+            }
+        }, 200, this);
+
+        if (storeBasket.count()) {
+            BasketF.refreshBasketGrids();
+        }
+    },
+
+    loadDataToFantomRecords: function (arrEventOut, grid) {
+        var storeEvent = grid.getViewModel().getStore('eventstore');
+
+        // * перебор пришедших событий
+        Ext.Array.each(arrEventOut, function (obj) {
+            var rec = storeEvent.findRecord('tournament_name', obj.tournament_name, 0, false, true, true);
+            // * скопируем некоторые данные из пришедшей записи в фантомную запись
+            if (rec) {
+                Ext.Object.each(obj, function (key, val) {
+                    rec.set(key, val);
+                });
             }
         }, this);
     },
@@ -231,34 +299,41 @@ Ext.define('Office.view.fill.coeff.ApplyChangedData', {
     applyDiffs: function (grid, arrDiffs) {
         var vmGridEventLive = grid.getViewModel(),
             storeEvent = vmGridEventLive.getStore('eventstore'),
-            _this = this;
+            _this = this,
+            currentTime = new Date(),
+            strCurrentTime = Ext.Date.format(currentTime, 'timestamp');
 
         // * идем по изменениям
         Ext.Array.each(arrDiffs, function (diff) {
-            var oldRec = storeEvent.findRecord('event_id', diff['event_id'], 0, false, true, true);
+            var time = new Date(diff['time']),
+                strTime = Ext.Date.format(time, 'timestamp');
 
-            if (oldRec) { // * изменяем событие
-                oldRec.set('current_second', diff['current_second']);
-                oldRec.set('_current_second', diff['current_second']);
-                oldRec.set('betting_closed', diff['betting_closed']);
-                oldRec.set('status', diff['status']);
-                oldRec.set('timer_stopped', diff['timer_stopped']);
+            if(strTime > strCurrentTime){
+                var oldRec = storeEvent.findRecord('event_id', diff['event_id'], 0, false, true, true);
 
-                // * применим служебные кэфы
-                oldRec = this.applyServiceCoeffs(diff, oldRec, grid);
+                if (oldRec) { // * изменяем событие
+                    oldRec.set('current_second', diff['current_second']);
+                    oldRec.set('_current_second', diff['current_second']);
+                    oldRec.set('betting_closed', diff['betting_closed']);
+                    oldRec.set('status', diff['status']);
+                    oldRec.set('timer_stopped', diff['timer_stopped']);
 
-                var cs = oldRec.get('cs'),
-                    cse = oldRec.get('cse');
+                    // * применим служебные кэфы
+                    oldRec = this.applyServiceCoeffs(diff, oldRec, grid);
 
-                _this.iterateCs(diff['cs'], cs);
-                _this.iterateCs(diff['cse'], cse);
+                    var cs = oldRec.get('cs'),
+                        cse = oldRec.get('cse');
 
-                if (UtilMarkets.is_ended(diff))
-                    oldRec.set('finished', 1);
-            } else { // * добавляем событие
-                if (diff['finished'] != 1) {
-                    diff = this.applyServiceCoeffs(diff, null, grid);
-                    storeEvent.add(diff);
+                    _this.iterateCs(diff['cs'], cs);
+                    _this.iterateCs(diff['cse'], cse);
+
+                    if (UtilMarkets.is_ended(diff))
+                        oldRec.set('finished', 1);
+                } else { // * добавляем событие
+                    if (diff['finished'] != 1) {
+                        diff = this.applyServiceCoeffs(diff, null, grid);
+                        storeEvent.add(diff);
+                    }
                 }
             }
         }, this);
@@ -412,6 +487,9 @@ Ext.define('Office.view.fill.coeff.ApplyChangedData', {
                         || (itemId != 'rats'
                         && (itemId == 'line' && strTime > strCurrentTime)))) { // * не показываем закончившиеся матчи
 
+                        //if (itemId == 'rats')
+                        //    console.info(recTournamentIn.name);
+
                         // * события
                         objEventOut['tournament_id'] = recTournamentIn['id'];
                         objEventOut['sport_id'] = recTournamentIn['sport_id'];
@@ -441,7 +519,7 @@ Ext.define('Office.view.fill.coeff.ApplyChangedData', {
                         objEventOut['_current_second'] = objEventOut['current_second']; // * вспомогательное поле для хранения текущего таймера
 
                         // * при первой загрузке формируем и сохраняем те значения, которые не будут меняться
-                        if (firstLoad) {
+                        if (firstLoad || objEventOut['sport_slug'] == "sport_rats") {// * длч крыс нужно каждый раз обновлять эти данные
                             // * дата матча и время
                             objEventOut['_date_base'] = this.dateBase(objEventIn);
                             // * инициализация объекта
@@ -487,6 +565,68 @@ Ext.define('Office.view.fill.coeff.ApplyChangedData', {
             });
             return cs;
         };
+
+        if (tournaments && tournaments.length > 0) { // * имеются события
+            Ext.Array.each(tournaments, function (objEventIn) {
+                var objEventOut = {},
+                    time = new Date(objEventIn['time']),
+                    strTime = Ext.Date.format(time, 'timestamp'),
+                    eventExists = Ext.Array.findBy(arrEventOut, function (item) {
+                        return item['event_id'] == objEventIn['id'];
+                    });
+
+                if (strTime > strCurrentTime) {
+                    objEventOut['de_id'] = dayExpress['de_id'];
+                    objEventOut['tournament_id'] = objEventIn['tournament_id'];
+                    objEventOut['de_type'] = dayExpress['de_type'];
+                    objEventOut['sport_id'] = objEventIn['sport_id'];
+                    objEventOut['sport_slug'] = UtilMarkets.getSportSlug(objEventIn);
+                    objEventOut['tournament_name'] = objEventIn['tournament_name'];
+                    objEventOut['type'] = grid.getItemId();
+
+                    if (dayExpress['de_type'] == 1)
+                        objEventOut['cs'] = multipleDC5(objEventIn['cs']) || {};
+                    else
+                        objEventOut['cs'] = objEventIn['cs'] || {};
+
+                    objEventOut['event_id'] = objEventIn['id'];
+                    objEventOut['current_second'] = objEventIn['current_second'];
+
+                    objEventOut['home'] = objEventIn['home'];
+                    objEventOut['away'] = objEventIn['away'];
+
+                    objEventOut['betting_closed'] = objEventIn['betting_closed']; // * прием ставок приостановлен
+                    objEventOut['comment'] = objEventIn['comment'];
+                    objEventOut['finished'] = objEventIn['finished'];
+                    objEventOut['short_number'] = objEventIn['short_number'];
+                    objEventOut['status'] = objEventIn['status'];
+                    objEventOut['time'] = objEventIn['time'];
+                    objEventOut['timer_stopped'] = objEventIn['timer_stopped'];
+
+                    objEventOut['_current_second'] = objEventOut['current_second']; // * вспомогательное поле для хранения текущего таймера
+
+                    if (!eventExists) {
+                        arrEventOut.push(objEventOut);
+                    } else {  // * такое событие уже есть, добавим в него данные
+                        Ext.Array.merge(eventExists['cs'], objEventOut['cs']);
+                    }
+                }
+            }, this);
+        }
+
+        if ((itemId == 'dayexpress' && arrEventOut.length == Util.getGlobalConst("NUMBER_EVENTS_IN_DAY_EXPRESS"))
+            || (itemId == 'dayexpressDC' && arrEventOut.length >= Util.getGlobalConst("MIN_NUMBER_EVENTS_IN_COUPON_DAY_EXPRESS_DOUBLE_CHANCE")))
+            return arrEventOut;
+        else
+            return [];
+    },
+
+    getDayExpressTournamentsEmpty: function (dayExpress, grid) {
+        var arrEventOut = [],
+            tournaments = dayExpress.events,
+            itemId = grid.getItemId(),
+            currentTime = new Date(),
+            strCurrentTime = Ext.Date.format(currentTime, 'timestamp');
 
         if (tournaments && tournaments.length > 0) { // * имеются события
             Ext.Array.each(tournaments, function (objEventIn) {
@@ -622,8 +762,11 @@ Ext.define('Office.view.fill.coeff.ApplyChangedData', {
                 }
             }, this);
             return this.eventNameBase(event) + '<br>' + strOut;
-        } else
+        } else if (event['sport_slug'] == 'sport_rats') { // * для крыс
+            return this.eventNameBaseRats(event);
+        } else {
             return this.eventNameBase(event);
+        }
     },
 
     // * вторая колонка в таблице событий- название команд и др. статусы
@@ -633,6 +776,18 @@ Ext.define('Office.view.fill.coeff.ApplyChangedData', {
             eventName2 = Util.colorText('red', '2&nbsp&nbsp') + event['away'],
             eventNumber = '<span style="float: right;color: #8A259B;">' + '№ ' + event['short_number'] + '</span>';
         return eventName1 + eventNumber + '<br>' + eventName2;
+    },
+
+    // * текст Стол 1/Стол 2 для 2-й колонки турниров Крыс
+    eventNameBaseRats: function (event) {
+        // * строчки 1..2 колонки _event_name Событие
+
+        var color = event['tournament_name'] == 'Стол 1'? '#58CD87':'#64BDFC',
+            eventName1 = '<span style="color: '+color+';font-size:57px;">' + event['tournament_name'] + '</span>',
+            eventNumber = '<span style="float: right;color: #8A259B;">' + '№ ' + event['short_number'] + '</span>';
+        //var eventName1 = '<span style="color: #F5F5F5;font-size:58px;">' + event['tournament_name'] + '</span>',
+        //    eventNumber = '<span style="float: right;color: #8A259B;">' + '№ ' + event['short_number'] + '</span>';
+        return eventNumber + '<br>' + eventName1;
     },
 
     // * форматирует вывод даты и времени для таблицы событий
@@ -646,9 +801,9 @@ Ext.define('Office.view.fill.coeff.ApplyChangedData', {
             return '';
     },
 
-    get_current_second: function (val, column, rec) {
-        return UtilMarkets.durationText(rec.getData());
-    }
+    //get_current_second: function (val, column, rec) {
+    //    return UtilMarkets.durationText(rec.getData());
+    //}
 
 
 });

@@ -18,7 +18,7 @@ Ext.define('Office.view.common.ComboCheckV', {
                 '<tpl if="values.checked">',
                 '<div class="nowrap">',
                 '<span style="vertical-align: -5px">',
-                '<input type="checkbox" checked="checked" disabled="disabled" />',
+                '<input type="checkbox" checked="checked" />',
                 '</span>',
                 '<span>',
                 '<img class="{iconCls}" align="center" src=' + onePixelImg + '>',
@@ -33,7 +33,7 @@ Ext.define('Office.view.common.ComboCheckV', {
                 '<tpl if="!values.checked">',
                 '<div class="nowrap">',
                 '<span style="vertical-align: -5px">',
-                '<input type="checkbox" disabled="disabled" />',
+                '<input type="checkbox" />',
                 '</span>',
                 '<span>',
                 '<img class="{iconCls}" align="center" src=' + onePixelImg + '>',
@@ -65,7 +65,13 @@ Ext.define('Office.view.common.ComboCheckV', {
                 queryMode: 'local',
                 multiSelect: true,
                 _func: this._func,
+                _funcCollapse: this._funcCollapse,
                 listeners: {
+                    collapse: function(combo, n) {
+                        if (combo._funcCollapse) {
+                            combo._funcCollapse();
+                        }
+                    },
                     change: function (combo, arrNew, arrOld) {
                         arrNew = arrNew || [];
                         arrOld = arrOld || [];
@@ -122,10 +128,18 @@ Ext.define('Office.view.common.ComboCheckV', {
         ];
 
         this.callParent();
-    }
+    },
+    reset: function () {
+        var combo = this.down('combo');
+        return combo.reset();
+    },
+    getValue: function() {
+        var combo = this.down('combo');
+        return combo.getValue().join(',');
+    },
 
-    //getStore: function () {
-    //    var combo = this.down('combo');
-    //    return combo.store;
-    //}
+    getStore: function () {
+        var combo = this.down('combo');
+        return combo.store;
+    }
 });

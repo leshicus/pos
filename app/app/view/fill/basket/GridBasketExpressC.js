@@ -45,6 +45,17 @@ Ext.define('Office.view.fill.basket.GridBasketExpressC', {
 
         // * отправим ставки на монитор игрока
         MonitorF.sendBetsToMonitor();
+
+        var fill = Ext.ComponentQuery.query('#main')[0],
+            vm = fill.getViewModel(),
+            storeBasket = vm.getStore('basket');
+
+        // * сохраним значение ставки в multi_value каждой записи
+        //storeBasket.suspendEvent('update');
+        storeBasket.each(function (item) {
+            item.set('multi_value',n);
+        });
+       // storeBasket.resumeEvent('update');
     },
 
     validateSingleBetValue: function (bet, min, max) {

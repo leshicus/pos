@@ -22,7 +22,7 @@ Ext.define('Office.view.session.FormPrintLineV', {
     title: 'Печать линии',
     defaults: {
         // labelWidth: 150,
-        margin: 5
+        margin: '0 5 0 5'
     },
     initComponent: function () {
         var me = this;
@@ -30,7 +30,8 @@ Ext.define('Office.view.session.FormPrintLineV', {
             scope: this,
             params: [
                 'filters.cbSport',
-               // 'cbSport_model'
+                'filters.cbTournament',
+                // 'cbSport_model'
             ]
         });
 
@@ -39,6 +40,7 @@ Ext.define('Office.view.session.FormPrintLineV', {
             // * ругается, что метод load() не определен. Наверно, потому что в момент определения переменной
             // * стор еще не создан, и storeSport=null
             me.getViewModel().getStore('sport').load();
+            me.getViewModel().getStore('tournament').load();
         }, 20);
 
         this.items = [
@@ -51,14 +53,32 @@ Ext.define('Office.view.session.FormPrintLineV', {
                 displayField: 'value',
                 valueField: 'id',
                 _checkField: 'checked',
+                margin: '5 5 0 5',
                 _bind: {
                     store: '{sport}',
                     //selection: '{cbSport_model}',
                     value: '{filters.cbSport}'
                 },
+                _funcCollapse: function (combo, n) {
+                    me.controller.reloadTournamentCombo(combo, n);
+                },
                 //_func: function (combo, n) {
                 //    me.getViewModel().set('cbSport', n);
                 //}
+            },
+            {
+                xtype: 'combocheck',
+                emptyText: 'Турнир',
+                itemId: 'cbTournament',
+                editable: true,
+                queryMode: 'remote',//'remote',
+                displayField: 'name',
+                valueField: 'id',
+                _checkField: 'checked',
+                _bind: {
+                    store: '{tournament}',
+                    value: '{filters.cbTournament}'
+                }
             },
             {
                 xtype: 'datefromto',
@@ -79,83 +99,100 @@ Ext.define('Office.view.session.FormPrintLineV', {
                     }
                 }
             },
-
+            //{
+            //    text: 'Сбросить',
+            //    xtype: 'button',
+            //    glyph: Glyphs.get('refresh'),
+            //    width: 150,
+            //    textAlign: 'center',
+            //    handler: 'onResetFilter'
+            //},
+            {
+                layout: {
+                    type: 'hbox'
+                },
+                margin: '0 5 5 5',
+                cls:'button-like-toolbar',
+                items: [
+                    {
+                        layout: {
+                            type: 'vbox',
+                            align: 'stretch'
+                        },
+                        flex:1,
+                        defaults: {
+                            xtype: 'button',
+                            margin: '5 0 0 0'
+                        },
+                        items: [
+                            {
+                                text: 'Упрощенная линия',
+                                glyph: Glyphs.get('print'),
+                                width: 150,
+                                textAlign: 'left',
+                                handler: 'onPrintLine',
+                                _type: 'short'
+                            },
+                            {
+                                text: 'Полная линия',
+                                glyph: Glyphs.get('print'),
+                                width: 150,
+                                textAlign: 'left',
+                                handler: 'onPrintLine',
+                                _type: 'full'
+                            },
+                            {
+                                text: 'Результаты',
+                                glyph: Glyphs.get('print'),
+                                width: 150,
+                                textAlign: 'left',
+                                handler: 'onPrintResults',
+                                _type: 'short'
+                            }
+                        ]
+                    },
+                    {
+                        layout: {
+                            type: 'vbox',
+                            align: 'stretch'
+                        },
+                        flex:1,
+                        defaults: {
+                            xtype: 'button',
+                            margin: '5 0 0 5'
+                        },
+                        items: [
+                            {
+                                text: 'Пятерочка',
+                                glyph: Glyphs.get('print'),
+                                hidden: !(Ext.ComponentQuery.query('menumain')[0].getViewModel().get('globals').keepRecordsOfPlayers && Ext.ComponentQuery.query('menumain')[0].getViewModel().get('globals').use_express_day),
+                                width: 150,
+                                textAlign: 'left',
+                                handler: 'onPrintDayExpress',
+                                _type: '0'
+                            },
+                            {
+                                text: 'Двойной шанс',
+                                glyph: Glyphs.get('print'),
+                                hidden: !(Ext.ComponentQuery.query('menumain')[0].getViewModel().get('globals').keepRecordsOfPlayers && Ext.ComponentQuery.query('menumain')[0].getViewModel().get('globals').use_express_day_dc),
+                                width: 150,
+                                textAlign: 'left',
+                                handler: 'onPrintDayExpress',
+                                _type: '1'
+                            }
+                        ]
+                    }
+                ]
+            }
         ];
 
-        this.bbar = new Ext.container.Container({
-            layout: {
-                type: 'vbox',
-                align: 'stretch'
-            },
-            defaults: {
-                xtype: 'toolbar'
-            },
-            items: [
-                {
-                    items: [
-                        {
-                            text: 'Упрощенная линия',
-                            glyph: Glyphs.get('print'),
-                            width: 150,
-                            textAlign: 'left',
-                            handler: 'onPrintLine',
-                            _type: 'short'
-                        }
-                    ]
-                },
-                {
-                    items: [
-                        {
-                            text: 'Полная линия',
-                            glyph: Glyphs.get('print'),
-                            width: 150,
-                            textAlign: 'left',
-                            handler: 'onPrintLine',
-                            _type: 'full'
-                        }
-                    ]
-                },
-                {
-                    items: [
-                        {
-                            text: 'Результаты',
-                            glyph: Glyphs.get('print'),
-                            width: 150,
-                            textAlign: 'left',
-                            handler: 'onPrintResults',
-                            _type: 'short'
-                        }
-                    ]
-                },
-                {
-                    items: [
-                        {
-                            text: 'Пятерочка',
-                            glyph: Glyphs.get('print'),
-                            hidden: !(Ext.ComponentQuery.query('menumain')[0].getViewModel().get('globals').keepRecordsOfPlayers && Ext.ComponentQuery.query('menumain')[0].getViewModel().get('globals').use_express_day),
-                            width: 150,
-                            textAlign: 'left',
-                            handler: 'onPrintDayExpress',
-                            _type: '0'
-                        }
-                    ]
-                },
-                {
-                    items: [
-                        {
-                            text: 'Двойной шанс',
-                            glyph: Glyphs.get('print'),
-                            hidden: !(Ext.ComponentQuery.query('menumain')[0].getViewModel().get('globals').keepRecordsOfPlayers && Ext.ComponentQuery.query('menumain')[0].getViewModel().get('globals').use_express_day_dc),
-                            width: 150,
-                            textAlign: 'left',
-                            handler: 'onPrintDayExpress',
-                            _type: '1'
-                        }
-                    ]
-                }
-            ]
-        });
-
+        this.tools = [
+            {
+                type: 'close',
+                tooltip: 'Удалить фильтры',
+                handler: 'onResetFilter'
+            }
+        ]
 
         this.callParent();
     }

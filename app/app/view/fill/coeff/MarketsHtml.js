@@ -350,11 +350,12 @@ Ext.define('Office.view.fill.coeff.MarketsHtml', {
         var activeTabIndexEvent = BasketF.getActiveTabIndexEvent(),
             fill = Ext.ComponentQuery.query('#main')[0],
             vmFill = fill.getViewModel(),
-            amount=amount|| 0,
+            amount = amount || 0,
             storeBasket = vmFill.getStore('basket'),
             gridEvent = Ext.ComponentQuery.query('grideventlive')[activeTabIndexEvent] /*|| Ext.ComponentQuery.query('grideventrats')[0]*/,
             vmEvent = gridEvent.getViewModel(),
-            arrBasis = [];
+            arrBasis = [],
+            betting_closed = false;
 
         // * превышение числа ставок для экспресса
         var maxExpress = Util.getGlobalConst("COUPON_MAX_LENGTH_EVENTS");
@@ -372,7 +373,12 @@ Ext.define('Office.view.fill.coeff.MarketsHtml', {
                 var selectedEvent = event;
         }
 
-        if (selectedEvent) {
+        betting_closed = selectedEvent.get('betting_closed');
+
+        if (betting_closed)
+            Util.warnMes('До забега осталось менее ' + Util.RATS_TIME_TO_STOP_BETTING + ' секунд, прием ставок прекращен.')
+
+        if (selectedEvent && !betting_closed) {
             var event_id = selectedEvent.get('event_id') || selectedEvent.get('id'),
                 arrCoef = UtilMarkets.getCoefByCoefId(gridEvent, event_id, coefId);
             arrBasis = UtilMarkets.getBasisByCoefId(gridEvent, event_id, coefId);
@@ -405,12 +411,14 @@ Ext.define('Office.view.fill.coeff.MarketsHtml', {
                     event_id: event_id,
                     short_number: selectedEvent.get('short_number'),
                     arrCoef: arrCoef, // * вот это тот самый код, который обеспечивал мне "чудесную синхронизацию" записей eventstore и basket
-                    amount: amount ,
+                    arrBasis: arrBasis,
+                    arrCoefOld: false,// * хранит прежнее значение кэфа после изменении
+                    arrBasisOld: false,// * хранит прежнее значение базиса после изменении
+                    amount: amount,
                     home: selectedEvent.get('home'),
                     away: selectedEvent.get('away'),
                     de_id: selectedEvent.get('de_id'),
                     type: selectedEvent.get('type'),// * line, live
-                    arrBasis: arrBasis,
                     tournament_id: selectedEvent.get('tournament_id'),
                     multi_value: 0,
                     system_value: 0,
@@ -550,7 +558,7 @@ Ext.define('Office.view.fill.coeff.MarketsHtml', {
     addToBasketFastInput: function (short_number, coefNum, amount) {// * coefNum - условный номер кэфа из массива FastInputF.outcomes
         var activeTabIndexEvent = BasketF.getActiveTabIndexEvent(),
             gridEvent = Ext.ComponentQuery.query('grideventlive')[activeTabIndexEvent],
-            amount=amount||0;
+            amount = amount || 0;
 
         var storeEvent = gridEvent.store,
             event = storeEvent.findRecord('short_number', short_number, 0, false, true, true);

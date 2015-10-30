@@ -116,7 +116,8 @@ Ext.define('Office.view.timeline.contextmenu.MenuTimelineC', {
                 viewModel: {
                     data: {
                         slipId:slipId,
-                        to_pay:to_pay
+                        to_pay:''
+                        //to_pay:to_pay
                     }
                 }
             }),

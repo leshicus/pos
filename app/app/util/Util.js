@@ -28,6 +28,7 @@ Ext.define('Office.util.Util', {
     COEFFICIENT_CHANGED: 'COEFFICIENT_CHANGED',
     WRONG_CASH_OR_CLUB: 'WRONG_CASH_OR_CLUB',
     ERROR_500: 'Ошибка 500',
+    RATS_TIME_TO_STOP_BETTING:6,// * для Крыс, время до начала забега, когда запрещено делать ставки
 
     // * инициализация параметров класса (фильтров), которые будут в дальнейшем передаваться в запросе
     initClassParams: function (obj) {
@@ -688,6 +689,18 @@ Ext.define('Office.util.Util', {
 
         for (key in arr) {
             if ((strict && arr[key] === str) || (!strict && arr[key].indexOf(str) > -1)) {
+                found = true;
+                break;
+            }
+        }
+        return found;
+    },
+    in_array_object: function (obj, arr) {	// Checks if a value exists in an array
+        // +   original by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+        var found = false, key;
+
+        for (key in arr) {
+            if (Ext.Object.equals(arr[key], obj)) {
                 found = true;
                 break;
             }

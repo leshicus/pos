@@ -128,9 +128,9 @@ Ext.define('Office.view.fill.UtilMarkets', {
         if (event) {
             var cs = Util.cloneObject(event.get('cs')),
                 cse = Util.cloneObject(event.get('cse'));
-           // console.info(cs,cse);
-           //var cs = event.get('cs'),
-           //     cse = event.get('cse');
+            // console.info(cs,cse);
+            //var cs = event.get('cs'),
+            //     cse = event.get('cse');
             Ext.Object.merge(cs, cse);
             Ext.Object.each(cs, function (key, val) {
                 if (val[0].toString() == coefId) {
@@ -336,9 +336,9 @@ Ext.define('Office.view.fill.UtilMarkets', {
                 curDate = Ext.Date.format(new Date(), 'timestamp'),
                 difDate = timestamp - curDate;
 
-            if (difDate > 0)
-                return this.secondsToString(difDate);
-            else
+            if (difDate > 0) {
+                    return this.secondsToString(difDate);
+            } else
                 return 0;
         } else {
             if (this.is_ended(event) || this.is_paused(event) || this.is_stopped(event))

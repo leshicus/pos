@@ -30,8 +30,8 @@ Ext.define('Office.view.fill.FillV', {
         Util.initClassParams({
             scope: this,
             params: [
-                'filters.cbSport',
-                'filters.filterEvent',
+                //'filters.cbSport',
+                //'filters.filterEvent',
                 'locale'
             ]
         });
@@ -68,7 +68,7 @@ Ext.define('Office.view.fill.FillV', {
         this.items = [
             {
                 region: 'west',
-                width: 350,
+                width: 360,
                 title: 'События',
                 collapsible: true,
                 collapsed: false,
@@ -105,7 +105,6 @@ Ext.define('Office.view.fill.FillV', {
                                 title: 'Лайв'
                             },
                             {
-                                //xtype: 'grideventrats',
                                 itemId: 'rats',
                                 glyph: Glyphs.get('paw'),
                                 title: 'Крысы'
@@ -321,7 +320,7 @@ Ext.define('Office.view.fill.FillV', {
                                 //title: 'Одиночные',
                                 cls: 'basket-grid',
                                 bind: {
-                                    disabled: '{showTabSingle}',
+                                    //disabled: '{showTabSingle}',
                                     title: 'Одиночные'+'{getCountSingle}'
                                 }
                             },

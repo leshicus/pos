@@ -41,7 +41,7 @@ Ext.define('Office.util.TaskF', {
                 taskSeconds = runner.newTask({
                     run: function () {
                         var isInDom = document.getElementById(grid.getId()); // * объект показан
-                        if(isInDom) {
+                        if (isInDom) {
                             var recordsInStore = store.getRange();
 
                             // * проходим каждый раз по всем записям стора и обновляем таймер
@@ -50,8 +50,10 @@ Ext.define('Office.util.TaskF', {
                                     var recCurrent = store.findRecord('id', rec.get('id'), 0, false, true, true);
                                     if (recCurrent) {
                                         var _current_second = recCurrent.get('_current_second');
-                                        recCurrent.set('_current_second', _current_second + 1);
-                                        recCurrent.commit();
+                                        if(_current_second>=0){
+                                            recCurrent.set('_current_second', _current_second + 1);
+                                            recCurrent.commit();
+                                        }
                                     }
                                 }
                             });
@@ -88,26 +90,33 @@ Ext.define('Office.util.TaskF', {
             runner = vmFill.get('taskRunner'),
             taskFilter = this.getTaskById(runner, 'taskFilter_' + grid.getItemId()),
             vm = grid.getViewModel(),
-            rawdata = vm.getStore('rawdata');
+            rawdata = vm.getStore('rawdata'),
+            _this = this;
 
         if (!taskFilter) {
             taskFilter = runner.newTask({
                 run: function () {
                     var isInDom = document.getElementById(grid.getId()); // * объект показан
-                    if(isInDom){
+                    if (isInDom) {
+
                         var store = grid.getViewModel().getStore('eventstore'),
                         // var store = grid.getViewModel().getStore('eventstore_chained'),
                             currentTime = new Date(),
                             strCurrentTime = Ext.Date.format(currentTime, 'timestamp'),
                             arrBasketToDelete = [],
-                            arrEventToDelete = [];
+                            arrEventToDelete = [],
+                            arrEventSetToDefault = [];
 
                         store.each(function (item) {
                             var time = new Date(item.get('time')),
                                 strTime = Ext.Date.format(time, 'timestamp');
+                            //if(item.get('type') == 'line' && item.get('short_number') == 4892)
+                            //    console.info(strTime < strCurrentTime,strTime,strCurrentTime,item);
                             if (item
-                                && ((item.get('_event_type') == 'line' && strTime < strCurrentTime)
-                                || (item.get('sport_slug') == 'sport_rats' && strTime < strCurrentTime)
+                                && ((item.get('type') == 'line' && strTime < strCurrentTime)
+                                /*|| (item.get('sport_slug') == 'sport_rats'
+                                && strTime < strCurrentTime
+                                && !item.get('_fantom'))*/ // * чтобы не удалялись фантомные строки в крысах
                                 || (item.get('finished') == 1))) {
 
                                 // * перед удалением события проверим, может оно сейчас выделено,
@@ -122,6 +131,27 @@ Ext.define('Office.util.TaskF', {
                                     vmFill.set('title', null);
                                 }
 
+                                //// * для раздела Крысы-ставки, будем при этом обновлять грид Крысы: история ставок
+                                //var gridrat = fill.down('gridrat'),
+                                //    str = 'Событие закончилось: ' + '№ ' + item.get('short_number');
+                                //
+                                //if (gridrat && grid.getItemId() == 'rats') {
+                                //    gridrat.store.reload();
+                                //} else
+                                //    str += '<br>' + item.get('home') + ' - ' + item.get('away');
+                                //Util.warnMes(str); // * очень назойливое уведомление
+
+                                arrEventToDelete.push(item);
+                            } else if (item  // * фантомные строки Крыс
+                                && ((item.get('sport_slug') == 'sport_rats'
+                                && strTime < strCurrentTime
+                                && item.get('_fantom')))) {
+
+                                arrEventSetToDefault.push(item);
+
+                                FillF.clearCenterArea();
+                                fill.getViewModel().set('title', null);
+
                                 // * для раздела Крысы-ставки, будем при этом обновлять грид Крысы: история ставок
                                 var gridrat = fill.down('gridrat'),
                                     str = 'Событие закончилось: ' + '№ ' + item.get('short_number');
@@ -130,15 +160,17 @@ Ext.define('Office.util.TaskF', {
                                     gridrat.store.reload();
                                 } else
                                     str += '<br>' + item.get('home') + ' - ' + item.get('away');
-                                //Util.warnMes(str); // * очень назойливое уведомление
-
-                                arrEventToDelete.push(item);
                             }
                         }, this);
 
                         if (arrEventToDelete.length) {
+                           // store.clearFilter(); // * иначе группировка и скрол сбиваются- появляются пропуски
                             store.remove(arrEventToDelete);
                             grid.getView().refresh();
+                        }
+
+                        if (arrEventSetToDefault.length) {
+                            _this.setFantomToDefault(arrEventSetToDefault, grid);
                         }
 
                         // * удалим из купона исходы удаленных событий (проверяется только существует ли событие)
@@ -159,7 +191,7 @@ Ext.define('Office.util.TaskF', {
                         }
                     }
                 },
-                interval: 1000 * 5, // в милисекундах
+                interval: 1000 * 1, // в милисекундах
                 _taskId: 'taskFilter_' + grid.getItemId()
             });
         } else
@@ -169,6 +201,23 @@ Ext.define('Office.util.TaskF', {
             taskFilter.stop();
         });
         taskFilter.start();
+    },
+
+    // * сбросить данные в фантомной ячейке Крыс на дефолтное
+    setFantomToDefault: function (arrEvent, grid) {
+        var storeEvent = grid.getViewModel().getStore('eventstore'),
+            arrDefaults = storeEvent._defaults;
+
+        Ext.Array.each(arrEvent, function (item) {
+            var el = Ext.Array.findBy(arrDefaults, function (itm) {
+                return itm.tournament_name == item.get('tournament_name');
+            });
+
+            if (el){
+                item.data={};
+                item.set(el);
+            }
+        });
     },
 
     // * периодически обновляет virtual (Виртуальные заявки)
@@ -182,7 +231,7 @@ Ext.define('Office.util.TaskF', {
             taskName = runner.newTask({
                 run: function () {
                     var isInDom = document.getElementById(grid.getId()); // * объект показан
-                    if(isInDom){
+                    if (isInDom) {
                         if (storeVirtual)
                             storeVirtual.reload();
                     }
@@ -210,11 +259,11 @@ Ext.define('Office.util.TaskF', {
             taskName = runner.newTask({
                 run: function () {
                     var isInDom = document.getElementById(grid.getId()); // * объект показан
-                    if(isInDom) {
+                    if (isInDom) {
                         func();
                     }
                 },
-                interval: 1000 * 30, // в милисекундах
+                interval: 1000 * 5,
                 _taskId: 'taskDayExpressLoad'
             });
         } else

@@ -105,8 +105,8 @@ Ext.define('Office.view.timeline.FormSmsCodeC', {
                                 window.open(Server.getUrl(objUrlXaction), '_blank');
                             }
 
-                            var windowWithdraw = Ext.ComponentQuery.query('#windowWithdraw')[0];
-                            windowWithdraw.close();
+                            //var windowWithdraw = Ext.ComponentQuery.query('#windowWithdraw')[0];
+                            //windowWithdraw.close();
 
                             // * обновим список таймлайн
                             var gridTimeline = Ext.ComponentQuery.query('gridtimeline')[0],

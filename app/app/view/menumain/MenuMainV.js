@@ -168,6 +168,18 @@ Ext.define('Office.view.menumain.MenuMainV', {
                         bind: {
                             hidden: '{!getShowButtonVirtual}'
                         }
+                    },
+                    {
+                        //text: 'График для игры на поле',
+                        text: Ux.locale.Manager.get("menumain.scheduleforgamefield"),
+                        itemId: 'scheduleforgamefield',
+                        glyph: Glyphs.get('list')
+                    },
+                    {
+                        //text: 'Игркоки',
+                        text: Ux.locale.Manager.get("menumain.players"),
+                        itemId: 'players',
+                        glyph: Glyphs.get('list')
                     }
                 ]
             }),
@@ -342,6 +354,24 @@ Ext.define('Office.view.menumain.MenuMainV', {
                             disabled: '{isGlobalSession}'
                         },
                         disabled: true
+                    },
+                    {
+                        text: Ux.locale.Manager.get("menumain.scheduleforgamefield"),
+                        itemId: 'scheduleforgamefield',
+                        glyph: Glyphs.get('list'),
+                        cls: 'menutopleft',
+                        listeners: {
+                            click: 'onClickMenumain'
+                        }
+                    },
+                    {
+                        text: Ux.locale.Manager.get("menumain.players"),
+                        itemId: 'players',
+                        glyph: Glyphs.get('list'),
+                        cls: 'menutopleft',
+                        listeners: {
+                            click: 'onClickMenumain'
+                        }
                     }
                 ]
             }),
@@ -556,8 +586,8 @@ Ext.define('Office.view.menumain.MenuMainV', {
                 items: [
                     segmentedButtonTopLeft, // * показывается либо это меню
                     buttonTopLeft, // * либо это, в зависимости от ширины экрана
-                    '->',
-                    segmentedButtonTopRight
+                    //'->',
+                    //segmentedButtonTopRight
                 ]
             }),
             segmentedButtonBottomRight = Ext.create('Ext.button.Segmented', {
@@ -576,6 +606,186 @@ Ext.define('Office.view.menumain.MenuMainV', {
                         text: Ux.locale.Manager.get("menumain.chat"),
                         itemId: 'chat',
                         glyph: Glyphs.get('comments')
+                    },
+                    {
+                        text:'Инфо',
+                        //tooltip: Ux.locale.Manager.get("menumain.info"),
+                        itemId: 'info',
+                        glyph: Glyphs.get('info'),
+                        //defaults:{},// * не работает
+                        menu: [
+                            {
+                                text: 'Памятка по НДФЛ',
+                                href: Server.getPrefix() + "/office/files/info_about_identify.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Адреса пунктов приёма ставок',
+                                href: Server.getPrefix() + "/office/files/betting_points.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Памятка для кассиров',
+                                href: Server.getPrefix() + "/office/files/pamyatka.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Руководство',
+                                href: Server.getPrefix() + "/office/files/help.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: '«MortalBet» и выкуп ставок',
+                                href: Server.getPrefix() + "/office/files/mortalbet.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Правила конторы',
+                                href: Server.getPrefix() + "/office/files/rules.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Объяснение ставок',
+                                href: Server.getPrefix() + "/office/files/stavki.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Контакты технической поддержки',
+                                href: Server.getPrefix() + "/office/files/telephony.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Правила для «Игры на поле»',
+                                href: Server.getPrefix() + "/office/files/RulesForGameOnField.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Инструкция для кассира',
+                                href: Server.getPrefix() + "/office/files/instruction.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Правила игры Bet Rat v2',
+                                href: Server.getPrefix() + "/office/files/BetRatv2.0.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Коды для быстрого поиска',
+                                href: Server.getPrefix() + "/office/files/QuickSearchCodes.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Инструкция ТАЙМЛАЙН',
+                                href: Server.getPrefix() + "/office/files/info-timeline.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Инструкция к "ВИРТУАЛЬНАЯ ЗАЯВКА"',
+                                href: Server.getPrefix() + "/office/files/cashbox_ru.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Клубные карты',
+                                href: Server.getPrefix() + "/office/files/PlayerCard.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Инструкция для вывода ТОП матча',
+                                href: Server.getPrefix() + "/office/files/TopMatch.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Инструкция по заполнению прописки',
+                                href: Server.getPrefix() + "/office/files/AddressReg.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Тестирование кассира',
+                                href: Server.getPrefix() + "/office/files/cashiers_test.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Инструкция к акции "Экспресс дня"',
+                                href: Server.getPrefix() + "/office/files/express-of-day.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Правила HYPER DICE (кубики)',
+                                href: Server.getPrefix() + "/office/files/hyperdice_rules.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Правила турнира "Колесо фортуны"',
+                                href: Server.getPrefix() + "/office/files/fortune_rules.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Правила "Турнира комбинаций"',
+                                href: Server.getPrefix() + "/office/files/combo_rules.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            },
+                            {
+                                text: 'Программа лояльности "Спортивная лига"',
+                                href: Server.getPrefix() + "/office/files/loyality_promo.pdf",
+                                hrefTarget: '_blank',
+                                glyph: Glyphs.get('pdf'),
+                                cls: 'pdf'
+                            }
+                        ]
+                    },
+                    {
+                        text: 'Выход',
+                        //tooltip: Ux.locale.Manager.get("menumain.exit"),
+                        itemId: 'exit',
+                        glyph: Glyphs.get('signout'),
+                        style: {
+                            "border-width": "0px",
+                            "border-right-width": "0px !important"
+                        }
                     }
                 ]
             }),

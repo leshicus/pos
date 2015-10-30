@@ -62,6 +62,9 @@ Ext.define('Office.view.timeline.FormWithdrawC', {
                 })
             });
         win.show();
+
+        var windowWithdraw = Ext.ComponentQuery.query('#windowWithdraw')[0];
+        windowWithdraw.close();
     },
     sendSms: function (button, isPrintable) {
         var formWithdraw = this.getView(),
@@ -104,18 +107,21 @@ Ext.define('Office.view.timeline.FormWithdrawC', {
             vmformWithdraw = formWithdraw.getViewModel(),
             slipId = vmformWithdraw.get('slipId'),
             to_pay = vmformWithdraw.get('to_pay');
-        if(to_pay > 0)
-        {
+        //if(to_pay > 0)
+        //{
+        if (formWithdraw.isValid())
             this.sendSms(button, true);
-        }
-        else
-        {
-            Util.erMes('Сумма не может быть меньше или равна 0!');
-        }
+        //}
+        //else
+        //{
+        //    Util.erMes('Сумма не может быть меньше или равна 0!');
+        //}
     },
     // * печать без чека. Форма отправки смс
     onClickPay: function (button) {
-        this.sendSms(button, false);
+        var formWithdraw = this.getView();
+        if (formWithdraw.isValid())
+            this.sendSms(button, false);
     },
     onClickCancel: function (button) {
         var windowWithdraw = button.up('window');
@@ -136,8 +142,7 @@ Ext.define('Office.view.timeline.FormWithdrawC', {
                     sum: to_pay
                 }
             };
-        if(to_pay > 0)
-        {
+        if (formWithdraw.isValid()) {
             Ext.Ajax.request({
                 url: Server.getUrl(objUrl),
                 method: 'POST',
@@ -159,10 +164,10 @@ Ext.define('Office.view.timeline.FormWithdrawC', {
                 scope: this
             });
         }
-        else
-        {
-            Util.erMes('Сумма не может быть меньше или равна 0!');
-        }
+        //else
+        //{
+        //    Util.erMes('Сумма не может быть меньше или равна 0!');
+        //}
     },
 
     // * сообщение о подтверждении внесения денег

@@ -19,4 +19,7 @@
 	define('REDIS_ADDRESS', 'localhost:6379');
 	define('REDIS_PASSWORD', '');
 	define('ENABLE_VOCXOD', 1);
+
+// массив $RATS_TOURNAMENTS должен быть пустой если ставки на крыс надо ставить только в одном турнире
+$RATS_TOURNAMENTS = array(/* формат table_id => tournament_id */'2'=>'1658','3'=>'1659');
 ?>

@@ -275,11 +275,12 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
                                     className = 'market-table-td';
                                 if (coefId) {
                                     if (objSpan && Ext.Object.getSize(objSpan)) {
-                                        if (storeBasket)
+                                        if (storeBasket) {
                                             storeBasket.each(function (item) {
                                                 if (item.get('arrCoef')[0] == objSpan.coefid)
                                                     className = 'market-table-td-in-basket';
                                             });
+                                        }
                                     }
                                 }
                                 return className;

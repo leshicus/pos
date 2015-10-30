@@ -5,6 +5,8 @@ Ext.define('Office.view.fill.MonitorF', {
 
     // * отправим ставки на монитор игрока
     sendBetsToMonitor: function () {
+        //FayeClient.sendCommand({command: 'hide_modal'});
+
         var fill = Ext.ComponentQuery.query('#main')[0],
             vm = fill.getViewModel(),
             selectedGamer = vm.get('selectedGamer'),
@@ -23,7 +25,6 @@ Ext.define('Office.view.fill.MonitorF', {
             recBasketSum = storeBasketSum.getAt(0),
             arr_total_value = Ext.Array.pluck(Ext.Array.pluck(Ext.ComponentQuery.query('#main')[0].getViewModel().getStore('basket').getRange(), 'data'), 'amount'), // * массив сумм ставок
             type = BasketF.getBetType() == 'single' ? 'single' : 'multi',
-        //total_value = type == "single" ? Ext.Array.sum(arr_total_value) : 0,
             multi_value = type == "multi" ? recBasketSum.get('amount') : 0,
             total_possible_winning = 0,
             total_cf_value = 0,
@@ -91,14 +92,19 @@ Ext.define('Office.view.fill.MonitorF', {
         storeBasket.each(function (item, idx) {
             var rec = Util.cloneObject(item.getData()),
                 cf_value = parseFloat(rec['arrCoef'][2]),
-                amount = parseFloat(rec['amount']);
+                amount = parseFloat(rec['amount']),
+                arrCoef = item.get('arrCoef'),
+                arrBasis = item.get('arrBasis');
 
-            //if (rec['arrCoefSent'] && rec['arrCoefSent'][0] != rec['arrCoef'][0])
-            //    rec['replaced'] = rec['arrCoef'][2];
-            //else if (rec['arrBasisSent'] && rec['arrBasisSent'][0] != rec['arrBasis'][0])
-            //    rec['replaced'] = rec['arrBasis'][2];
-            //else
-            rec['replaced'] = false;
+            if (item.get('arrCoefOld') && item.get('arrCoefOld')[0] != item.get('arrCoef')[0])
+                rec['replaced'] = item.get('arrCoefOld')[2];
+            else
+                rec['replaced'] = false;
+
+            if (item.get('arrBasisOld') && item.get('arrBasisOld')[2] != item.get('arrBasis')[2])
+                rec['previous_short_name'] = BasketF.getCoefShortName(item.get('arrCoefOld')[1], item.get('arrBasisOld')[2]);
+            else
+                rec['previous_short_name'] = false;
 
             rec['id'] = rec['event_id'] + '-' + rec['outcome_mnemonic_name'];
             rec['cf_id'] = rec['coefId'];
@@ -157,6 +163,24 @@ Ext.define('Office.view.fill.MonitorF', {
             state['max'] = rec['max'];
 
             arrBets.push(rec);
+
+            // * сохранение значения кэфа и базиса для того, чтобы при изменении кэфа было с чем сравнивать новое значение
+            storeBasket.suspendEvents();
+
+            if(!item.get('arrCoefOld')){
+                item.set('arrCoefOld', Util.cloneObject(arrCoef));
+                item.set('coefIdOld', arrCoef[0]);
+            }
+
+            if(!item.get('arrBasisOld')
+               /* || (item.get('arrBasisOld') && item.get('arrBasisOld')[2] != arrBasis[2])*/){
+                if (arrBasis) {
+                    item.set('arrBasisOld', Util.cloneObject(arrBasis));
+                    item.set('basisIdOld', arrBasis[0]);
+                }
+            }
+
+            storeBasket.resumeEvents();
         });
 
         if (type == 'multi') {
@@ -171,90 +195,110 @@ Ext.define('Office.view.fill.MonitorF', {
         data['state'] = state;
         data['bets'] = arrBets;
 
-        //console.info(data);
         FayeClient.sendCommand({command: 'snapshot', data: data});
     },
 
     // * отправка на монитор изменивщихся и удаленных ставок
-    sendChangedBetsToMonitor: function (arrResp) {
+    // * flag = 1 - отправка после ответа сервера об изменении кэфов, flag = 0 - отправка после изменения от веб-сокетов об изменении кэфов
+    sendChangedBetsToMonitor: function (arrResp, flag) {
         FayeClient.sendCommand({command: 'hide_modal'});
 
         var data = new Object(),
             bets = [],
             fill = Ext.ComponentQuery.query('#main')[0],
             vm = fill.getViewModel(),
-            storeBasket = vm.getStore('basket'),
-            addDeleteBet = function (item) {
-                var old_cf_id = item.cf_id;
+            storeBasket = vm.getStore('basket');
 
-                var rec = storeBasket.findRecord('coefIdSent', old_cf_id, 0, false, true, true);
-                if (rec) {
-                    var home = rec.get('home'),
-                        away = rec.get('away');
+        function addDeleteBet(item, flag) {
+            var old_cf_id = item.cf_id;
 
-                    bets.push({
-                        "home": home,
-                        "away": away,
-                        "server_message": "BETTING_CLOSED",
-                        "message": "Кф. закрылся и событие было удалено из купона:"
-                    });
+            if (flag) {
+                var coefIdSent = 'coefId';
+            } else {
+                var coefIdSent = 'coefIdSent';
+            }
+
+            var rec = storeBasket.findRecord(coefIdSent, old_cf_id, 0, false, true, true);
+            if (rec) {
+                var home = rec.get('home'),
+                    away = rec.get('away');
+
+                bets.push({
+                    "home": home,
+                    "away": away,
+                    "server_message": item.message,
+                    "message": "Кф. закрылся и событие было удалено из купона:"
+                });
+            }
+        };
+
+        function addChangeBet(item, flag) {
+            console.info(arguments);
+
+            if (flag) {
+                var coefIdSent = 'coefIdOld',
+                    arrBasisSent = 'arrBasisOld',
+                    arrCoefSent = 'arrCoefOld';
+            } else {
+                var coefIdSent = 'coefIdSent',
+                    arrBasisSent = 'arrBasisSent',
+                    arrCoefSent = 'arrCoefSent';
+            }
+
+            var cf_id = item.data.cf_id,
+                cf_value = item.data.cf_value,
+                odds_id = item.data.odds_id,
+                odds_value = item.data.odds_value,
+                old_cf_id = item.cf_id;
+
+            var rec = storeBasket.findRecord(coefIdSent, old_cf_id, 0, false, true, true);
+
+            if (rec) {
+                var home = rec.get('home'),
+                    away = rec.get('away'),
+                    coefName = rec.get('coefName'),
+                    dat = new Object();
+
+                if (rec.get(arrBasisSent))
+                    var basis = rec.get(arrBasisSent)[2];
+                else
+                    var basis = null;
+
+                dat["home"] = home;
+                dat["away"] = away;
+                dat["server_message"] = item.message;
+                dat["message"] = "Кф. изменился:";
+                dat["prev_short_name"] = BasketF.getCoefShortName(rec.get(arrCoefSent)[1], basis);
+                dat["prev_cf_value"] = rec.get(arrCoefSent)[2];
+
+                if (cf_value) {
+                    dat["cf_value"] = cf_value;
+                } else {
+                    dat["cf_value"] = rec.get(arrCoefSent)[2];
                 }
-            },
-            addChangeBet = function (item) {
-                var cf_id = item.data.cf_id,
-                    cf_value = item.data.cf_value,
-                    odds_id = item.data.odds_id,
-                    odds_value = item.data.odds_value,
-                    old_cf_id = item.cf_id;
 
-                var rec = storeBasket.findRecord('coefIdSent', old_cf_id, 0, false, true, true);
-
-                if (rec) {
-                    var home = rec.get('home'),
-                        away = rec.get('away'),
-                        coefName = rec.get('coefName'),
-                        dat = new Object();
-
-                    dat["home"] = home;
-                    dat["away"] = away;
-                    dat["server_message"] = "COEFFICIENT_CHANGED";
-                    dat["message"] = "Кф. изменился:";
-                    dat["prev_short_name"] = BasketF.getCoefShortName(rec.get('arrCoefSent')[1], rec.get('arrBasisSent')[2]);
-                    dat["prev_cf_value"] = rec.get('arrCoefSent')[2];
-
-                    if (cf_value) {
-                        dat["cf_value"] = cf_value;
-                    } else {
-                        dat["cf_value"] = rec.get('arrCoefSent')[2];
-                    }
-
-                    if (odds_value) { // * поменялся базис
-                        var menumain = Ext.ComponentQuery.query('menumain')[0],
-                            vmMenumain = menumain.getViewModel(),
-                            storeOutcomes = vmMenumain.getStore('outcomes');
-                        //storeOutcomes.load({
-                        //    callback: function(records, operation, success) {
-                        dat["short_name"] = BasketF.getCoefShortName(rec.get('arrCoef')[1], odds_value);
-                        //    }
-                        //});
-                    } else {
-                        dat["short_name"] = coefName;
-                    }
-
-                    bets.push(dat);
+                if (odds_value) { // * поменялся базис
+                    dat["short_name"] = BasketF.getCoefShortName(rec.get('arrCoef')[1], odds_value);
+                } else {
+                    dat["short_name"] = coefName;
                 }
-            };
+
+                bets.push(dat);
+            }
+        };
 
         Ext.Array.each(arrResp, function (item) {
             if (item.message == Util.BETTING_CLOSED) {// * исчезли кэфы
-                addDeleteBet(item);
+                addDeleteBet(item, flag);
             } else if (item.message == Util.COEFFICIENT_CHANGED) {// * поменялись кэфы
-                addChangeBet(item);
+                addChangeBet(item, flag);
             }
         }, this);
 
-        data['bets'] = bets;
-        FayeClient.sendCommand({command: 'bet_fail', data: data});
+        if (bets.length) {
+            data['bets'] = bets;
+            FayeClient.sendCommand({command: 'bet_fail', data: data});
+        }
     },
 
     sendErrorToMonitor: function (message) {

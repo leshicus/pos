@@ -141,7 +141,7 @@ Ext.define('Office.view.fill.basket.GridBasketSingleV', {
                         '<tr>',
                         '<td align="center"><span class="bet">' + '{[values.arrCoef[2]]}' + '</span></td>',
                         '<td align="center">' + '{min}' + '</td>',
-                        '<td align="center" width="60"><input type="number" id="{id}" min="0" value="{amount}" class="bet" onClick="this.select();"  onkeypress="OfficeGlobalNS.config.onKeyPressBet(this,event,{min},{max})" onchange="OfficeGlobalNS.config.setSingleBetValue(this,{min},{max});" /></td>',//onchange="OfficeGlobalNS.config.setSingleBetValue(this,{min},{max});"
+                        '<td align="center" width="60"><input type="number" id="{id}" min="0" value="{amount}" class="bet" onClick="this.select();"  onkeypress="OfficeGlobalNS.config.onKeyPressBet(this,event,{min},{max})" onkeyup="OfficeGlobalNS.config.setSingleBetValue(this,{min},{max});" onchange="OfficeGlobalNS.config.setSingleBetValue(this,{min},{max});" /></td>',//onchange="OfficeGlobalNS.config.setSingleBetValue(this,{min},{max});"
                         '<td align="center">' + '{max}' + '</td>',
                         '<td align="center"><span class="bet">' + '{[this.multiple(values.amount,values.arrCoef[2],values.min,values.max)]}' + '</span></td>',
                         '</tr>',

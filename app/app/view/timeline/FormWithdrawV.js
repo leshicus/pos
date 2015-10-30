@@ -29,6 +29,18 @@ Ext.define('Office.view.timeline.FormWithdrawV', {
                 listeners:{
                     render: 'registerClickEvent',
                     specialkey: 'onEnter'
+                },
+                maskRe:/^[0-9.]$/,
+                validator: function (val) { // * определяет корректность структуры введенного значения
+                    var regex = /^\d+(\.\d+)?$/;
+                    if(val<=0)
+                        return 'Число должно быть положительным';
+
+                    if (!regex.test(val)) {
+                        return 'Допустимо только число (разделитель - точка)';
+                    } else {
+                        return true;
+                    }
                 }
             }
         ];

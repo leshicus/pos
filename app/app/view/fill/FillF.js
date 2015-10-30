@@ -4,11 +4,15 @@ Ext.define('Office.view.fill.FillF', {
     alternateClassName: ['FillF'],
 
     // * очистка store basketSum
-    clearBasketSum: function () {
-        var gridbasketexpress = Ext.ComponentQuery.query('gridbasketexpress')[0];
+    clearBasketSumAndSystem: function () {
+        var gridbasketexpress = Ext.ComponentQuery.query('gridbasketexpress')[0],
+            vmExpress = gridbasketexpress.getViewModel();
         if (gridbasketexpress) {
-            var basketSum = gridbasketexpress.getViewModel().getStore('basketSum');
+            var basketSum = vmExpress.getStore('basketSum');
             basketSum.loadData(basketSum._defaults);
+
+            vmExpress.set('system_count', null);
+            vmExpress.set('system_value', null);
         }
     },
 
@@ -136,6 +140,11 @@ Ext.define('Office.view.fill.FillF', {
                 if (result) {
                     vmDayExpress.runnerTaskWs = null;
                 }
+
+                // * обновим купон, если требуется
+               // console.info(dayExpress);
+                ApplyChangedData.updateBasket(dayExpress.dayExpress.events);
+
             }
         }, 100, this);
     },
@@ -173,8 +182,10 @@ Ext.define('Office.view.fill.FillF', {
     },
 
     clearCenterArea: function () {
+
         var fill = Ext.ComponentQuery.query('#main')[0],
             container = fill.down('#centerArea'),
+            //vm = fill.getViewModel(),
             activeTabId = BasketF.getActiveTabEventId();
 
         if (container && typeof container.getDockedItems != 'undefined') {
@@ -188,11 +199,12 @@ Ext.define('Office.view.fill.FillF', {
             if (activeTabId != 'rats' && bbar && tbarMainLine.items.length == 0) {
                 bbar.removeAll();
             }
-
         }
 
         if (container)
             container.removeAll();
+
+        //vm.set('title', null);
     },
 
     // * очистка данных о выделенном событии

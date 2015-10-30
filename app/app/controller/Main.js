@@ -102,7 +102,7 @@ Ext.define('Office.controller.Main', {
                     }
                 }
                 if (errors) {
-                    Util.erMes(errors[0]);
+                    Util.erMes(errors[0] || 'Ошибка загрузки данных' );
                     //Util.erMes(JSON.stringify(errors));
                 }
                 return false;

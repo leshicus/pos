@@ -23,6 +23,27 @@ Ext.define('Office.view.session.FormPrintLineM', {
             },
             storeId: 'sport',
             autoLoad: false
+        },
+        tournament: {
+            fields: ['id', 'value', 'checked', 'iconCls'],
+            proxy: {
+                type: 'ajax',
+                url: Server.getUrl({
+                    class: 'Pos_Filters_Tournament',
+                    token: '{token}',
+                    params: {
+                        sport_id: '{filters.cbSport}',
+                        mode:0,
+
+                    }
+                }),
+                reader: {
+                    type: 'json',
+                    rootProperty: 'rows'
+                }
+            },
+            storeId: 'tournament',
+            autoLoad: true
         }
     }
 });

@@ -26,7 +26,7 @@ Ext.define('Office.view.common.DateFromToV', {
                 emptyText: 'Дата по',
                 value: this._dateTo || null,
                 allowBlank: this._allowBlankTo || true,
-               // margin: '0 0 0 2',
+                margin: '0 0 0 2',
                 format: this._format || 'd.m.Y',
                 altFormats: 'd.m.Y H:i:s',
                 listeners: this._listenersTo || null
