@@ -8,6 +8,7 @@ Ext.define('Office.view.fill.FillM', {
     alias: 'viewmodel.fill',
     data: {
         numGridCoef: 0,
+        timer:0,
         basket_count: 0,
         timeline_id: '',
         balance: '',

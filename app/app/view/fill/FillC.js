@@ -57,7 +57,9 @@ Ext.define('Office.view.fill.FillC', {
     // * рендер grideventlive
     onRender: function (grid) {
         // * задание на обновление коэффициентов
-        TaskF.startTaskClearEventStore(grid);
+        var intParam = 5;
+        TaskF.startTaskClearEventStore(grid,intParam);
+
         if (grid.getItemId() == 'live'
             || grid.getItemId() == 'rats') {
             TaskF.taskSecondsStart(grid);
@@ -67,7 +69,7 @@ Ext.define('Office.view.fill.FillC', {
     // * рендер fill
     onFillRender: function (fill) {
         WsF.startLoadWS();
-
+//TaskF.taskTimerStart(fill);
         FillF.getDayExpressData();
 
         // * выделим вкладку в событиях (линия или лайв), если есть указание в локальном хранилище
@@ -87,9 +89,9 @@ Ext.define('Office.view.fill.FillC', {
             tabpanel.setActiveItem(activeEventTab);
 
             // * фокус на Быстрый ввод игрока
-            var fastInputGambler = fill.down('#fastInputGambler');
-            if (fastInputGambler)
-                fastInputGambler.focus();
+            //var fastInputGambler = fill.down('#fastInputGambler');
+            //if (fastInputGambler)
+            //    fastInputGambler.focus();
         }, 100, this);
 
         // * окончание в ApplyChangedData::loadMatchdataData
@@ -171,6 +173,11 @@ Ext.define('Office.view.fill.FillC', {
                 });
             bbar.add(gridrat);
         }
+
+        // * фокус на Быстрый ввод игрока
+        var fastInputGambler = fill.down('#fastInputGambler');
+        if (fastInputGambler)
+            fastInputGambler.focus();
         //}
     },
 

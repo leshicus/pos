@@ -204,19 +204,17 @@ Ext.define('Office.view.fill.UtilMarkets', {
             return null;
         return coef[2];
     },
+
     // * Возвращает текущую часть матча, если не овертайм. Пример:  Тайм: 2. Во время перерыва или окончания матча пишет статус соответственно
     part: function (event) {
-        // console.info(event);
         var overtime = this.partOver(event),
             status = this.status(event),
             name = this.partName(event),
             num = this.partNum(event);
-        //console.info(overtime,status,name,num );
         if (overtime) {
             return overtime;
         }
         if (status) {
-            //console.info(status);
             return status;
         } else if (name) {
             return name + ':' + num;

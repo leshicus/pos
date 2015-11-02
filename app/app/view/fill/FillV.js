@@ -70,6 +70,9 @@ Ext.define('Office.view.fill.FillV', {
                 region: 'west',
                 width: 360,
                 title: 'События',
+                //bind:{
+                //    title: 'События ' + '{timer}',
+                //},
                 collapsible: true,
                 collapsed: false,
                 split: true,

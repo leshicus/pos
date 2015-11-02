@@ -27,52 +27,87 @@ Ext.define('Office.util.TaskF', {
         taskSession.start();
     },
 
+    taskTimerStart: function (fill) {
+        var vmFill = fill.getViewModel(),
+            runner = vmFill.get('taskRunner'),
+            taskSeconds = this.getTaskById(runner, 'taskSeconds_' + fill.getItemId());
+
+        if (!taskSeconds) {
+            taskSeconds = runner.newTask({
+                run: function () {
+                    vmFill.set('timer', vmFill.get('timer') + 1);
+                },
+                interval: 1000 * 1, // в секундах
+                _taskId: 'taskSeconds_' + fill.getItemId()
+            });
+        } else
+            taskSeconds.stop();
+
+        // * регистрация события на остановку таймера после закрытия раздела
+        fill.on('destroy', function () {
+            taskSeconds.stop();
+        });
+
+        taskSeconds.start();
+    },
+
     taskSecondsStart: function (grid) {
         var fill = Ext.ComponentQuery.query('#main')[0],
             vmFill = fill.getViewModel(),
             runner = vmFill.get('taskRunner'),
             taskSeconds = this.getTaskById(runner, 'taskSeconds_' + grid.getItemId()),
-            vm = grid.getViewModel();
+            vm = grid.getViewModel(),
+            isInDom = Ext.get(grid.getId()); // * объект показан
 
-        Ext.defer(function () {// * из-за того, что в VM определил сторы в конструкторе, они перестали успевать сформироваться
-            var store = vm.getStore('eventstore_chained');
+        if (isInDom) {
+            Ext.defer(function () {// * из-за того, что в VM определил сторы в конструкторе, они перестали успевать сформироваться
+                var store = vm.getStore('eventstore_chained');
 
-            if (!taskSeconds && store) {
-                taskSeconds = runner.newTask({
-                    run: function () {
-                        var isInDom = document.getElementById(grid.getId()); // * объект показан
-                        if (isInDom) {
-                            var recordsInStore = store.getRange();
-
-                            // * проходим каждый раз по всем записям стора и обновляем таймер
-                            Ext.Array.each(recordsInStore, function (rec) {
-                                if (rec && !rec.get('timer_stopped')) {
-                                    var recCurrent = store.findRecord('id', rec.get('id'), 0, false, true, true);
-                                    if (recCurrent) {
-                                        var _current_second = recCurrent.get('_current_second');
-                                        if(_current_second>=0){
-                                            recCurrent.set('_current_second', _current_second + 1);
-                                            recCurrent.commit();
-                                        }
-                                    }
+                if (!taskSeconds && store) {
+                    taskSeconds = runner.newTask({
+                        run: function () {
+                            store.each(function (rec) {
+                                if (!rec.get('timer_stopped')) {
+                                    rec.set('_current_second', rec.get('_current_second') + 1);
+                                    rec.commit();
                                 }
                             });
-                        }
-                    },
-                    interval: 1000 * 1, // в секундах
-                    _taskId: 'taskSeconds_' + grid.getItemId()
+
+                            if(store&&typeof store.commitChanges == 'function')
+                            store.commitChanges();
+                            //var recordsInStore = store.getRange();
+                            //
+                            //// * проходим каждый раз по всем записям стора и обновляем таймер
+                            //Ext.Array.each(recordsInStore, function (rec) {
+                            //    if (rec && !rec.get('timer_stopped')) {
+                            //        rec.set('_current_second', rec.get('_current_second') + 1);
+                            //        rec.commit();
+                            //        //var recCurrent = store.findRecord('id', rec.get('id'), 0, false, true, true);
+                            //        //if (recCurrent) {
+                            //        //    var _current_second = recCurrent.get('_current_second');
+                            //        //    if (_current_second >= 0) {
+                            //        //        recCurrent.set('_current_second', _current_second + 1);
+                            //        //        recCurrent.commit();
+                            //        //    }
+                            //        //}
+                            //    }
+                            //});
+                        },
+                        interval: 1000 * 1, // в секундах
+                        _taskId: 'taskSeconds_' + grid.getItemId()
+                    });
+                } else
+                    taskSeconds.stop();
+
+                // * регистрация события на остановку таймера после закрытия раздела
+                grid.on('destroy', function () {
+                    taskSeconds.stop();
                 });
-            } else
-                taskSeconds.stop();
 
-            // * регистрация события на остановку таймера после закрытия раздела
-            grid.on('destroy', function () {
-                taskSeconds.stop();
-            });
-
-            //if (grideventlive.getItemId() == 'live')
-            taskSeconds.start();
-        }, 10, this);
+                //if (grideventlive.getItemId() == 'live')
+                taskSeconds.start();
+            }, 10, this);
+        }
     },
 
     // * найти таск по его _taskId в массиве vm.data.taskrunner
@@ -84,7 +119,7 @@ Ext.define('Office.util.TaskF', {
     },
 
     // * периодически подчищает eventstore, удаляя просроченные события (только из line и rats)
-    startTaskClearEventStore: function (grid) {
+    startTaskClearEventStore: function (grid,intParam) {
         var fill = Ext.ComponentQuery.query('#main')[0],
             vmFill = fill.getViewModel(),
             runner = vmFill.get('taskRunner'),
@@ -114,9 +149,9 @@ Ext.define('Office.util.TaskF', {
                             //    console.info(strTime < strCurrentTime,strTime,strCurrentTime,item);
                             if (item
                                 && ((item.get('type') == 'line' && strTime < strCurrentTime)
-                                /*|| (item.get('sport_slug') == 'sport_rats'
-                                && strTime < strCurrentTime
-                                && !item.get('_fantom'))*/ // * чтобы не удалялись фантомные строки в крысах
+                                    /*|| (item.get('sport_slug') == 'sport_rats'
+                                     && strTime < strCurrentTime
+                                     && !item.get('_fantom'))*/ // * чтобы не удалялись фантомные строки в крысах
                                 || (item.get('finished') == 1))) {
 
                                 // * перед удалением события проверим, может оно сейчас выделено,
@@ -164,7 +199,7 @@ Ext.define('Office.util.TaskF', {
                         }, this);
 
                         if (arrEventToDelete.length) {
-                           // store.clearFilter(); // * иначе группировка и скрол сбиваются- появляются пропуски
+                            // store.clearFilter(); // * иначе группировка и скрол сбиваются- появляются пропуски
                             store.remove(arrEventToDelete);
                             grid.getView().refresh();
                         }
@@ -191,7 +226,7 @@ Ext.define('Office.util.TaskF', {
                         }
                     }
                 },
-                interval: 1000 * 1, // в милисекундах
+                interval: 1000 * intParam, // в милисекундах
                 _taskId: 'taskFilter_' + grid.getItemId()
             });
         } else
@@ -213,8 +248,8 @@ Ext.define('Office.util.TaskF', {
                 return itm.tournament_name == item.get('tournament_name');
             });
 
-            if (el){
-                item.data={};
+            if (el) {
+                item.data = {};
                 item.set(el);
             }
         });

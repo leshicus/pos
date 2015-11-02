@@ -220,7 +220,7 @@ Ext.define('Office.view.accept.GridAcceptC', {
 
             Ext.Ajax.request({
                 url: Server.getUrl(objUrl),
-                async: false,
+                async: false, // * !!! синхронный запрос
                 success: function (response) {
                     var checkUserRes = Gui.JSONDecodeSafe(response.responseText);
 

@@ -307,10 +307,10 @@ Ext.define('Office.view.fill.coeff.ApplyChangedData', {
         Ext.Array.each(arrDiffs, function (diff) {
             var time = new Date(diff['time']),
                 strTime = Ext.Date.format(time, 'timestamp');
+            if (((grid.getItemId() == 'live' || grid.getItemId() == 'rats') && strTime <= strCurrentTime)
+                || (grid.getItemId() == 'line' && strTime > strCurrentTime)) {
 
-            if(strTime > strCurrentTime){
                 var oldRec = storeEvent.findRecord('event_id', diff['event_id'], 0, false, true, true);
-
                 if (oldRec) { // * изменяем событие
                     oldRec.set('current_second', diff['current_second']);
                     oldRec.set('_current_second', diff['current_second']);
@@ -782,8 +782,8 @@ Ext.define('Office.view.fill.coeff.ApplyChangedData', {
     eventNameBaseRats: function (event) {
         // * строчки 1..2 колонки _event_name Событие
 
-        var color = event['tournament_name'] == 'Стол 1'? '#58CD87':'#64BDFC',
-            eventName1 = '<span style="color: '+color+';font-size:57px;">' + event['tournament_name'] + '</span>',
+        var color = event['tournament_name'] == 'Стол 1' ? '#58CD87' : '#64BDFC',
+            eventName1 = '<span style="color: ' + color + ';font-size:57px;">' + event['tournament_name'] + '</span>',
             eventNumber = '<span style="float: right;color: #8A259B;">' + '№ ' + event['short_number'] + '</span>';
         //var eventName1 = '<span style="color: #F5F5F5;font-size:58px;">' + event['tournament_name'] + '</span>',
         //    eventNumber = '<span style="float: right;color: #8A259B;">' + '№ ' + event['short_number'] + '</span>';
