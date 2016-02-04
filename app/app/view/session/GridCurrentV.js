@@ -16,7 +16,7 @@ Ext.define('Office.view.session.GridCurrentV', {
     viewConfig: {
         stripeRows: true
     },
-    collapsible: true,
+    //collapsible: true,
     controller: 'gridcurrent',
     sortableColumns: false,
     bind: {

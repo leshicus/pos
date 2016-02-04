@@ -27,6 +27,7 @@ Ext.define('Office.view.session.GridCloseSessionV', {
             sumAtOpenTime: '{theSession.sumAtOpenTime}',
             acceptedPerSession: '{theSession.acceptedPerSession}',
             paidPerSessionWithTLPOs: '{theSession.paidPerSessionWithTLPOs}',
+            returnedPerSession: '{theSession.returnedPerSession}',
             currentSumInCash: '{theSession.currentSumInCash}',
             cashMovementInput: '{theSession.cashMovementInput}',
             cashMovementOutputWithoutTL: '{theSession.cashMovementOutputWithoutTL}'
@@ -62,6 +63,10 @@ Ext.define('Office.view.session.GridCloseSessionV', {
             },
             paidPerSessionWithTLPOs: {
                 displayName: 'Выплачено за смену',
+                renderer: Ext.util.Format.numberRenderer('0,0.00')
+            },
+            returnedPerSession: {
+                displayName: 'Возвращено',
                 renderer: Ext.util.Format.numberRenderer('0,0.00')
             },
             currentSumInCash: {

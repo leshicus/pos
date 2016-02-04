@@ -21,10 +21,14 @@
 .bg-red-ratcoef {
     background: rgb(247, 71, 71);
     color:white;
+    padding-left: 5px;
+    padding-right: 5px;
 }
 .bg-black-ratcoef {
     background: rgb(49, 49, 49);
     color:white;
+    padding-left: 5px ;
+    padding-right: 5px ;
 }
 
 .bg-red-lt {
@@ -74,7 +78,7 @@
 
 /* цвет кнопки редактировать */
 .button_edit{
-    border-color: #cecece;
+    border-color: #cecece !important;
     background-color: #F5F5F5 !important;
 }
 /* цвет ставки, находящейся в купоне */
@@ -82,3 +86,22 @@
     background: rgb(255, 251, 184);
 }
 
+/* цвет колонок Тип платежа в Детилизации по смене */
+.bg-accept-sport {
+    background-color: #ECFFEB;
+}
+.bg-accept-tl {
+    background-color: #A1FF9F;
+}
+.bg-pay-sport {
+    background-color: #FFEBEB;
+}
+.bg-pay-tl {
+    background-color: #FFC4C4;
+}
+.bg-return {
+    background-color: #FFF5B4;
+}
+.bg-income {
+    background-color: #BCD2FF;
+}

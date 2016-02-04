@@ -4,17 +4,14 @@ Ext.define('Office.view.pay.PayF', {
     alternateClassName: ['PayF'],
 
     // * получим параметры ставки
-    getSlipList: function () {
+    getSlipList: function (field) {
         var grid = Ext.ComponentQuery.query('gridpay')[0],
             vm = grid.getViewModel(),
             store = vm.getStore('pay'),
             buttonPrintBill = grid.down('#buttonPrintBill');
 
-        //buttonsMake.hide();
         buttonPrintBill.disable();
         store.removeAll(true); // * silent = true
-        //grid.getView().refresh();
-        //this.resetData();
 
         var slipId = vm.get('get_slipId'),
             code = vm.get('get_code');
@@ -42,14 +39,22 @@ Ext.define('Office.view.pay.PayF', {
                             buttonPrintBill.enable();
                         return false;
                     } else if (!mes.slipId) {
-                        Util.toast('Ошибка', mes.message || 'Ставка не найдена');
+                        if (mes.message && mes.message.indexOf('Access denied') != -1) {
+                            Ext.Msg.confirm('Ошибка авторизации', str, function (button) {
+                                if (button == 'yes') {
+                                    Office.util.Setup.logout();
+                                }
+                            }, this);
+                        } else
+                            Util.warnMes(mes.message || 'Ставка не найдена', grid.down('#slipId'));
                     } else {
                         if (mes.externalSlipCash) {// * ставка сделана в другой кассе, и только там ее можно выплатить
                             Util.erMes('Данная ставка принята другой кассой. <br>Игрок может получить выплату только в кассе «<b>' + mes.externalSlipCash + '</b>»');
                         } else {
-
                             var mainController = Office.app.getController('Main');
                             mainController.storeLoadVm(grid);
+
+                            vm.set('slipInfoTransaction', mes);
                         }
                     }
                 } else {
@@ -71,38 +76,35 @@ Ext.define('Office.view.pay.PayF', {
 
 // * форма редактирования личных данных, объединяет editUserDataIfNeedAndMakeOutputTransaction и editUserDataIfNeedAndReturnSlip
     editUserDataIfNeedAndMakeAction: function (slipInfo, printCheck, callbackFn, classForm) {
-        var player = slipInfo.player;
+        var player = slipInfo.player || slipInfo;
         var slipId = slipInfo.slipId;
+
         if (player) {
             // * показать окно ввода данных игрока
-            var form = Ext.create('Office.view.card.FormCardV', {
-                viewModel: {
-                    data: {
-                        printCheck: printCheck,
-                        is_resident: player.is_resident,
-                        callbackFn: callbackFn,
-                        slipId: slipId,
-                        theClient: Ext.data.Model.create(player),
-                    }
-                }
-            });
+            var form = Ext.create('Office.view.card.FormCardV');
+            form.getViewModel().set('printCheck', printCheck);
+            form.getViewModel().set('is_resident', player.is_resident);
+            form.getViewModel().set('callbackFn', callbackFn);
+            form.getViewModel().set('slipId', slipId);
+            form.getViewModel().set('theClient', Ext.data.Model.create(player));
 
             // * не надо показывать поле штрихкод
             var fieldBarcode = form.down('#barcode');
             fieldBarcode.setDisabled(true);
 
-            if (parseInt(player.is_resident)) {
-                // * для резидентов серия паспорта обязательна
-                var fieldPasser = form.down('#passer');
-                fieldPasser.allowBlank = false;
-
-                // * приведем формат полей к тому, как они хранятся в форме
-                player.passer = Gui.getPassportSerie(player.passport_number, player.is_resident);
-                player.pasnom = Gui.getPassportNumber(player.passport_number, player.is_resident);
-            } else {
-                player.pasnom = player.passport_number;
-            }
+            //if (parseInt(player.is_resident)) {
+            //    // * для резидентов серия паспорта обязательна
+            //    var fieldPasser = form.down('#passer');
+            //    fieldPasser.allowBlank = false;
+            //
+            //    // * приведем формат полей к тому, как они хранятся в форме
+            //    player.passer = Gui.getPassportSerie(player.passport_number, player.is_resident);
+            //    player.pasnom = Gui.getPassportNumber(player.passport_number, player.is_resident);
+            //} else {
+            //    player.pasnom = player.passport_number;
+            //}
             player.passport_issue_datetime = Gui.formatPassportIssueDate(player.passport_issue_datetime);
+            player.birthday = Gui.formatPassportIssueDate(player.birthday);
 
             // * переопределим методы из FormCardC
             form.getController().onClickSave = classForm.onClickSave;
@@ -151,7 +153,7 @@ Ext.define('Office.view.pay.PayF', {
 
         if (form.getForm().isValid()) {
             var player = form.getRecord().getData();
-            player['passport_number'] = player['passer'] + player['pasnom'];
+            //player['passport_number'] = player['passer'] + player['pasnom'];
 
             // * сохранение данных клиента
             var objUrl = {
@@ -212,6 +214,8 @@ Ext.define('Office.view.pay.PayF', {
             });
 
             window.close();
+        } else {
+            Util.erMes(Config.STR_FORM_ERROR);
         }
     },
 
@@ -236,11 +240,11 @@ Ext.define('Office.view.pay.PayF', {
 
         if (use_ndfl) {
             if (slipInfo && slipInfo.player_id > 0) {
-                var pidDate = player.passport_issue_datetime,
-                    pidDateStr = Gui.formatPassportIssueDate(pidDate);
+                var pidDateStr = Gui.formatPassportIssueDate(player.passport_issue_datetime),
+                    birthdayDateStr = Gui.formatPassportIssueDate(player.birthday);
 
                 if (player.firstname != '' && player.address != '' && player.lastname != '' && player.passport_number != '' && player.passport_issuer != ''
-                    && player.passport_issue_datetime != '' && Gui.isValidPassportIssueDate(pidDateStr)) { // * выплачиваем
+                    && player.passport_issue_datetime != '' && Gui.isValidPassportIssueDate(pidDateStr) && player.birthday != '' && Gui.isValidPassportIssueDate(birthdayDateStr)) { // * выплачиваем
                     PayF.makeOutputTransaction(slipId, code, printCheck);
                 } else // * форма редактирования личных данных
                     PayF.editUserDataIfNeedAndMakeAction(slipInfo, printCheck, PayF.makeOutputTransaction, PayF);
@@ -265,12 +269,7 @@ Ext.define('Office.view.pay.PayF', {
         };
 
         Ext.Ajax.request({
-            //url: 'store/returnSlip.php',
             url: Server.getUrl(objUrl),
-            //params: {
-            //    xaction: 'return',
-            //    slip_id: slipId
-            //},
             method: 'POST',
             success: function (resp, o) {
                 var response = Ext.util.JSON.decode(resp.responseText);
@@ -285,10 +284,7 @@ Ext.define('Office.view.pay.PayF', {
                                     objUrl = {
                                         class: 'Pos_Pageprinter_Print',
                                         params: {
-                                            slipId: slipId,
-                                            user_id: user_id,
-                                            username: userLogin,
-                                            token: userToken
+                                            slipId: slipId
                                         }
                                     };
                                 window.open(Server.getUrl(objUrl));
@@ -322,17 +318,10 @@ Ext.define('Office.view.pay.PayF', {
                                 var user_id = Ext.util.Cookies.get('userId'),
                                     userLogin = Ext.util.Cookies.get('betzet_login'),
                                     userToken = Ext.util.Cookies.get('betzet_token'),
-                                    url = Office.util.Server.getPageprinter() + '?slipId=' + response.slipId + '&penaltySlipId=' + response.penaltySlipId + '&user_id=' + user_id + '&username=' + userLogin + '&token=' + userToken + '&secondTime=true',
                                     objUrl = {
                                         class: 'Pos_Pageprinter_Print',
                                         params: {
-                                            slipId: response.slipId,
-                                            penaltySlipId: response.penaltySlipId,
-
-                                            user_id: user_id,
-                                            username: userLogin,
-                                            token: userToken,
-                                            secondTime: true
+                                            slipId: response.slipId
                                         }
                                     };
                                 window.open(Server.getUrl(objUrl));
@@ -341,9 +330,9 @@ Ext.define('Office.view.pay.PayF', {
                         }
                         else {
                             if (response.errorText)
-                                Util.erMes('Ошибка', response.errorText);
+                                Util.erMes(response.errorText);
                             else
-                                Util.erMes('Не известная ошибка', 'Выкуп не возможен.');
+                                Util.erMes(response.mesage || 'Не известная ошибка. Выкуп не возможен.');
                         }
                     } catch (e) {
                         return;
@@ -353,7 +342,7 @@ Ext.define('Office.view.pay.PayF', {
                 failure: function (response) {
                     try {
                         var mes = Ext.decode(response.responseText);
-                        Util.erMes('Ошибка', mes);
+                        Util.erMes(mes);
                     } catch (e) {
                         return;
                     }
@@ -365,6 +354,7 @@ Ext.define('Office.view.pay.PayF', {
             console.info('Внимание: slipId не определен');
         }
     },
+
     checkPlayerAndReturnSlip: function (slipId, printCheck, player) {
         var menumain = Ext.ComponentQuery.query('menumain')[0],
             vmMenumain = menumain.getViewModel(),
@@ -373,22 +363,20 @@ Ext.define('Office.view.pay.PayF', {
 
         if (use_ndfl) {
             if (player.id > 0) {
-                var pidDate = player.passport_issue_datetime,
-                    pidDateStr = Gui.formatPassportIssueDate(pidDate);
+                var pidDateStr = Gui.formatPassportIssueDate(player.passport_issue_datetime),
+                    birthdayDateStr = Gui.formatPassportIssueDate(player.birthday);
                 if (player.firstname != '' && player.address != '' && player.lastname != '' && player.passport_number != '' && player.passport_issuer != ''
-                    && player.passport_issue_datetime != '' && Gui.isValidPassportIssueDate(pidDateStr)) {
+                    && player.passport_issue_datetime != '' && Gui.isValidPassportIssueDate(pidDateStr) && player.birthday != '' && Gui.isValidPassportIssueDate(birthdayDateStr)) {
                     PayF.returnSlip(slipId);
                 } else // * форма редактирования данных клиента
                     PayF.editUserDataIfNeedAndMakeAction(player, printCheck, PayF.checkPlayerAndReturnSlip, PayF);
-                //this.editUserDataIfNeedAndReturnSlip(player, slipId);
             } else// * форма редактирования данных клиента
                 PayF.editUserDataIfNeedAndMakeAction(player, printCheck, PayF.checkPlayerAndReturnSlip, PayF);
-            //this.editUserDataIfNeedAndReturnSlip(player, slipId);
         } else // * возврат ставки
             PayF.returnSlip(slipId);
     },
+
     buyback: function (slipId, printCheck, player) {
-        console.log('выкуп');
         var menumain = Ext.ComponentQuery.query('menumain')[0],
             vmMenumain = menumain.getViewModel(),
             globals = vmMenumain.getData().globals,
@@ -396,10 +384,10 @@ Ext.define('Office.view.pay.PayF', {
 
         if (use_ndfl) {
             if (player.id > 0) {
-                var pidDate = player.passport_issue_datetime,
-                    pidDateStr = Gui.formatPassportIssueDate(pidDate);
+                var pidDateStr = Gui.formatPassportIssueDate(player.passport_issue_datetime),
+                    birthdayDateStr = Gui.formatPassportIssueDate(player.birthday);
                 if (player.firstname != '' && player.address != '' && player.lastname != '' && player.passport_number != '' && player.passport_issuer != ''
-                    && player.passport_issue_datetime != '' && Gui.isValidPassportIssueDate(pidDateStr)) {
+                    && player.passport_issue_datetime != '' && Gui.isValidPassportIssueDate(pidDateStr) && player.birthday != '' && Gui.isValidPassportIssueDate(birthdayDateStr)) {
                     PayF.madeBuyback(slipId);
                 } else // * форма редактирования данных клиента
                     PayF.editUserDataIfNeedAndMakeAction(player, printCheck, PayF.buyback, PayF);
@@ -408,22 +396,22 @@ Ext.define('Office.view.pay.PayF', {
         } else // * выкуп ставки
             PayF.madeBuyback(slipId);
     },
+
     editUserDataIfNeedAndDoBuyback: function (response, slipId) {
-        Util.erMes('Ошибка', 'Игрока нет или не все его данные заполнены');
+        Util.erMes('Игрока нет или не все его данные заполнены');
     },
+
     // * произвести выплату
     makeOutputTransaction: function (slipId, code, printCheck) {
         var _this = this,
             objUrl = {
-                class: 'Pos_Cash_Transactions_Create',
+                class: 'Pos_Slips_Transactions_Payout',
                 params: {
                     cashId: Ext.util.Cookies.get('userId'),
                     addStakeSum: true,
                     rows: {
                         id: null,
                         source_or_dest_user_id: Ext.util.Cookies.get('userId'),
-                        type_id: 2,
-                        sum: 1,
                         slip_id: slipId,
                         code: code
                     }
@@ -437,9 +425,6 @@ Ext.define('Office.view.pay.PayF', {
                     var mes = Ext.decode(response.responseText);
                     if (mes.success) {
                         Util.infoMes('Выплата проведена успешно');
-
-                        //Ext.getCmp('buttonPayWithoutPrint').disable();// это свойство биндится через formulas
-                        //Ext.getCmp('buttonPayWithPrint').disable();
 
                         var grid = Ext.ComponentQuery.query('gridpay')[0];
 
@@ -506,29 +491,29 @@ Ext.define('Office.view.pay.PayF', {
             "to_pay": slipInfo.to_pay
         };
 
-        if(vm.get('is_win')){
+        if (vm.get('is_win')) {
             data['tax_sum'] = slipInfo.tax_sum;
             data['tax_percent'] = slipInfo.tax_percent;
         }
 
         if (slipInfo.children) {
             data['slipType'] = slipInfo.type;
-            data['bets_in_system'] = slipInfo.count_bet_in_system||0;
+            data['bets_in_system'] = slipInfo.count_bet_in_system || 0;
             data['slipTypeName'] = slipInfo.operationText;
 
             Ext.Array.each(slipInfo.children, function (item, idx) {
-                var rec=new Object(),
-                    is_settled=slipInfo.is_calculated == 1 ? true:false;
+                var rec = new Object(),
+                    is_settled = slipInfo.is_calculated == 1 ? true : false;
 
                 rec['home'] = item['homeName'];
                 rec['away'] = item['awayName'];
                 rec['bet_type'] = item['outcomeName'];
                 rec['coef'] = item['coefficient'];
                 rec['outcome'] = item['bet_result'] == -1 ? "Нет" : "Да"; // * ?
-                rec['outcome_text'] =  item['result_text'];
-                rec['scores'] =  item['score'];
-                rec['is_settled'] =   is_settled;// * 2 - не рассчитана
-                rec['is_win'] =  item['bet_result'] == 1;
+                rec['outcome_text'] = item['result_text'];
+                rec['scores'] = item['score'];
+                rec['is_settled'] = is_settled;// * 2 - не рассчитана
+                rec['is_win'] = item['bet_result'] == 1;
 
                 arrBets.push(rec);
             });
@@ -538,19 +523,19 @@ Ext.define('Office.view.pay.PayF', {
             data['slipType'] = 0;
             data['slipTypeName'] = "Одинар";
 
-            var is_settled = slipInfo.bet_result != 2 ? true:false;
+            var is_settled = slipInfo.bet_result != 2 ? true : false;
 
-            var rec=new Object();
+            var rec = new Object();
 
-            rec['home'] =  slipInfo.homeName;
+            rec['home'] = slipInfo.homeName;
             rec['away'] = slipInfo.awayName;
             rec['bet_type'] = slipInfo.outcomeName;
             rec['coef'] = slipInfo.coefficient;
             rec['outcome'] = "Нет"; // * ?
-            rec['outcome_text'] =  slipInfo.result_text;
-            rec['scores'] =  slipInfo.score;
-            rec['is_settled'] =  is_settled;
-            rec['is_win'] =  vm.get('is_win');
+            rec['outcome_text'] = slipInfo.result_text;
+            rec['scores'] = slipInfo.score;
+            rec['is_settled'] = is_settled;
+            rec['is_win'] = vm.get('is_win');
 
             arrBets.push(rec);
         }

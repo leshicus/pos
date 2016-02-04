@@ -1,0 +1,62 @@
+{
+  "windowlogin": {
+    "title": "Авторизация",
+    "formfield": {
+      "language": "Язык/Language",
+      "username": "Имя пользователя",
+      "password": "Пароль"
+    },
+    "button": {
+      "login": "Войти"
+    }
+  },
+  "menumain": {
+    "session": "Смены",
+    "fill": "Ставки",
+    "timeline": "Таймлайн",
+    "accept": "Принятые",
+    "card": "Клубные карты",
+    "card2": "Клубные<br>карты",
+    "pay": "Выплаты",
+    "rat": "Крысы",
+    "ratbets": "Крысы-ставки",
+    "gameacc": "Игровые счета",
+    "gameacc2": "Игровые<br>счета",
+    "panels": "Панели",
+    "virtual": "Виртуальные заявки",
+    "virtual2": "Виртуальные<br>заявки",
+    "coords": "Анонс матчей для УГМ",
+    "coords2": "Анонс матчей<br>для УГМ",
+    "scheduleforgamefield": "График для игры на поле",
+    "scheduleforgamefield2": "График для<br>игры на поле",
+    "players": "Игроки",
+    "printline": "Печать линии",
+    "printline2": "Печать<br>линии",
+    "chat": "Чат",
+    "info": "Информация",
+    "exit": "Выход"
+  },
+  "gridevent": {
+    "columns": {
+      "num": "№",
+      "datecom": "Совершена",
+      "client": "Клиент",
+      "gambler": "Игрок",
+      "datecalc": "Рассчитана",
+      "bettype": "Тип ставки",
+      "host": "Хозяин",
+      "guest": "Гость",
+      "outcome": "Исход",
+      "sum": "Сумма",
+      "coeff": "Коэфф.",
+      "statid": "Статус",
+      "total": "Итог",
+      "datepay": "Выплачена"
+    },
+    "tools": {
+      "refresh": "Обновить",
+      "gear": "Настройка",
+      "close": "Удалить фильтры"
+    }
+  }
+}

@@ -83,7 +83,11 @@ Ext.define('Office.view.accept.GridAcceptC', {
                 if (view.panel.getSelectionModel().hasSelection()) {
                     e.stopEvent(); // * чтобы не показывалось нативное меню Хрома
 
-                    var menu = Ext.create('Office.view.accept.contextmenu.MenuAcceptV');
+                    var menu = Ext.ComponentQuery.query('menuaccept')[0];
+
+                    if (!menu)
+                        menu = Ext.create('Office.view.accept.contextmenu.MenuAcceptV');
+
                     menu.showAt(e.getXY());
 
                     rec = rec.getData();
@@ -187,7 +191,7 @@ Ext.define('Office.view.accept.GridAcceptC', {
             var showIt = currentDateTime.getTime() < fromDateTime.getTime();
 
             if (!showIt && rec.reject_or_approve_datetime != '0000-00-00 00:00:00') {
-                var rejectOrAcceptDateTime = new Date(a.reject_or_approve_datetime);
+                var rejectOrAcceptDateTime = new Date(rec.reject_or_approve_datetime);
                 rejectOrAcceptDateTime.setTime(rejectOrAcceptDateTime.getTime() + addTime * 1000 * 60);
                 showIt = currentDateTime.getTime() < rejectOrAcceptDateTime.getTime();
             }
@@ -212,8 +216,7 @@ Ext.define('Office.view.accept.GridAcceptC', {
             var objUrl = {
                     class: 'Pos_Timeline_Subslipstree',
                     params: {
-                        timelineId: rec.slip_id,
-                        expand_result: false
+                        timelineId: rec.slip_id
                     }
                 },
                 flag = false;
@@ -239,7 +242,7 @@ Ext.define('Office.view.accept.GridAcceptC', {
                     }
                 },
                 failure: function (response) {
-                    Util.toast('Внимание', 'Не загружены данные по ставкам');
+                    Util.warnMes('Не загружены данные по ставкам');
                 },
                 method: 'POST',
                 scope: this
@@ -250,7 +253,7 @@ Ext.define('Office.view.accept.GridAcceptC', {
         if (this.isTimelineSlip(rec)) {
             return getSlip();
         } else {
-            if (rec.status != 6) {
+            if (rec.status != 6) {// * STS_WAITING
                 if ((rec.result_text == 'ожидает подтверждения' && rec.sport != 'SPORT_RATS')
                     || (currentDateTime.getTime() < madeDateTime.getTime() && rec.sport != 'SPORT_RATS' && rec.is_live == 'Нет' && rec.stake != "" && rec.result_text == 'в игре')
                     || (this.isTimelineSlip(rec) && rec.result_text == '' && currentDateTime.getTime() < madeDateTime.getTime() && rec.is_live == 'Нет' && rec.stake != "" && rec.status != "11" && rec.is_timeline_closed != 1 && countSubSlips == 0)) {
@@ -260,6 +263,7 @@ Ext.define('Office.view.accept.GridAcceptC', {
         }
     },
 
+    // * выкуп
     enableBuyout: function (rec) {
         var source = typeof(rec.source) != 'undefined' ? rec.source : 3;
 
@@ -270,6 +274,7 @@ Ext.define('Office.view.accept.GridAcceptC', {
             && (rec.type == 0 || rec.type == 1)
             && typeof(rec.sport) != 'undefined'
             && rec.sport != 'SPORT_RATS'
+            && rec.status != '10'
             && source == 3) {
             return true;
         }
@@ -330,28 +335,28 @@ Ext.define('Office.view.accept.GridAcceptC', {
     onProxyException: function (proxy, response, options) {
         console.info(arguments);
         Util.erMes(response.status + ": " + response.statusText);
-    },
-    showBalance: function (store, records, successful, operation, node, eOpts) {
-        var grid = Ext.ComponentQuery.query('gridaccept')[0];
-        grid.getEl().unmask();
-
-        var objUrl = {
-            class: 'Pos_Sessions_Lastsessioninfo'
-        };
-        Ext.Ajax.request({
-            url: Server.getUrl(objUrl),
-            success: function (response) {
-                var session = Ext.decode(response.responseText),
-                    cashBalance = grid.down('#cashBalance');
-                cashBalance.setValue(session.currentSumInCash);
-            },
-            failure: function (response) {
-                Util.toast('Внимание', 'Не загружены данные о смене: ошибка сервера');
-            },
-            method: 'POST',
-            scope: this
-        });
     }
+    //showBalance: function (store, records, successful, operation, node, eOpts) {
+    //    var grid = Ext.ComponentQuery.query('gridaccept')[0];
+    //    grid.getEl().unmask();
+    //
+    //    var objUrl = {
+    //        class: 'Pos_Sessions_Lastsessioninfo'
+    //    };
+    //    Ext.Ajax.request({
+    //        url: Server.getUrl(objUrl),
+    //        success: function (response) {
+    //            var session = Ext.decode(response.responseText),
+    //                cashBalance = grid.down('#cashBalance');
+    //            cashBalance.setValue(session.currentSumInCash);
+    //        },
+    //        failure: function (response) {
+    //            Util.warnMes('Не загружены данные о смене: ошибка сервера');
+    //        },
+    //        method: 'POST',
+    //        scope: this
+    //    });
+    //}
 
 
 });

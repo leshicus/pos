@@ -1,8 +1,6 @@
 Ext.define('Office.controller.Main', {
     extend: 'Ext.app.Controller',
-    requires: [
-
-    ],
+    requires: [],
     stores: [],
     init: function () {
         this.listen({
@@ -28,18 +26,18 @@ Ext.define('Office.controller.Main', {
                 // * при изменении значения в поле формы, меняется соответствующее значение в record формы
                 // * from: https://www.sencha.com/forum/showthread.php?181203-Automatically-update-record-when-form-values-change
                 'form field': {
-                    change: function(field, newValue, oldValue) {
+                    change: function (field, newValue, oldValue) {
                         // Update record when form field values change
                         var form = field.up('form');
                         var record = form.getRecord();
                         var name = field.getName();
                         var value;
 
-                        if(record && record.get(name) !== 'undefined') {
-                            if(field.getXType() == 'radiofield' && field.up('radiogroup')) {
+                        if (record && record.get(name) !== 'undefined') {
+                            if (field.getXType() == 'radiofield' && field.up('radiogroup')) {
                                 // This is a radiofield inside of a radiogroup
                                 value = field.up('radiogroup').getValue();
-                                if(typeof value[name] != 'object') value = value[name];
+                                if (typeof value[name] != 'object') value = value[name];
                                 else return;
                             } else {
                                 // Ordinary field
@@ -98,18 +96,18 @@ Ext.define('Office.controller.Main', {
                             }
                         }, this);
                     } else {
-                        Util.toast('Неизвестная ошибка', 'Раздел не загружен.');
+                        Util.warnMes('Раздел не загружен.');
                     }
                 }
                 if (errors) {
-                    Util.erMes(errors[0] || 'Ошибка загрузки данных' );
+                    Util.erMes(errors[0] || 'Ошибка загрузки данных');
                     //Util.erMes(JSON.stringify(errors));
                 }
                 return false;
-            }else{
+            } else {
                 return true;
             }
-        }else{
+        } else {
             return false;
         }
     },
@@ -200,10 +198,10 @@ Ext.define('Office.controller.Main', {
     },
 
     // * фильтры берутся из VM
-    storeLoadVm: function (grid, successFn,failureFn) {
+    storeLoadVm: function (grid, successFn, failureFn) {
         var filters = Ext.encode(grid.getViewModel().getData().filters),
             store = grid.store;
-        setTimeout(Util.storeLoad(store, filters, null, successFn, failureFn, grid),500);
+        setTimeout(Util.storeLoad(store, filters, null, successFn, failureFn, grid), 500);
 
     },
     /*

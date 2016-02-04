@@ -32,7 +32,7 @@ Ext.define('Office.view.players.FormAddPlayerC', {
                         if (response.responseText) {
                             var o = Ext.decode(response.responseText);
                             if (o.success) {
-                                Util.toast('Успех', 'Добавлен новый игрок');
+                                Util.sucMes('Добавлен новый игрок');
                                 gridplayers.store.reload();
                             } else {
                                 Util.erMes(o.errorText || o.errors[0]);
@@ -44,6 +44,8 @@ Ext.define('Office.view.players.FormAddPlayerC', {
                     }
                 });
             
+        }else{
+            Util.erMes(Config.STR_FORM_ERROR);
         }
     },
     onClickCancel: function (button) {
@@ -57,6 +59,13 @@ Ext.define('Office.view.players.FormAddPlayerC', {
                 button = win.down('button[action=save]');
             this.onClickSave(button);
         }
+    },
+
+    onAfterRender: function (form) {
+        Util.validate(form);
+        var term = form.down('#name');
+        term.focus();
     }
+
 
 });

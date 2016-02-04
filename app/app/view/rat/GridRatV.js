@@ -18,6 +18,7 @@ Ext.define('Office.view.rat.GridRatV', {
     viewConfig: {
         stripeRows: true
     },
+
     bind: '{rat}',
     listeners: {
         //render: 'onRatRender'
@@ -104,16 +105,16 @@ Ext.define('Office.view.rat.GridRatV', {
                     text: 'Дата и время',
                     dataIndex: 'date_time',
                     itemId: 'date_time',
-                    width: 180,
+                    width: 160,
                     items: [
                         date
                     ]
                 },
                 {
-                    text: 'Номер забега',
+                    text: 'Номер<br>забега',
                     dataIndex: 'race_number',
                     itemId: 'race_number',
-                    width: 120,
+                    width: 80,
                     defaults: {
                         enableKeyEvents: true,
                         margin: 2
@@ -135,13 +136,14 @@ Ext.define('Office.view.rat.GridRatV', {
                     text: 'Результат',
                     dataIndex: 'result',
                     itemId: 'result',
-                    width: 100
+                    width: 90
                 },
                 {
                     text: 'I место',
                     align: 'center',
                     dataIndex: 'first',
                     itemId: 'first',
+                    tdCls:'gridrat-cell',
                     //renderer: Util.renderRat,
                     width: 70
                 },
@@ -161,8 +163,8 @@ Ext.define('Office.view.rat.GridRatV', {
                 },
                 {
                     xtype: 'actioncolumn',
-                    text: 'Повтор записи',
-                    width:120,
+                    text: 'Повтор<br>записи',
+                    width:80,
                     align: 'center',
                     dataIndex: 'url_video',
                     items: [

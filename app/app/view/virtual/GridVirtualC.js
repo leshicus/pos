@@ -57,7 +57,7 @@ Ext.define('Office.view.virtual.GridVirtualC', {
         Ext.Msg.confirm('Предупреждение', msg, function (button) {
             if (button == 'yes') {
                 // * очистим купон, если он не чист
-                var fill = Ext.ComponentQuery.query('#main')[0];
+                var fill = Ext.ComponentQuery.query('fill')[0];
                 if (fill) {
                     fill.getController().clickClearBet();
                 }
@@ -69,7 +69,7 @@ Ext.define('Office.view.virtual.GridVirtualC', {
                             var mes = Gui.JSONDecodeSafe(response.responseText);
 
                             if (mes.success) {
-                                Util.warnMes('Заявка отправлена в купон');
+                                Util.sucMes('Заявка отправлена в купон');
 
                                 // * реально отпраляем заявку в localStorage
                                 var menumain = Ext.ComponentQuery.query('menumain')[0],

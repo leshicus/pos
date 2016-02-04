@@ -2,12 +2,15 @@ Ext.define('Office.view.session.FormInputCashC', {
     extend: 'Ext.app.ViewController',
     requires: [],
     alias: 'controller.forminputcash',
-    listen: {
-        component: {
-            '#': {}
-        },
-        store: {}
-    },
+
+    //registerClickEvent: function (field) {
+    //    field.getEl().on('click', function () {
+    //        var form = field.up('form'),
+    //            vm = form.getViewModel();
+    //        vm.set('to_pay',"");
+    //    }, this);
+    //},
+
     onClickSave: function (button) {
         var window = button.up('window'),
             form = window.down('form'),
@@ -20,7 +23,7 @@ Ext.define('Office.view.session.FormInputCashC', {
                 var objUrl = {
                     class: 'Pos_Cash_Movements',
                     params: {
-                        summ: summ,
+                        summ:parseFloat(summ),
                         comment: comment
                     }
                 };
@@ -31,9 +34,8 @@ Ext.define('Office.view.session.FormInputCashC', {
                         if (response.responseText) {
                             var o = Ext.decode(response.responseText);
                             if (o.success) {
-                                Util.toast('Успех', 'Операция внесения прошла успешно');
-                                var gridcurrent = Ext.ComponentQuery.query('gridcurrent')[0];
-                                gridcurrent.getController().reloadGrids();
+                                Util.sucMes('Операция внесения прошла успешно');
+                                SessionF.reloadGrids();
                             } else {
                                 Util.erMes(o.message||o.errors[0]);
                             }
@@ -47,7 +49,7 @@ Ext.define('Office.view.session.FormInputCashC', {
                 var objUrl = {
                     class: 'Pos_Cash_Output',
                     params: {
-                        summ: summ,
+                        summ: parseFloat(summ),
                         comment: comment
                     }
                 };
@@ -64,9 +66,9 @@ Ext.define('Office.view.session.FormInputCashC', {
                         if (response.responseText) {
                             var o = Ext.decode(response.responseText);
                             if (o.success) {
-                                Util.toast('Успех', 'Операция изъятия прошла успешно');
-                                var gridcurrent = Ext.ComponentQuery.query('gridcurrent')[0];
-                                gridcurrent.getController().reloadGrids();
+                                Util.sucMes('Операция изъятия прошла успешно');
+
+                                SessionF.reloadGrids();
                             } else {
                                 Util.erMes(o.message||o.errors[0]);
                             }
@@ -78,11 +80,42 @@ Ext.define('Office.view.session.FormInputCashC', {
             }
 
             window.close();
+        }else{
+            Util.erMes(Config.STR_FORM_ERROR);
         }
     },
+
     onClickCancel: function (button) {
         var window = button.up('window');
         window.close();
+    },
+
+    onAfterRender: function (form) {
+        Util.validate(form);
+        var term = form.down('#summ');
+        term.focus();
+    },
+
+    onEnterSumm: function (field, e) {
+        if (e.getKey() == e.ENTER) {
+            var win = field.up('window'),
+                comment = win.down('#comment');
+            comment.focus();
+        }
+    },
+
+    onEnter: function (field, e) {
+        if (e.getKey() == e.ENTER) {
+            var win = field.up('window'),
+                button = win.down('button[action=save]');
+            this.onClickSave(button);
+        }
+    },
+
+    onClickButtonBalance: function (btn) {
+        var form = btn.up('form'),
+            vm = form.getViewModel();
+        vm.set('to_pay',vm.get('session.currentSumInCash'));
     }
 
 });

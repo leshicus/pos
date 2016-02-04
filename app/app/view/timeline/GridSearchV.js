@@ -16,11 +16,12 @@ Ext.define('Office.view.timeline.GridSearchV', {
     border: true,
     title: 'Игроки',
     autoScroll: true,
+    reserveScrollbar: true,
     viewConfig: {
         stripeRows: true,
         enableTextSelection: true,
         getRowClass: function (record, index, rowParams, store) { // * класс для строки грида
-            if (record.get('enabled') != 1 || record.get('is_blacklisted') == 1 || record.get('is_demo') == 1) return 'blocked-card-row';
+            if (!FormCardF.isAllowedPlayer(record)) return 'blocked-card-row';
         }
     },
     glyph: Glyphs.get('user'),
@@ -30,7 +31,6 @@ Ext.define('Office.view.timeline.GridSearchV', {
         celldblclick: 'onCellDblclick',
         scope: 'controller'
     },
-    //buttons: Util.getButtonCancel({scope: 'controller'}),
     initComponent: function () {
         Util.initClassParams({
             scope: this,
@@ -71,7 +71,7 @@ Ext.define('Office.view.timeline.GridSearchV', {
                     text: 'Отчество',
                     dataIndex: 'patronymic_name',
                     itemId: 'patronymic_name',
-                    width: 130
+                    width: 110
                 },
                 {
                     text: 'Паспорт',
@@ -79,15 +79,15 @@ Ext.define('Office.view.timeline.GridSearchV', {
                     itemId: 'passport_number',
                     width: 100,
                     // * серия и номер отдельно
-                    renderer: function (val, w, rec) {
-                        if (val && val.length == 10) {
-                            var passer = val.substr(0, 4),
-                                pasnum = val.substr(-6, 6);
-                            return passer + ' ' + pasnum;
-                        } else {
-                            return val;
-                        }
-                    }
+                    //renderer: function (val, w, rec) {
+                    //    if (val && val.length == 10) {
+                    //        var passer = val.substr(0, 4),
+                    //            pasnum = val.substr(-6, 6);
+                    //        return passer + ' ' + pasnum;
+                    //    } else {
+                    //        return val;
+                    //    }
+                    //}
                 },
                 {
                     text: 'Телефон',
@@ -96,10 +96,10 @@ Ext.define('Office.view.timeline.GridSearchV', {
                     width: 110
                 },
                 {
-                    text: 'Активный',
+                    text: 'Актив.',
                     dataIndex: 'enabled',
                     itemId: 'enabled',
-                    width: 80,
+                    width: 70,
                     renderer: function (val, meta, rec) {
                         if (val == 1) {
                             meta.align = 'center';

@@ -1,24 +1,22 @@
 Ext.define('Office.Application', {
     extend: 'Ext.app.Application',
     requires: [
-        // 'Ext.tip.*',
         /* 'Ext.state.CookieProvider',
          'Ext.state.LocalStorageProvider'*/
-
+        'Office.util.Config',
         'Office.util.Util',
         'Office.view.fill.UtilMarkets',
-        'Office.view.pay.Status',
         'Office.util.TaskF',
-        // 'Office.view.fill.coeff.CoefShowModes',
+        'Office.view.card.FormCardF',
+        'Office.view.session.SessionF',
         'Office.view.fill.coeff.ApplyChangedData',
         'Office.util.Server',
         'Office.util.Filters',
         'Office.util.Setup',
         'Office.util.Debug',
         'Office.util.Gui',
-        //'Office.util.ClientWS',
-        //'Office.util.JsonPStorageProvider',
-        //  'Office.util.AjaxStorageProvider',
+
+        'Office.util.MatchdataTransport',
 
         'Ux.locale.Manager', // * блок для динамической локализации компонентов
         'Ux.locale.override.extjs.Button',
@@ -59,7 +57,7 @@ Ext.define('Office.Application', {
         // * какого шрифта у нас будут глифы
         Ext.setGlyphFontFamily('FontAwesome');
 
-        Office.util.Setup.clearCookies();
+        //Office.util.Setup.clearCookies();
         Ext.util.Cookies.set('locale', Ux.locale.Manager.getLanguage());
 
         // * очищаю хэш в url
@@ -71,13 +69,14 @@ Ext.define('Office.Application', {
                 method: 'GET'
             },
             language: 'Русский',
+            abbr: 'ru',
             tpl: Office.util.Server.getLocalization(),
             type: 'ajax'
         });
         var callbackLocale = function () {
-                var Setup = Office.util.Setup;
-                Setup.init();
-            };
+            var Setup = Office.util.Setup;
+            Setup.init();
+        };
         // * применяю Русскую локализацию, после этого запускаю интерфейс ввода имент-пароля
         Ux.locale.Manager.init(callbackLocale);
 
@@ -85,5 +84,13 @@ Ext.define('Office.Application', {
         // * В противном случае они меняются в зависимости от языка
         Ext.util.Format.thousandSeparator = " ";
         Ext.util.Format.decimalSeparator = ".";
+
+        // * определение ф-ии window.requestAnimationFrame в зависимости от используемого браузера
+        Util.setupRequestAnimationFrame();
+
+        // * замена символа в строке по номеру
+        String.prototype.replaceAt = function (index, character) {
+            return this.substr(0, index) + character + this.substr(index + character.length);
+        }
     }
 });

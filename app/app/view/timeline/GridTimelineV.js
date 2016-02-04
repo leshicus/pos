@@ -19,14 +19,15 @@ Ext.define('Office.view.timeline.GridTimelineV', {
             if (record.get('other_cash') == true) return 'blocked-card-row';
         }
     },
-    glyph: Glyphs.get('list_1'),
-    cls: 'gridtimeline',
+    //glyph: Glyphs.get('list_1'),
+    //cls: 'gridtimeline',
     bind: {
         store: '{timeline}',
-        title: 'Таймлайн{get_fio}'
+        title: 'Таймлайн'
+        //title: 'Таймлайн{get_fio}'
     },
     listeners: {
-        cellclick: 'onCellclick',
+        cellclick: 'onCellClick',
         afterrender:'onAfterRender',
         scope: 'controller'
     },
@@ -42,26 +43,53 @@ Ext.define('Office.view.timeline.GridTimelineV', {
                 'resident'
             ]
         });
-        var fieldSearch = Ext.create('Ext.form.field.Text', {
-            emptyText: 'Номер и код таймлайна или телефон игрока',
-            width: 200,
+        //var fieldSearch = Ext.create('Ext.form.field.Text', {
+        //    emptyText: 'Номер таймлайна или телефон игрока',
+        //    width: 300,
+        //    enableKeyEvents: true,
+        //    _fireEventOnEnter: true,
+        //    selectOnFocus: true,
+        //    itemId: 'term',
+        //    listeners: {
+        //        specialkey: 'onEnter',
+        //        change: 'onChangeTerm'
+        //    },
+        //    bind: {
+        //        value: '{filters.term}'
+        //    },
+        //    triggers: {// * значек лупы
+        //        one: {
+        //            cls: 'x-form-search-trigger',
+        //            handler: 'onPressLoupe'
+        //        }
+        //    }
+        //});
+
+        var comboSearch = Ext.create('Ext.form.field.ComboBox', {
+            emptyText: 'Номер таймлайна или телефон игрока',
+            width: 300,
             enableKeyEvents: true,
-            _fireEventOnEnter: true,
-            selectOnFocus: true,
             itemId: 'term',
-            listeners: {
+            valueField: 'id',
+            hideLabel: true,
+            queryMode: 'remote',
+            //hideTrigger:true,
+            displayField: 'query',
+            autoSelect:false,
+            minChars:30,
+                listeners: {
                 specialkey: 'onEnter',
                 change: 'onChangeTerm'
             },
             bind: {
-                value: '{filters.term}'
+                store:'{search}'
             },
-            triggers: {// * значек лупы
-                one: {
-                    cls: 'x-form-search-trigger',
-                    handler: 'onPressLoupe'
-                }
-            }
+            //triggers: {// * значек лупы
+            //    one: {
+            //        cls: 'x-form-search-trigger',
+            //        handler: 'onPressLoupe'
+            //    }
+            //}
         });
 
         this.columns = {
@@ -77,7 +105,7 @@ Ext.define('Office.view.timeline.GridTimelineV', {
                 {
                     text: '№',
                     dataIndex: 'id',
-                    width: 60
+                    width: 120
                 },
                 {
                     text: 'Тип',
@@ -101,7 +129,7 @@ Ext.define('Office.view.timeline.GridTimelineV', {
                 },
                 {
                     text: 'Внесено',
-                    dataIndex: 'stake',
+                    dataIndex: 'total_charged_sum',
                     width: 100,
                     renderer: Ext.util.Format.numberRenderer('0,0.00')
                 },
@@ -116,6 +144,11 @@ Ext.define('Office.view.timeline.GridTimelineV', {
                     dataIndex: 'to_pay',
                     width: 100,
                     renderer: Ext.util.Format.numberRenderer('0,0.00')
+                },
+                {
+                    text: 'Кол.ставок',
+                    dataIndex: 'count',
+                    width: 90
                 },
                 {
                     text: 'Статус',
@@ -138,49 +171,34 @@ Ext.define('Office.view.timeline.GridTimelineV', {
                 action: 'add',
                 handler: 'onAddTimeline'
             },
-            fieldSearch,
+            //fieldSearch,
+            comboSearch,
             {
                 xtype: 'checkbox',
                 itemId: 'includeArchieved',
-                margin: '2 2 2 5',
+               // margin: '2 2 2 5',
                 inputValue: true,
                 uncheckedValue: false,
                 boxLabel: 'Архивные',
-                flex: 1,
+                //flex: 1,
                 bind: {
                     value: '{filters.includeArchieved}'
+                }
+            },
+            {
+                xtype:'displayfield',
+                fieldLabel:'Клиент:',
+                bind:{
+                    value:'{get_fio}'
+                },
+                labelWidth:60,
+                style:{
+                    'padding-top': '4px',
+                    'padding-left': '10px'
                 }
             }
 
         ];
-        //this.bbar = [
-        //    {
-        //        xtype: 'displayfield',
-        //        itemId: 'displayFio',
-        //        fieldLabel: 'ФИО',
-        //        labelWidth: 50,
-        //        margin: '0 20 0 0',
-        //        bind:'{fio}',
-        //        style: {
-        //            'color': "rgb(39, 127, 204) !important"
-        //        }
-        //    },
-        //    {
-        //        xtype: 'displayfield',
-        //        itemId: 'displayPassport',
-        //        fieldLabel: 'Паспорт',
-        //        labelWidth: 70,
-        //        bind:'{passport}',
-        //        margin: '0 20 0 0'
-        //    },
-        //    {
-        //        xtype: 'displayfield',
-        //        itemId: 'displayPhone',
-        //        fieldLabel: 'Телефон',
-        //        bind:'{phone}',
-        //        labelWidth: 80
-        //    }
-        //];
 
         this.tools = [
             {
@@ -191,7 +209,7 @@ Ext.define('Office.view.timeline.GridTimelineV', {
                 type: 'close',
                 tooltip: 'Удалить фильтры'
             }
-        ]
+        ];
 
         this.callParent();
     }

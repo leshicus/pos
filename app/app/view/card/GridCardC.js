@@ -15,13 +15,12 @@ Ext.define('Office.view.card.GridCardC', {
                         _this = this;
 
                     if (card_status !== '1') {
-                        var form = Ext.create('Office.view.card.FormCardV', {
-                            viewModel: {
-                                data: {
-                                    theClient: selected || ''
-                                }
-                            }
-                        });
+                        var form = Ext.create('Office.view.card.FormCardV'),
+                            barcode=form.down('#barcode');
+                        form.getViewModel().set('theClient',selected || '');
+                        form.loadRecord(selected);
+
+                        barcode.allowBlank = selected.get('edit');
 
                         var window = Ext.create('Ext.Window', {
                             title: 'Редактирование',
@@ -34,18 +33,22 @@ Ext.define('Office.view.card.GridCardC', {
                         window.show();
 
                         // * сделать не пустые поля не редактируемыми
-                        Ext.defer(function(){ // * без задержки не успевают проставиться признаки
+                        Ext.defer(function () { // * без задержки не успевают проставиться признаки
                             form.getController().setNotEditable();
-                        },100);
-                    }else{
-                        Util.toast('Ошибка','Нельзя редактировать активные карты');
+                        }, 300);
+                    } else {
+                        Util.warnMes('Нельзя редактировать активные карты');
                     }
                 },
                 // * контекстное меню в гриде
                 itemcontextmenu: function (view, rec, node, index, e) {
                     if (view.panel.getSelectionModel().hasSelection()) {
                         e.stopEvent(); // * чтобы не показывалось
-                        var menu = Ext.create('Office.view.card.contextmenu.MenuCardV');
+
+                        var menu = Ext.ComponentQuery.query('menucard')[0];
+                        if (!menu)
+                            menu = Ext.create('Office.view.card.contextmenu.MenuCardV');
+
                         menu.showAt(e.getXY());
                         if (rec.get('card_status') != 1) {
                             menu.down('#menuBlock').disable();
@@ -59,36 +62,35 @@ Ext.define('Office.view.card.GridCardC', {
                     var grid = this.getView(),
                         newRec = grid.store.add({
                             is_resident: '1',
-                            id: '0',
-                            lastname:'',
-                            firstname:'',
-                            patronymic_name:'',
-                            passport_number:'',
-                            passport_issuer:'',
-                            passport_issue_datetime:'',
+                            id: 0,
+                            lastname: '',
+                            firstname: '',
+                            patronymic_name: '',
+                            country: '',
+                            birthday: '',
+                            document_type: '',
+                            passport_number: '',
+                            passport_issuer: '',
+                            passport_issue_datetime: '',
 
-                            passport_code:'',
-                            address:'',
-                            mobile_phone:'',
-                            is_vip:'0',
-                            is_blacklisted:'0',
-                            barcode:'',
-                            //binding_datetime:'',
+                            passport_code: '',
+                            address: '',
+                            mobile_phone: '',
+                            is_vip: '0',
+                            is_blacklisted: '0',
+                            barcode: '',
 
-                            card_status:'0',
-                            //edit:'',
-                            login:'',
-                            passer:'',
-                            pasnom:''
+                            card_status: '0',
+                            login: '',
+                            edit:1
+                            //passer: '',
+                            //pasnom: ''
                         })[0],
+                        form = Ext.create('Office.view.card.FormCardV');
 
-                        form = Ext.create('Office.view.card.FormCardV', {
-                            viewModel: {
-                                data: {
-                                    theClient: newRec
-                                }
-                            }
-                        });
+                    form.getViewModel().set('theClient',newRec);
+                    form.loadRecord(newRec);
+
                     var window = Ext.create('Ext.Window', {
                         width: 700,
                         title: 'Добавление',
@@ -101,19 +103,12 @@ Ext.define('Office.view.card.GridCardC', {
                     window.show();
                 }
             }
-        },
-        store: {
-            //'#card': {
-            //    load: function (store, arr) {
-            //        //console.info(arguments);
-            //    }
-            //}
         }
     },
 
     onLoadCard: function (store, arrRecs) {
-        if(!arrRecs.length)
-        Util.warnMes('Клубные карты не найдены');
+        if (!arrRecs.length)
+            Util.warnMes('Клубные карты не найдены');
     },
 
     onEnter: function (field, e) {
@@ -121,7 +116,6 @@ Ext.define('Office.view.card.GridCardC', {
             var mainController = Office.app.getController('Main'),
                 grid = this.getView(),
                 store = grid.getViewModel().getStore('card');
-            //mainController.onAddFilterVm(field, null, null, null, true, store, grid);
             mainController.storeLoadVm(grid);
         }
     },
@@ -152,7 +146,6 @@ Ext.define('Office.view.card.GridCardC', {
                     }
                 };
             Ext.Ajax.request({
-                //url: Ext.util.Format.format(Server.getBarCodeInfo(), Server.getToken(), field.getValue()),
                 url: Server.getUrl(objUrl),
                 success: success,
                 failure: failure,
@@ -161,17 +154,4 @@ Ext.define('Office.view.card.GridCardC', {
         }
     },
 
-
-    /*onAddFilter: function (field, n, o, e) {
-        var mainController = Office.app.getController('Main'),
-            grid = this.getView();
-        //mainController.onAddFilterVm(field, n, o, e, false, grid.store,grid);
-        mainController.storeLoadVm(grid);
-    },*/
-
-    /*onClearFilter: function (field, e) {
-        var mainController = Office.app.getController('Main'),
-            grid = this.getView();
-        mainController.onClearFilterVm(field, e, grid.store,grid);
-    }*/
 });

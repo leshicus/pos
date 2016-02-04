@@ -56,7 +56,7 @@ Ext.define('Office.view.pay.GridPayM', {
             var slipRawValue = get('slipRawValue'),
                 code = '';
             if (slipRawValue) {
-                slipRawValue = slipRawValue.replace(new RegExp("Х|х|X", 'g'), 'x');
+                slipRawValue = slipRawValue.replace(new RegExp("Х|х|X|Ч|ч", 'g'), 'x');
                 if (slipRawValue.indexOf('x') > 0) { // * номер_х_код
                     code = slipRawValue.split('x')[1];
                 }
@@ -67,7 +67,7 @@ Ext.define('Office.view.pay.GridPayM', {
             var slipRawValue = get('slipRawValue'),
                 slipId = '';
             if (slipRawValue) {
-                slipRawValue = slipRawValue.replace(new RegExp("Х|х|X", 'g'), 'x');
+                slipRawValue = slipRawValue.replace(new RegExp("Х|х|X|Ч|ч", 'g'), 'x');
                 if (slipRawValue.indexOf('x') > 0) { // * номер_х_код
                     slipId = slipRawValue.split('x')[0];
                 } else {
@@ -77,27 +77,16 @@ Ext.define('Office.view.pay.GridPayM', {
             return slipId;
         },
 
-        //get_showMakeButtons: function (get) {
-        //    var slipInfo = get('slipInfo'),
-        //        slipRawValue = get('slipRawValue');
-        //    //if (get('slipRawValue')
-        //    //    && get('slipInfo')
-        //    //    && !get('existsTransaction')
-        //    //    && !get('externalSlipCash')) {
-        //    if (get('status') == 1) // * ставка выиграла
-        //        return true;
-        //    else
-        //        return false;
-        //}
-        get_showMakeButtons: {
+        showButtonPayWithoutPrint: {
             bind: {
                 is_win: '{is_win}'
             },
             get: function (data) {
-                return data.is_win;
+                var payWithoutCheck = Util.getGlobalConst('ENABLE_PAY_WITHOUT_CHECK');
+                return data.is_win && payWithoutCheck;
             }
         },
-        get_showMakeButtonCheck: {
+        showButtonPayWithPrint: {
             bind: {
                 is_win: '{is_win}'
             },

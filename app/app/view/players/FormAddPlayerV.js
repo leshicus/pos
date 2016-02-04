@@ -14,22 +14,21 @@ Ext.define('Office.view.players.FormAddPlayerV', {
         labelWidth: 200,
         margin: 5
     },
+    listeners: {
+        afterrender:'onAfterRender'
+    },
     initComponent: function () {
         this.items = [
             {
                 fieldLabel: 'Имя игрока:',
                 xtype: 'textfield',
                 itemId: 'name',
+                labelWidth:80,
                 allowBlank:false,
-                //msgTarget:'side',
-                /*bind:{
-                    value:'{theClient.name}'
-                },*/
                 listeners: {
                     specialkey: 'onEnter'
                 }
             }
-
         ];
 
         this.callParent();

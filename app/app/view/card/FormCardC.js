@@ -8,28 +8,24 @@ Ext.define('Office.view.card.FormCardC', {
     control: {},
     onClickSave: function (button) {
         var window = button.up('window'),
-            form = window.down('form'),
-            values = form.getValues(),
+            form = window.down('form');
+        // * удалим маски из полей с маской, если она там осталась (бывает, если onblur не успевает сработать)
+        FormCardF.removeMask(form);
+
+        var values = form.getValues(),
             grid = Ext.ComponentQuery.query('gridcard')[0],
             vm = grid.getViewModel(),
             store = vm.getStore('card'),
             vmForm = form.getViewModel(),
             selected = vmForm.getData().theClient,
             mainController = Office.app.getController('Main'),
-            player,
-            objUrlBarcode = {
-                class: 'Pos_Barcode_Update',
-                params: {
-                    player: player,
-                    barcode: values['barcode'],
-                    edit_player: 1
-                }
-            },
-            callbackBarcodeUpdate = function (opt, success, response) {
+            player;
+
+            function callbackBarcodeUpdate (opt, success, response) {
                 if (response.responseText) {
                     var respBarcode = Ext.decode(response.responseText);
                     if (respBarcode.success) {
-                        Util.warnMes('Штрих-код сохранен');
+                        Util.sucMes('Штрих-код сохранен');
                         window.close();
                         //  store.commitChanges();
                     } else {
@@ -51,39 +47,60 @@ Ext.define('Office.view.card.FormCardC', {
                     ]
                 });
                 vm.set('filters.lastname', values['lastname']);
-                //vm.set('filters.barcode', values['barcode']);
                 mainController.storeLoadVm(grid);
-            },
-            callbackSavebypassportUpdate = function (opt, success, response) {
+            };
+
+            function callbackSavebypassportUpdate (opt, success, response) {
                 if (response.responseText) {
                     var respUpdate = Ext.decode(response.responseText);
                     if (respUpdate.success) {
                         if (values['barcode']) {
+                            var objUrlBarcode = {
+                                class: 'Pos_Barcode_Update',
+                                params: {
+                                    player: player,
+                                    barcode: values['barcode']
+                                }
+                            };
+
                             Ext.Ajax.request({
                                 url: Server.getUrl(objUrlBarcode),
                                 method: 'POST',
                                 callback: callbackBarcodeUpdate
                             });
                         } else {
-                            Util.toast('Успех', 'Данные сохранены');
+                            Util.sucMes('Данные сохранены');
                             mainController.storeLoadVm(grid);
                             window.close();
                         }
                     } else {
-                        //store.rejectChanges();
                         Util.erMes(respUpdate.message);
                     }
                 } else {
-                    //store.rejectChanges();
-                    Util.erMes('Данные не сохранены');
+                    Util.warnMes('Данные не сохранены');
                 }
-            },
-            callbackSavebypassportNew = function (opt, success, response) {
+            };
+
+            function callbackSavebypassportNew (opt, success, response) {
                 if (response.responseText) {
-                    //var respUpdate = Ext.decode(response.responseText);
                     var respUpdate = Gui.JSONDecodeSafe(response.responseText);
+
                     if (respUpdate && respUpdate.success) {
+                        var mes = respUpdate.mes,
+                            str = 'Добавлен новый пользователь с ID ' + respUpdate.user_id;
+                        if (mes) {
+                            str += '<br>' + mes;
+                        }
+
                         if (values['barcode']) {
+                            var objUrlBarcode = {
+                                class: 'Pos_Barcode_Update',
+                                params: {
+                                    player: player,
+                                    barcode: values['barcode']
+                                }
+                            };
+
                             Ext.Ajax.request({
                                 url: Server.getUrl(objUrlBarcode),
                                 method: 'POST',
@@ -104,16 +121,12 @@ Ext.define('Office.view.card.FormCardC', {
                             mainController.storeLoadVm(grid);
                         }
 
-                        Util.infoMes('Добавлен новый пользователь с ID ' + respUpdate.user_id);
+                        Util.infoMes(str);
                         window.close();
-                        //store.commitChanges();
-                        //vm.set('filters.barcode', values['barcode']);
                     } else {
-                        //store.rejectChanges();
                         Util.erMes(respUpdate.mes || response.responseText);
                     }
                 } else {
-                    //store.rejectChanges();
                     Util.erMes('Данные не сохранены');
                 }
             };
@@ -121,19 +134,19 @@ Ext.define('Office.view.card.FormCardC', {
         if (form.getForm().isValid()) {
             if (selected) {
                 player = selected.getData();
+                Ext.Object.merge(player, values);
             } else {
                 player = values;
             }
-            player['passport_number'] = values['passer'] + values['pasnom'];
-
+            //player['passport_number'] = values['passer'] + values['pasnom'];
+            player['country'] = values['country'];
+            //player['birthday'] = Gui.formatPassportIssueDate(Ext.Date.format(player['birthday'], 'Y-m-d'));
             var objUrl = {
                 class: 'Pos_Players_Savewithoutpassport',
-                //class: 'Pos_Players_Savebypassport',
                 params: {
                     player: player
                 }
             };
-            //if (selected.get('id').indexOf(Util.extModel) != -1) {// * новый пользователь
             if (selected.get('id') == 0) {// * новый пользователь
                 Ext.Ajax.request({
                     url: Server.getUrl(objUrl),
@@ -147,6 +160,8 @@ Ext.define('Office.view.card.FormCardC', {
                     callback: callbackSavebypassportUpdate
                 });
             }
+        } else {
+            Util.erMes(Config.STR_FORM_ERROR);
         }
     },
 
@@ -155,38 +170,31 @@ Ext.define('Office.view.card.FormCardC', {
             window = form.up('window'),
             grid = Ext.ComponentQuery.query('gridcard')[0];
         if (grid) {
-            var selected = grid.getSelectionModel().getSelection()[0];
+            window.close();
 
+            var selected = grid.getSelectionModel().getSelection()[0];
             if (selected)
                 selected.reject();
             else {
-                //grid.store.rejectChanges();
                 grid.store.remove(grid.store.getById(0));
             }
         }
-
-        window.close();
     },
+
 
     onClickEditAdress: function (field, val) {
         var formCard = field.up('formcard'),
-        //address = formCard.down('#address'),
             address = formCard.getViewModel().getData().theClient.get('address'),
             grid = Ext.ComponentQuery.query('gridcard')[0];
         if (grid) {
-            //var selected = grid.getSelectionModel().getSelection()[0];
-            var formKladr = Ext.create('Office.view.card.FormKladrV', {
-                viewModel: {
-                    data: {
-                        theAddress: address
-                    }
-                }
-            });
+            var formKladr = Ext.create('Office.view.card.FormKladrV');
+            formKladr.getViewModel().set('theAddress', address);
+
             var window = Ext.create('Ext.Window', {
                 width: 400,
                 title: 'Заполнение адреса',
                 constrain: true,
-                closable: false,
+                closable: true,
                 modal: true,
                 layout: 'fit'
             });
@@ -226,40 +234,70 @@ Ext.define('Office.view.card.FormCardC', {
     // * переключает allowBlank для passer в зависимости от is_resident
     makePasserRequired: function (e, input) {
         var form = Ext.ComponentQuery.query('formcard')[0],
-            passer = form.down('#passer'),
+            vm = form.getViewModel(),
+            selectedDocument = vm.get('selectedDocument'),
+        //passer = form.down('#passer'),
+            country = form.down('#country'),
+            document_type = form.down('#document_type'),
             fieldResident = form.down('#is_resident'),
             is_resident = fieldResident.getValue(),
-            pasnom = form.down('#pasnom');
+            pasnom = form.down('#passport_number');
 
-        passer.allowBlank = !is_resident;
+        // passer.allowBlank = !is_resident;
         pasnom.setReadOnly(false);
 
-        if (!is_resident) { // * такой изврат, т.к. нельзя сделать disabled- так значение поля не будет передаваться при form::submit
-            passer.addCls('x-item-disabled');
-            passer.setReadOnly(true);
+        document_type.setReadOnly(false);
+
+        if (is_resident) { // * такой изврат, т.к. нельзя сделать disabled- так значение поля не будет передаваться при form::submit
+            country.select(643);
+            //country.addCls('x-item-disabled');
+            country.setReadOnly(true);
         } else {
-            passer.removeCls('x-item-disabled');
-            passer.setReadOnly(false);
+            country.reset();
+            //country.removeCls('x-item-disabled');
+            country.setReadOnly(false);
+        }
+
+        //if (selectedDocument) {
+        //    // * серия только для паспорта РФ
+        //    if (is_resident && selectedDocument.get('id') == '21') { // * такой изврат, т.к. нельзя сделать disabled- так значение поля не будет передаваться при form::submit
+        //        passer.removeCls('x-item-disabled');
+        //        passer.setReadOnly(false);
+        //    } else {
+        //        passer.addCls('x-item-disabled');
+        //        passer.setReadOnly(true);
+        //    }
+        //}
+
+        // * отфильтруем типы документов
+        FormCardF.filterStoreDocument(is_resident, form);
+    },
+
+    // * проставим маски ввода на серию/номер документа
+    onDocumentTypeChange: function (combo) {
+        var form = Ext.ComponentQuery.query('formcard')[0],
+            pasnom = form.down('#passport_number');
+
+        FormCardF.setFieldMask(pasnom);
+
+        Ext.defer(function () {
+            pasnom.focus();
+        }, 10, this);
+    },
+
+    onFocus: function (pasnom) {
+        if (!pasnom.readOnly && !pasnom.disabled) {
+            FormCardF.setFieldMask(pasnom);
+            pasnom.setValue(pasnom.plugin[0].applyFormatToString(pasnom.getValue()));
         }
     },
 
     onAfterRender: function (form) {
-        Ext.defer(function () {// * задержка должна быть больше 100мс
-            var form = Ext.ComponentQuery.query('formcard')[0],
-                passer = form.down('#passer'),
-                fieldResident = form.down('#is_resident'),
-                is_resident = fieldResident.getValue();
-
-            if (!is_resident) { // * такой изврат, т.к. нельзя сделать disabled- так значение поля не будет передаваться при form::submit
-                passer.addCls('x-item-disabled');
-                passer.setReadOnly(true);
-            } else {
-                passer.removeCls('x-item-disabled');
-            }
-        }, 200, this);
+        Util.validate(form);
+        FormCardF.afterRender(form);
     },
 
-    // * сделать заполненные поля не редактируемыми
+    // * сделать заполненные поля не редактируемыми. Но если информация в поле ошибочная, то можно редактировать
     setNotEditable: function () {
         var form = this.getView(),
             objFields = form.getForm().getValues(),
@@ -269,25 +307,29 @@ Ext.define('Office.view.card.FormCardC', {
         Ext.Object.each(objFields, function (key, val) {
             var id = '#' + key;
             field = form.down(id);
-            if (field && val && key != 'barcode'/*&& key != 'passer'&& key != 'pasnom'*/) {
-                field.setReadOnly(true);
 
-                if (key == 'address') {
-                    // * скрыть кнопку КЛАДР
-                    var buttonKladr = form.down('#buttonKladr');
-                    buttonKladr.disable();
+            if (field) {
+                if (val && key != 'barcode' && field.isValid()) {
+                    field.setReadOnly(true);
+
+                    if (key == 'address' && form.down('#address').getValue()) {
+                        // * скрыть кнопку КЛАДР
+                        var buttonKladr = form.down('#buttonKladr');
+                        buttonKladr.disable();
+                    }
+                } else {
+                    if (key != 'barcode')
+                        editableResidentFlag = true;
+                    field.setReadOnly(false);
                 }
-            } else {
-                if (key != 'barcode')
-                    editableResidentFlag = true;
-                field.setReadOnly(false);
+
+                field.suspendEvent('specialkey');
             }
+
             // * признак Резидент нужно давать редактировать, если есть хоть одно другое редактируемое поле
             if (editableResidentFlag) {
                 form.down('#is_resident').setReadOnly(false);
             }
-
-            field.suspendEvent('specialkey');
         });
     },
     onChooseUser: function () {
@@ -300,6 +342,7 @@ Ext.define('Office.view.card.FormCardC', {
             constrain: true,
             itemId: 'windowSearch',
             modal: true,
+            closable: true,
             layout: {
                 type: 'hbox',
                 align: 'stretch'
@@ -319,24 +362,8 @@ Ext.define('Office.view.card.FormCardC', {
     },
 
     onCellDblclick: function (grid, td, cellIndex, record, tr, rowIndex, e) {
-        if (record.get('enabled') == 1 && record.get('is_blacklisted') == 0 && record.get('is_demo') == 0) {
-            var gridSearch = Ext.ComponentQuery.query('gridsearch')[0],
-                selected = record,
-                window = gridSearch.up('window');
-
-            var passport_number = selected.get('passport_number'),
-                is_resident = selected.get('is_resident'),
-                passport_issue_datetime = selected.get('passport_issue_datetime');
-
-            if (parseInt(is_resident)) {
-                // * приведем формат полей к тому, как они хранятся в форме
-                selected.set('passer', Gui.getPassportSerie(passport_number, is_resident));
-                selected.set('pasnom', Gui.getPassportNumber(passport_number, is_resident));
-            } else {
-                selected.set('pasnom', passport_number);
-            }
-            selected.set('passport_issue_datetime', Gui.formatPassportIssueDate(passport_issue_datetime));
-
+        // * различающийся код
+        function diffCode(selected, window) {
             var formCard = Ext.ComponentQuery.query('formcard')[0];
 
             formCard.getViewModel().set('theClient', selected);
@@ -347,22 +374,16 @@ Ext.define('Office.view.card.FormCardC', {
             Ext.defer(function () { // * без задержки не успевают проставиться признаки
                 formCard.getController().setNotEditable();
             }, 100);
-        } else {
-            var str = record.get('enabled') != 1 ? 'не активен; ' : '';
-            str += record.get('is_blacklisted') == 1 ? 'в черном списке; ' : '';
-            str += record.get('is_demo') == 1 ? 'демо; ' : '';
-
-            Util.toast('Внимание', 'Нельзя выполнить операцию: ' + str);
         }
 
+        // * общий код
+        FormCardF.cellDblClickCommon(diffCode, record);
     },
 
     loadSearchTimelineGambler: function (store, records) {
         if (!records.length)
             Util.erMes('Игрок не найден');
         else if (records.length == 1) {
-
-
             Ext.defer(function () {// * иначе какая-то ошибка возникает
                 this.onCellDblclick(null, null, null, records[0]);
             }, 100, this);

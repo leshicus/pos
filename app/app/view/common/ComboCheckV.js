@@ -52,6 +52,7 @@ Ext.define('Office.view.common.ComboCheckV', {
         this.items = [
             {
                 xtype: 'combo',
+                matchFieldWidth:false,
                 bind: this._bind,
                 emptyText: this.emptyText,
                 displayField: this.displayField,
@@ -72,7 +73,8 @@ Ext.define('Office.view.common.ComboCheckV', {
                             combo._funcCollapse();
                         }
                     },
-                    change: function (combo, arrNew, arrOld) {
+                    change: function (combo, arrNew, arrOld) {//todo если перещелкивать между двумя такими полями (Параметры ТЛ), то самовыделяются значения
+                        //console.info(arrNew, arrOld);
                         arrNew = arrNew || [];
                         arrOld = arrOld || [];
 
@@ -96,7 +98,7 @@ Ext.define('Office.view.common.ComboCheckV', {
                         }
 
                         // * обратим значение для отмеченного поля
-                        if (Util.in_array("0", arrDif, true) || Util.in_array("-1", arrDif, true)) { // * если выделен пункт Все, то поведение отличается
+                        if (/*Util.in_array("0", arrDif, true) ||*/ Util.in_array("-1", arrDif, true)) { // * если выделен пункт Все, то поведение отличается
                             // * заморозим ивенты
                             combo.suspendEvent('change');
                             // * проставим/снимем чекеры
@@ -112,10 +114,12 @@ Ext.define('Office.view.common.ComboCheckV', {
                             combo.resumeEvent('change');
                         } else {
                             Ext.Array.each(arrDif, function (item, i) {
-                                var rec = store.findRecord(combo.valueField, item, 0, false, true, true),
-                                    id = rec.get('id'),
-                                    flag = Util.in_array(id, arrNew);
-                                rec.set(checkField, flag);
+                                var rec = store.findRecord(combo.valueField, item, 0, false, true, true);
+                                if(rec){
+                                    var id = rec.get('id'),
+                                        flag = Util.in_array(id, arrNew);
+                                    rec.set(checkField, flag);
+                                }
                             });
                         }
                         

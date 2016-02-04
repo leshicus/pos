@@ -1,19 +1,7 @@
-/*@import 'fontello/css/fontello.css';*/
-/*.icon-express {
-  background-image:url(../image/menu.png) !important;
-}
-.icon-odinar {
-  background-image:url(../image/dot1.png) !important;
-}
-.icon-folder {
-    background-image:url(../image/Places-folder-blue-icon.png) !important;
-}*/
-
 /* общий стиль для всех иконок спорта */
 .sport {
     height: 24px;
     width: 24px;
-    /*vertical-align: -0.5em; для 16 */
     vertical-align: -1em;
 }
 .football {background-image:url(../image/sport/football24.png) !important;}

@@ -81,6 +81,25 @@ Ext.define('Office.util.Gui', {
         return ((dd != '00') && (mm != '00') && (yyyy > 1900) && (yyyy <= now.getFullYear()));
     },
 
+    isValidBirthdayDate: function (datetimeStr) {
+        var IsoDateRe = new RegExp("^([1-9][0-9]{3})-([0-9]{2})-([0-9]{2})$");
+        var matches = IsoDateRe.exec(datetimeStr);
+        if (!matches) return false;
+        var now = new Date();
+        var parts = datetimeStr.match(/(\d+)/g);
+        var date = new Date(parts[0], parts[1] - 1, parts[2]); // note parts[1]-1
+        var dd = date.getDate();
+        var mm = date.getMonth() + 1; //January is 0!
+        var yyyy = date.getFullYear();
+        if (dd < 10) {
+            dd = '0' + dd;
+        }
+        if (mm < 10) {
+            mm = '0' + mm;
+        }
+        return ((dd != '00') && (mm != '00') && (yyyy > 1900) && (yyyy <= now.getFullYear()));
+    },
+
     JSONDecodeSafe: function (json) {
         try {
             res = Ext.decode(json);
@@ -90,6 +109,13 @@ Ext.define('Office.util.Gui', {
         }
 
         return res;
-    }
+    },
+    //
+    //validFullname:function (fullname) {
+    //    if (fullname == '') return false;
+    //    var pp = /^[a-zA-Zа-яА-Я]+ [a-zA-Zа-яА-Я]+ [a-zA-Zа-яА-Я]+$/;
+    //    return fullname.match(pp)
+    //}
+
 
 });

@@ -10,7 +10,11 @@ Ext.define('Office.view.session.GridLastSessionC', {
                 itemcontextmenu: function (view, rec, node, index, e) {
                     if (view.panel.getSelectionModel().hasSelection()) {
                         e.stopEvent(); // * чтобы не показывалось
-                        var menu = Ext.create('Office.view.session.contextmenu.MenuLastSessionV');
+
+                        var menu = Ext.ComponentQuery.query('menulastsession')[0];
+                        if (!menu)
+                            menu = Ext.create('Office.view.session.contextmenu.MenuLastSessionV');
+
                         menu.showAt(e.getXY());
                     }
                     return false;
@@ -25,12 +29,7 @@ Ext.define('Office.view.session.GridLastSessionC', {
         },
         store: {
             '#lastsession': {
-                /* load: function (store, arr, success, resp) {
-                    var o = Ext.decode(resp._response.responseText);
-                    if (!success) {
-                        Util.erMes('Ошибка', o.message);
-                    }
-                }*/
+
             }
         }
     }

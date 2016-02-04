@@ -1,30 +1,22 @@
 Ext.define('Office.view.login.WindowLoginC', {
     extend: 'Ext.app.ViewController',
     alias: 'controller.windowlogin',
-    init: function () {
-        this.listen({
-            component: {
-                '#': {},
-                // * язык
-                'combobox[itemId=language]': {
-                    change: function (field, newVal) {
-                        // * локализация пользовательских названий полей
-                        Ux.locale.Manager.updateLocale(Ux.locale.Manager.getLanguageText(newVal));
 
-                        // * локализация штатных компонентов
-                        var url = Ext.util.Format.format("app/Ux/locale/ext-locale/ext-locale-{0}.js", newVal);
-                        Ext.Loader.loadScript({
-                                url: url,
-                                onLoad: this.onSuccess,
-                                onError: this.onFailure,
-                                scope: this
-                            }
-                        );
-                    }
-                }
+    onChangeLocale:function (field, newVal) {
+        // * локализация пользовательских названий полей
+        Ux.locale.Manager.updateLocale(newVal);
+
+        // * локализация штатных компонентов
+        var url = Ext.util.Format.format("resources/libs/ext-locale/ext-locale-{0}.js", newVal);
+        Ext.Loader.loadScript({
+                url: url,
+                onLoad: this.onSuccess,
+                onError: this.onFailure,
+                scope: this
             }
-        })
+        );
     },
+
     // * очищать поле username если на него щелкнуть
     usernameClickEvent: function (field) {
         field.getEl().on('click', function () {
@@ -92,13 +84,7 @@ Ext.define('Office.view.login.WindowLoginC', {
        // }
 
         // * очистим локальное хранилище от прежних купонов
-        var localStorageBasket = Ext.util.LocalStorage.get('newpos_basket');
-        if (localStorageBasket) {
-            delete window.localStorage.newpos_basket; // * удаляю запись newpos_basket
-            delete window.localStorage.bets;
-
-            localStorageBasket.clear();
-        }
+        BasketF.clearLocalStorageBasket();
         //localStorage.removeItem('multi_value');
         //localStorage.removeItem('system_value');
 

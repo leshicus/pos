@@ -18,11 +18,7 @@ Ext.define('Office.view.accept.contextmenu.MenuAcceptC', {
                     objUrl = {
                         class: 'Pos_Pageprinter_Print',
                         params: {
-                            slipId: slipId,
-                            user_id: user_id,
-                            username: userLogin,
-                            token: userToken,
-                            secondTime: true
+                            slipId: slipId
                         }
                     };
                 window.open(Server.getUrl(objUrl));
@@ -43,7 +39,7 @@ Ext.define('Office.view.accept.contextmenu.MenuAcceptC', {
                 Ext.Msg.confirm('Предупреждение', 'Cкопировать ставку №' + +slipId + '?<br/>Купон будет очищен!', function (btn) {
                     if (btn == 'yes') {
                         // * очистим купон, если он не чист
-                        var fill = Ext.ComponentQuery.query('#main')[0];
+                        var fill = Ext.ComponentQuery.query('fill')[0];
                         if (fill) {
                             fill.getController().clickClearBet();
                         }
@@ -55,7 +51,7 @@ Ext.define('Office.view.accept.contextmenu.MenuAcceptC', {
                                     arrBets = betsInfo.respond;
 
                                 if (betsInfo.success) {
-                                    Util.warnMes('Заявка отправлена в купон');
+                                    Util.sucMes('Заявка отправлена в купон');
 
                                     // * реально отпраляем заявку в localStorage
                                     var menumain = Ext.ComponentQuery.query('menumain')[0],
@@ -170,12 +166,12 @@ Ext.define('Office.view.accept.contextmenu.MenuAcceptC', {
                             method: 'POST'
                         });
                     }
-                });
+                }).textField.inputEl.dom.type = 'password'; // * чтобы пароль скрывался (показывался звездочками)
             }
         },
         '#menuBuyout': {
             click: function (button) {
-                me = this;
+                var me = this;
                 var grid = Ext.ComponentQuery.query('gridaccept')[0],
                     selection = grid.getSelectionModel().getSelection()[0],
                     slipId = selection.get('slip_id'),
@@ -198,10 +194,11 @@ Ext.define('Office.view.accept.contextmenu.MenuAcceptC', {
                                     if (response.use_ndfl) {
                                         if (response.player_id > 0) {
 
-                                            var pidDate = response.player.passport_issue_datetime;
-                                            pidDateStr = Gui.formatPassportIssueDate(pidDate);
+                                            var pidDateStr = Gui.formatPassportIssueDate(response.player.passport_issue_datetime),
+                                            birthdayDateStr = Gui.formatPassportIssueDate(response.player.birthday);
+
                                             if (response.player.firstname != '' && response.player.lastname != '' && response.player.passport_number != '' && response.player.passport_issuer != ''
-                                                && response.player.passport_issue_datetime != '' && Gui.isValidPassportIssueDate(pidDateStr)) {
+                                                && response.player.passport_issue_datetime != ''&& response.player.birthday != '' && Gui.isValidPassportIssueDate(pidDateStr) && Gui.isValidPassportIssueDate(birthdayDateStr)) {
                                                 Ext.Msg.confirm('Подтверждение', 'Вы действительно хотите осуществить выкуп ставки №' + slipId + '? Размер ' + ((response.penalty >= 0) ? 'комиссии' : 'бонуса') + ' при отказе от ставки: ' + ((response.penalty >= 0) ? response.penalty : (-response.penalty)) + ' (' + response.penaltyText + ')', function (btn) {
                                                     if (btn == 'yes') {
                                                         PayF.madeBuyback(slipId);
@@ -236,7 +233,10 @@ Ext.define('Office.view.accept.contextmenu.MenuAcceptC', {
                             } catch (e) {
                                 return;
                             }
-                            grid.store.reload();
+
+                            Ext.defer(function(){ // * от сервера не сразу приходит новый статус
+                                grid.store.reload();
+                            },1000,this);
                         },
                         failure: function (response) {
                             try {
@@ -245,7 +245,10 @@ Ext.define('Office.view.accept.contextmenu.MenuAcceptC', {
                             } catch (e) {
                                 return;
                             }
-                            grid.store.reload();
+
+                            Ext.defer(function(){ // * от сервера не сразу приходит новый статус
+                                grid.store.reload();
+                            },1000,this);
                         },
                         method: 'POST'
                     });
@@ -254,7 +257,7 @@ Ext.define('Office.view.accept.contextmenu.MenuAcceptC', {
                 }
             }
         },
-        '#menuReturn': {//todo сделать
+        '#menuReturn': {
             click: function (button) {
                 var grid = Ext.ComponentQuery.query('gridaccept')[0],
                     selection = grid.getSelectionModel().getSelection()[0],
@@ -277,10 +280,12 @@ Ext.define('Office.view.accept.contextmenu.MenuAcceptC', {
                                 if (slipInfo.success) {
                                     if (slipInfo.use_ndfl) {
                                         if (player && player.id > 0) {
-                                            var pidDate = player.passport_issue_datetime,
-                                                pidDateStr = Gui.formatPassportIssueDate(pidDate);
+
+                                            var pidDateStr = Gui.formatPassportIssueDate(player.passport_issue_datetime),
+                                                birthdayDateStr = Gui.formatPassportIssueDate(player.birthday);
+
                                             if (player.firstname != '' && player.address != '' && player.lastname != '' && player.passport_number != '' && player.passport_issuer != ''
-                                                && player.passport_issue_datetime != '' && Gui.isValidPassportIssueDate(pidDateStr)) {
+                                                && player.passport_issue_datetime != '' && Gui.isValidPassportIssueDate(pidDateStr)&& player.birthday != '' && Gui.isValidPassportIssueDate(birthdayDateStr)) {
                                                 PayF.returnSlip(slipId);
                                             } else {
                                                 PayF.editUserDataIfNeedAndMakeAction(slipInfo, true, PayF.checkPlayerAndReturnSlip, AcceptF);
@@ -292,13 +297,16 @@ Ext.define('Office.view.accept.contextmenu.MenuAcceptC', {
                                         PayF.returnSlip(slipId);
                                     }
 
-                                    grid.store.reload();
+                                    Ext.defer(function(){ // * от сервера не сразу приходит новый статус
+                                        grid.store.reload();
+                                    },1000,this);
                                 } else {
                                     if (player && player.id > 0) {
-                                        var pidDate = player.passport_issue_datetime,
-                                            pidDateStr = Gui.formatPassportIssueDate(pidDate);
+                                        var pidDateStr = Gui.formatPassportIssueDate(player.passport_issue_datetime),
+                                            birthdayDateStr = Gui.formatPassportIssueDate(player.birthday);
+
                                         if (player.firstname != '' && player.address != '' && player.lastname != '' && player.passport_number != '' && player.passport_issuer != ''
-                                            && player.passport_issue_datetime != '' && Gui.isValidPassportIssueDate(pidDateStr)) {
+                                            && player.passport_issue_datetime != '' && Gui.isValidPassportIssueDate(pidDateStr)&& player.birthday != '' && Gui.isValidPassportIssueDate(birthdayDateStr)) {
                                             PayF.returnSlip(slipId);
                                         } else {
                                             PayF.editUserDataIfNeedAndMakeAction(slipInfo, true, PayF.checkPlayerAndReturnSlip, AcceptF);
@@ -372,7 +380,7 @@ Ext.define('Office.view.accept.contextmenu.MenuAcceptC', {
 
         if (form.getForm().isValid()) {
             var player = form.getRecord().getData();
-            player['passport_number'] = player['passer'] + player['pasnom'];
+            //player['passport_number'] = player['passer'] + player['pasnom'];
 
             // * сохранение данных клиента
             var objUrl = {
@@ -433,6 +441,8 @@ Ext.define('Office.view.accept.contextmenu.MenuAcceptC', {
             });
 
             window.close();
+        }else{
+            Util.erMes(Config.STR_FORM_ERROR);
         }
     },
 

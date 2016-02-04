@@ -26,13 +26,12 @@ Ext.define('Office.view.session.GridCloseSessionC', {
                 if (response.responseText) {
                     var o = Ext.decode(response.responseText);
                     if (o.success) {
-                        Util.toast('Успех', 'Смена завершена');
+                        Util.sucMes('Смена завершена');
                         gridcurrentController.onPrintSession();
-                        var gridcurrent = Ext.ComponentQuery.query('gridcurrent')[0];
-                        Ext.defer(function(){
-                            gridcurrent.getController().reloadGrids();
-                        },100);
 
+                        Ext.defer(function(){
+                            SessionF.reloadGrids();
+                        },100);
                     } else {
                         Util.erMes('Смена не завершена: '+ o.message||o.errors[0]);
                     }

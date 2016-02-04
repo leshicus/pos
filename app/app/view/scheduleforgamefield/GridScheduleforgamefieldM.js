@@ -7,25 +7,17 @@ Ext.define('Office.view.scheduleforgamefield.GridScheduleforgamefieldM', {
             fields: [],
             proxy: {
                 type: 'ajax',
-                //url: Server.virtualSlip(),
                 url: Server.getUrl({
                     class: 'Pos_Scheduleforgamefield_Scheduleforgamefieldread',
                     token: '{token}',
                     params: {
-                        //timezones: '{filters.cbTimezone}', // * эти значения установливаются при data bind, и стор будет загружен с данными параметрами
-                       // place_id: '{filters.place_id}'
+                        timezones: '{getTimezone}' // * эти значения установливаются при data bind, и стор будет загружен с данными параметрами
                     }
                 }),
                 reader: {
                     type: 'json',
                     rootProperty: 'rows',
                     totalProperty: 'results'
-                },
-                extraParams: {
-                    /*xaction: 'read',
-                    short_number: '{filters.short_number}', // * эти значения установливаются при data bind, и стор будет загружен с данными параметрами
-                    place_id: '{filters.place_id}'*/
-                    timezones: '{filters.cbTimezone}'
                 },
                 actionMethods: {
                     create: 'POST',
@@ -55,6 +47,17 @@ Ext.define('Office.view.scheduleforgamefield.GridScheduleforgamefieldM', {
             },
             storeId: 'timezone',
             autoLoad: true
+        }
+    },
+    formulas: {
+        // * определяет, нужно ли показывать некоторые поля, в зависимости от количества записей в сторе
+        getTimezone: {
+            bind: {
+                cbTimezone: '{filters.cbTimezone}'
+            },
+            get: function (data) {
+                return encodeURIComponent(data.cbTimezone);
+            }
         }
     }
 

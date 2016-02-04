@@ -28,9 +28,9 @@ Ext.define('Office.view.session.FormStartSessionC', {
                     if (response.responseText) {
                         var o = Ext.decode(response.responseText);
                         if (o.success) {
-                            Util.toast('Успех', 'Смена начата');
-                            var gridcurrent = Ext.ComponentQuery.query('gridcurrent')[0];
-                            gridcurrent.getController().reloadGrids();
+                            Util.sucMes('Смена начата');
+
+                            SessionF.reloadGrids();
                         } else {
                             Util.erMes('Смена не начата: '+ o.message||o.errors[0]);
                         }
@@ -40,6 +40,8 @@ Ext.define('Office.view.session.FormStartSessionC', {
                 }
             });
             window.close();
+        }else{
+            Util.erMes(Config.STR_FORM_ERROR);
         }
     },
     onClickCancel: function (button) {
@@ -58,6 +60,19 @@ Ext.define('Office.view.session.FormStartSessionC', {
         } else {
             return 'Обязательное поле';
         }
-    }
+    },
 
+    onAfterRender: function (form) {
+        Util.validate(form);
+        var term = form.down('#operator_fullname');
+        term.focus();
+    },
+
+    onEnter: function (field, e) {
+        if (e.getKey() == e.ENTER) {
+            var win = field.up('window'),
+                button = win.down('button[action=save]');
+            this.onClickSave(button);
+        }
+    }
 });

@@ -33,7 +33,7 @@ Ext.define('Office.view.fill.coeff.TemplatesWeb', {
 
     rendererBetInBasketToolbar: function (val, metadata, rec, rI, cI) {
         if (val) {
-            var fill = Ext.ComponentQuery.query('#main')[0],
+            var fill = Ext.ComponentQuery.query('fill')[0],
                 vmFill = fill.getViewModel(),
                 storeBasket = vmFill.getStore('basket'),
                 arrSpan = Util.textFromHTMLString(val, 'span', 'data-coefid'),

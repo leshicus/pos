@@ -28,7 +28,8 @@ Ext.define('Office.view.timeline.FormSmsCodeV', {
                 allowBlank:false,
                 //msgTarget:'side',
                 listeners:{
-                    specialkey:'onEnter'
+                    specialkey:'onEnter',
+                    afterrender: Util.validate
                 }
             }
         ];

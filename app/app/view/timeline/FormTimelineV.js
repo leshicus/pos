@@ -1,5 +1,5 @@
 Ext.define('Office.view.timeline.FormTimelineV', {
-    extend: 'Ext.panel.Panel',
+    extend: 'Ext.form.Panel',
     requires: [
         'Office.view.card.FormCardV',
         'Office.view.timeline.GridSearchV',
@@ -18,7 +18,9 @@ Ext.define('Office.view.timeline.FormTimelineV', {
         align: 'stretch'
     },
     flex: 1,
-    listeners: {},
+    listeners: {
+        afterrender: 'onAfterRender'
+    },
     initComponent: function () {
         this.items = [
             {
@@ -28,6 +30,9 @@ Ext.define('Office.view.timeline.FormTimelineV', {
                     data: {
                         theClient: this.getViewModel().getData().theClient
                     }
+                },
+                listeners: {
+                    afterrender: Util.validate
                 }
             },
             {
@@ -62,7 +67,12 @@ Ext.define('Office.view.timeline.FormTimelineV', {
                                     value: '{theStake.type}'
                                 },
                                 listeners: {
-                                    afterrender: 'onTypeRender'
+                                    afterrender: 'onTypeRender',
+                                    select: function (c, rec) {
+                                        var form = this.up('formtimeline'),
+                                            vm = form.getViewModel();
+                                        vm.set('theStake.stake', '');
+                                    }
                                 }
                             },
                             {
@@ -73,6 +83,37 @@ Ext.define('Office.view.timeline.FormTimelineV', {
                                 itemId: 'sum',
                                 bind: {
                                     value: '{theStake.stake}'
+                                },
+                                maskRe: /^[0-9.]$/,
+                                validator: function (val) { // * определяет соответствие минимальной и максимальной величине ТЛ
+                                    var val = parseInt(val),
+                                        form = this.up('formtimeline'),
+                                        vm = form.getViewModel(),
+                                        type = vm.get('theStake.type'),
+                                        storeTimelinetype = vm.getStore('timelinetype'),
+                                        recType = storeTimelinetype.findRecord('id', type, 0, false, true, true),
+                                        typeName = recType.get('name'),
+                                        minGame = parseInt(Util.getGlobalConst('MIN_SUM_TL_GAME')),
+                                        minSport = parseInt(Util.getGlobalConst('MIN_SUM_TL_SPORT')),
+                                        maxTL = parseInt(Util.getGlobalConst('LIMIT_FOR_TIMELINE'));
+                                    if (typeName == 'Sport' && val < minSport) {
+                                        return 'Минимальная сумма ТЛ Sport: ' + minSport;
+                                    } else if (typeName == 'Game' && val < minGame) {
+                                        return 'Минимальная сумма ТЛ Game: ' + minGame;
+                                    }
+
+                                    if (val > maxTL) {
+                                        return 'Максимальная сумма ТЛ: ' + maxTL;
+                                    }
+
+                                    return true;
+                                },
+                                listeners: {
+                                    specialkey: function (field, e) {
+                                        if (e.getKey() == e.ENTER) {
+                                            field.up('formtimeline').getController().onClickSave();
+                                        }
+                                    }
                                 }
                             }
                         ]

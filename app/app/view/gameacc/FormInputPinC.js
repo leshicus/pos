@@ -41,7 +41,7 @@ Ext.define('Office.view.gameacc.FormInputPinC', {
                     if (response.responseText) {
                         var o = Ext.decode(response.responseText);
                         if (o.success) {
-                            Util.toast('Успех', 'Снятие прошло успешно');
+                            Util.sucMes('Снятие прошло успешно');
                             vmGridgameacc.getStore('gameacc').reload();
                             var gridgameaction = Ext.ComponentQuery.query('gridgameaction')[0];
                             gridgameaction.getViewModel().getStore('gameaction').reload();
@@ -55,6 +55,8 @@ Ext.define('Office.view.gameacc.FormInputPinC', {
             });
             windowOutput.close();
             window.close();
+        }else{
+            Util.erMes(Config.STR_FORM_ERROR);
         }
     },
 
@@ -72,6 +74,7 @@ Ext.define('Office.view.gameacc.FormInputPinC', {
     },
 
     onAfterRender: function (form) {
+        Util.validate(form);
         var pin = form.down('#pin');
         pin.focus();
     }

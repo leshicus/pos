@@ -4,7 +4,7 @@ Ext.define('Office.view.fill.WsF', {
     alternateClassName: ['WsF'],
 
     startLoadWS: function () {
-        //WS.unsubscribe('inplay', 'ru');
+        //return ;
         WS.init(
             function (ws) {
                 console.log('WS.init');
@@ -12,6 +12,7 @@ Ext.define('Office.view.fill.WsF', {
                 ws.websocketDelay = 20 * 1000;
                 ws.websocketErrorDelay = 10 * 1000;
                 ws.timers = {};
+               // ws.fetchFullTimeout = 10000;
 
 
                 ws.onMessage = function (objData, channel, lang) {
@@ -69,7 +70,7 @@ Ext.define('Office.view.fill.WsF', {
                         }
                     }
                     //TaskF.startTaskWs(gridLive);
-                    this.DelayTimer(channel, this.websocketDelay);
+                    //this.DelayTimer(channel, this.websocketDelay);
                 };
                 ws.onClose = function () {
                     console.log('WebSocket соединение прервано');
@@ -95,8 +96,20 @@ Ext.define('Office.view.fill.WsF', {
                 ws.RefreshSubscription = function (channel) {
                     console.log('RefreshSubscription', channel);
                     if (channel in this.currentSubscriptions) {
-                        //this.unsubscribe(channel);
+                        var fill = Ext.ComponentQuery.query('fill')[0],
+                            west = fill.down('panel[region=west]');
+                        // * окончание маски в GridEventLiveC::setLiveCountProperty
+                        //Ext.defer(function () {
+                        //
+                        //}, 200, this);
+                        this.Unsubscribe(channel, 'ru');
                         //delete this.currentSubscriptions[channel];
+                        Ext.defer(function(){
+                            west.getEl().mask('Загрузка матчей...');
+                            this.subscribe(channel, 'ru', null);
+                            this.currentSubscriptions[channel] = channel;
+                        },100,this);
+
                         //this.AddTimer('prematch', function () {
                         //    console.info('prematch, AddTimer, timeout triggered, start api');
                         //    var gridLive = Ext.ComponentQuery.query('grideventlive')[0];
@@ -127,45 +140,45 @@ Ext.define('Office.view.fill.WsF', {
                     this.Unsubscribe('inplay', 'ru');
                     this.Unsubscribe('prematch', 'ru');
                 };
-                ws.DelayTimer = function (mode, delay) {
-                    //console.log('DelayTimer', arguments, WS.timers[mode]);
-                    //if (mode in this.timers) {
-                    //    window.clearTimeout(this.timers[mode]['timer']);
-                    //    this.AddTimer(mode, this.timers[mode].func, delay);
-                    //}
-                };
-                ws.AddTimer = function (mode, func, timeout) {
-                    //console.log('AddTimer');
-                    if (typeof timeout == 'undefined') {
-                        timeout = 0;
-                    } else {
-                        timeout = parseInt(timeout, 10);
-                    }
-                    this.timers[mode] = {
-                        func: func,
-                        timer: window.setTimeout(
-                            function () {
-                                //console.warn('timeout',mode);
-                                delete this.timers[mode];
-                                func.call();
-                            }.bind(this),
-                            timeout
-                        )
-                    };
-                };
+                //ws.DelayTimer = function (mode, delay) {
+                //    //console.log('DelayTimer', arguments, WS.timers[mode]);
+                //    //if (mode in this.timers) {
+                //    //    window.clearTimeout(this.timers[mode]['timer']);
+                //    //    this.AddTimer(mode, this.timers[mode].func, delay);
+                //    //}
+                //};
+                //ws.AddTimer = function (mode, func, timeout) {
+                //    //console.log('AddTimer');
+                //    if (typeof timeout == 'undefined') {
+                //        timeout = 0;
+                //    } else {
+                //        timeout = parseInt(timeout, 10);
+                //    }
+                //    this.timers[mode] = {
+                //        func: func,
+                //        timer: window.setTimeout(
+                //            function () {
+                //                //console.warn('timeout',mode);
+                //                delete this.timers[mode];
+                //                func.call();
+                //            }.bind(this),
+                //            timeout
+                //        )
+                //    };
+                //};
 
-                ws.AddTimer('prematch', function () {
-                    //console.info('prematch, AddTimer, timeout triggered, start api');
-                    //this.AddTimer('prematch', function () {
-                    //    console.info('prematch','AddTimer','timeout triggered');
-                    //
-                    //},this.websocketDelay);
-                    //var gridLive = Ext.ComponentQuery.query('grideventlive')[0];
-                    //gridLive.getViewModel().getStore('rawdata').load();
-                }.bind(this), ws.websocketDelay);
-                ws.AddTimer('inplay', function () {
-                    //console.info('inplay', 'AddTimer', 'timeout triggered');
-                }, ws.websocketDelay);
+                //ws.AddTimer('prematch', function () {
+                //    //console.info('prematch, AddTimer, timeout triggered, start api');
+                //    //this.AddTimer('prematch', function () {
+                //    //    console.info('prematch','AddTimer','timeout triggered');
+                //    //
+                //    //},this.websocketDelay);
+                //    //var gridLive = Ext.ComponentQuery.query('grideventlive')[0];
+                //    //gridLive.getViewModel().getStore('rawdata').load();
+                //}.bind(this), ws.websocketDelay);
+                //ws.AddTimer('inplay', function () {
+                //    //console.info('inplay', 'AddTimer', 'timeout triggered');
+                //}, ws.websocketDelay);
 
                 //TaskF.startTaskWs(gridLive);
             },

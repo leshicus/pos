@@ -3,6 +3,7 @@ Ext.define('Office.view.menumain.MenuMainC', {
     requires: [
         'Office.view.session.GridCurrentV',
         'Office.view.session.GridLastSessionV',
+        'Office.view.session.GridDetalizationV',
         'Office.view.session.GridPaySlipV',
         'Office.view.session.FormPrintLineV',
 
@@ -30,6 +31,7 @@ Ext.define('Office.view.menumain.MenuMainC', {
         'Office.view.panels.GridParamV',
 
         'Office.view.virtual.GridVirtualV',
+        'Office.view.coords.GridCoordsV',
         'Office.view.scheduleforgamefield.GridScheduleforgamefieldV',
         'Office.view.players.GridPlayersV',
 
@@ -53,7 +55,7 @@ Ext.define('Office.view.menumain.MenuMainC', {
             objUrl = {
                 class: 'Pos_Sessions_Lastsessioninfo'
             };
-        // Ext.defer(function () { // * без задержки иногда ругается, что стор какой-то не загружен
+
         Ext.Ajax.request({
             url: Server.getUrl(objUrl),
             success: function (response) {
@@ -70,12 +72,13 @@ Ext.define('Office.view.menumain.MenuMainC', {
                         // * если указана кнопка как параметр
                         if (btn) {
                             if (!btn.disabled) {
-                                callback(btn);
+                                callback(btn, session);
                             } else {
-                                Util.toast('Ошибка', 'Смена закрыта. Начните новую смену.');
+                                Util.warnMes('Смена закрыта. Начните новую смену.');
                             }
-                        } else
+                        } else {
                             callback(session);
+                        }
                     }
 
                     // * заполним gridCurrent и статусы disabled его кнопок
@@ -85,32 +88,16 @@ Ext.define('Office.view.menumain.MenuMainC', {
 
                         vmCurrent.set('theSession', session);
 
-                        //if (vm.get('globals').use_ndfl) {
-                        //    gridCurrent.hiddenProperties = ["sessionAcceptedPerSessionWithoutAccounts",
-                        //        "sessionAcceptedPerSessionForAccounts",
-                        //        "sessionPaidPerSession",
-                        //        "sessionPaidPerSessionWithoutAccounts",
-                        //        "sessionPaidPerSessionForAccounts"];
-                        //}
-                        //else {
-                        //    gridCurrent.hiddenProperties = ["acceptedPerSessionWithoutTL",
-                        //        "acceptedPerSessionForTL",
-                        //        "paidPerSessionWithTLPOs",
-                        //        "paidPerSession",
-                        //        "cashMovementTLOutput",
-                        //        "cachierFullname"];
-                        //}
                         gridCurrent.store.filterBy(this.filterGridCurrent, this);
                     }
                 }
             },
             failure: function (response) {
-                Util.toast('Внимание', 'Не загружены данные о смене: ошибка сервера');
+                Util.warnMes('Не загружены данные о смене: ошибка сервера');
             },
             method: 'POST',
             scope: this
         });
-        // }, 10);
     },
 
     // * фильтрует строки в таблице gridcurrent в зависимости от св-ва hiddenProperties
@@ -145,30 +132,38 @@ Ext.define('Office.view.menumain.MenuMainC', {
 
         switch (item.getItemId()) {
             case 'session':
+                this.removeAllConditional(Util.AUTO_DESTROY_ON_REMOVE);
+
                 var gridcurrent = Ext.ComponentQuery.query('gridcurrent')[0],
                     gridpayslip = Ext.ComponentQuery.query('gridpayslip')[0],
-                    formprintline = Ext.ComponentQuery.query('formprintline')[0],
+                //formprintline = Ext.ComponentQuery.query('formprintline')[0],
                     gridlastsession = Ext.ComponentQuery.query('gridlastsession')[0],
+                    griddetalization = Ext.ComponentQuery.query('griddetalization')[0],
                     container_2 = Ext.ComponentQuery.query('#session_container_2')[0],
                     container_1 = Ext.ComponentQuery.query('#session_container_1')[0],
                     container = Ext.ComponentQuery.query('#session_container')[0];
 
-                if (!gridcurrent)
+                if (!gridcurrent) {
                     gridcurrent = Ext.create('Office.view.session.GridCurrentV', {
                         margin: '10 0 0 0',
                         width: 450
                     });
+                } else {
+                    SessionF.reloadGrids();
+                }
 
                 if (!gridpayslip)
-                    gridpayslip = Ext.create('Office.view.session.GridPaySlipV');
-
-                if (!formprintline)
-                    formprintline = Ext.create('Office.view.session.FormPrintLineV', {
-                        margin: '15 0 0 0'
+                    gridpayslip = Ext.create('Office.view.session.GridPaySlipV', {
+                        width: 370
                     });
 
                 if (!gridlastsession)
                     gridlastsession = Ext.create('Office.view.session.GridLastSessionV', {
+                        margin: '15 0 0 0'
+                    });
+
+                if (!griddetalization)
+                    griddetalization = Ext.create('Office.view.session.GridDetalizationV', {
                         margin: '15 0 0 0'
                     });
 
@@ -178,10 +173,11 @@ Ext.define('Office.view.menumain.MenuMainC', {
                             type: 'vbox',
                             align: 'stretch'
                         },
-                        width: 370,
+                        //width: 370,
+                        flex: 1,
                         itemId: 'session_container_2',
                         margin: '10 0 0 15',
-                        items: [gridpayslip, formprintline]
+                        items: [gridpayslip, griddetalization]
                     });
 
                 if (!container_1)
@@ -205,40 +201,39 @@ Ext.define('Office.view.menumain.MenuMainC', {
                         flex: 1,
                         items: [container_1, gridlastsession]
                     });
-                try {
-                    menumain.removeAll(Util.AUTO_DESTROY_ON_REMOVE);
-                    menumain.add(container);
-                } catch (e) {
-                    Util.erMes(e.message);
-                }
+
+                menumain.add(container);
                 break;
             case 'fill':
+                this.removeAllConditional(Util.AUTO_DESTROY_ON_REMOVE);
+
                 var panel = Ext.ComponentQuery.query('fill')[0];
                 if (!panel) {
                     panel = Ext.create('Office.view.fill.FillV', {
                         margin: '10 0 0 0'
                     });
 
-                    // * окончание в ApplyChangedData::loadMatchdataData
-                    //menumain.getEl().mask('Загрузка событий...');
-                } else {
                     // * переключим вкладку в Событиях, если нужно
-                    var localStorage = Ext.util.LocalStorage.get('newpos'),
-                        activeEventTab = parseInt(localStorage.getItem('activeEventTab')) || 0,
-                        tabpanel = panel.down('#eventstab');
-
-                    tabpanel.setActiveItem(activeEventTab);
-
-                    // * для того, чтобы ставки, сделанные из Виртуальных заявок и Принятых появились
-                    var gridEvent = Ext.ComponentQuery.query('grideventlive')[activeEventTab];
-                    if (gridEvent && gridEvent.getStore().count())
-                        BasketF.fillBasketFromLocal(gridEvent, 0);
+                    //var localStorage = Ext.util.LocalStorage.get('newpos'),
+                    //    activeEventTab = parseInt(localStorage.getItem('activeEventTab')) || 0,
+                    //    tabpanel = panel.down('#eventstab'),
+                    //    menumain = Ext.ComponentQuery.query('menumain')[0],
+                    //    vm = menumain.getViewModel();
+                    //
+                    ////tabpanel.setActiveItem(activeEventTab);
+                    //
+                    //// * для того, чтобы ставки, сделанные из Виртуальных заявок и Принятых появились
+                    //var gridEvent = Ext.ComponentQuery.query('grideventlive')[activeEventTab];
+                    //if (gridEvent && vm.getStore(gridEvent.getItemId()).count()) {
+                    //    BasketF.fillBasketFromLocal(gridEvent, 0);
+                    //}
                 }
 
-                menumain.removeAll(Util.AUTO_DESTROY_ON_REMOVE);
                 menumain.add(panel);
                 break;
             case 'timeline':
+                this.removeAllConditional(Util.AUTO_DESTROY_ON_REMOVE);
+
                 var gridtimeline = Ext.ComponentQuery.query('gridtimeline')[0],
                     gridslip = Ext.ComponentQuery.query('gridslip')[0],
                     timeline_container = Ext.ComponentQuery.query('#timeline_container')[0];
@@ -273,16 +268,15 @@ Ext.define('Office.view.menumain.MenuMainC', {
                         ]
                     });
 
-                try {
-                    menumain.removeAll(Util.AUTO_DESTROY_ON_REMOVE);
-                    menumain.add(timeline_container);
+                menumain.add(timeline_container);
 
-
-                } catch (e) {
-                    Util.erMes(e.message);
-                }
+                var term = gridtimeline.down('#term');
+                if (term)
+                    term.focus();
                 break;
             case 'accept':
+                this.removeAllConditional(Util.AUTO_DESTROY_ON_REMOVE);
+
                 var grid = Ext.ComponentQuery.query('gridaccept')[0];
 
                 if (!grid)
@@ -293,14 +287,11 @@ Ext.define('Office.view.menumain.MenuMainC', {
                 else // * просили каждый раз обновлять раздел при заходе
                     grid.getStore().reload();
 
-                try {
-                    menumain.removeAll(Util.AUTO_DESTROY_ON_REMOVE);
-                    menumain.add(grid);
-                } catch (e) {
-                    Util.erMes(e.message);
-                }
+                menumain.add(grid);
                 break;
             case 'card':
+                this.removeAllConditional(Util.AUTO_DESTROY_ON_REMOVE);
+
                 var grid = Ext.ComponentQuery.query('gridcard')[0];
 
                 if (!grid)
@@ -308,56 +299,25 @@ Ext.define('Office.view.menumain.MenuMainC', {
                         margin: '10 0 0 0'
                     });
 
-                try {
-                    menumain.removeAll(Util.AUTO_DESTROY_ON_REMOVE);
-                    menumain.add(grid);
-                } catch (e) {
-                    Util.erMes(e.message);
-                }
+                menumain.add(grid);
                 break;
             case 'pay':
+                this.removeAllConditional(Util.AUTO_DESTROY_ON_REMOVE);
+
                 var grid = Ext.ComponentQuery.query('gridpay')[0];
 
-                if (!grid)
+                if (!grid) {
                     grid = Ext.create('Office.view.pay.GridPayV', {
                         margin: '10 0 0 0'
                     });
-                else // * просили каждый раз обновлять раздел при заходе
+                } else // * просили каждый раз обновлять раздел при заходе
                     PayF.resetData();
 
-                try {
-                    menumain.removeAll(Util.AUTO_DESTROY_ON_REMOVE);
-                    menumain.add(grid);
-                } catch (e) {
-                    Util.erMes(e.message);
-                }
+                menumain.add(grid);
                 break;
-            //case 'rat':
-            //    var grid = Ext.create('Office.view.rat.GridRatV', {
-            //        region: 'center',
-            //        margin: '10 0 0 0',
-            //        flex: 1
-            //    });
-            //    try {
-            //        menumain.removeAll(Util.AUTO_DESTROY_ON_REMOVE);
-            //        menumain.add(grid);
-            //    } catch (e) {
-            //        Util.erMes(e.message);
-            //    }
-            //    break;
-            //case 'ratbets':
-            //    var grid = Ext.create('Office.view.ratbets.FaceRatbetsV', {
-            //        region: 'center',
-            //        margin: '10 0 0 0'
-            //    });
-            //    try {
-            //        menumain.removeAll(Util.AUTO_DESTROY_ON_REMOVE);
-            //        menumain.add(grid);
-            //    } catch (e) {
-            //        Util.erMes(e.message);
-            //    }
-            //    break;
             case 'gameacc':
+                this.removeAllConditional(Util.AUTO_DESTROY_ON_REMOVE);
+
                 var gridGameAcc = Ext.ComponentQuery.query('gridgameacc')[0],
                     gridGameAction = Ext.ComponentQuery.query('gridgameaction')[0],
                     container = Ext.ComponentQuery.query('#gameacc_container')[0];
@@ -388,14 +348,11 @@ Ext.define('Office.view.menumain.MenuMainC', {
                         items: [gridGameAcc, gridGameAction]
                     });
 
-                try {
-                    menumain.removeAll(Util.AUTO_DESTROY_ON_REMOVE);
-                    menumain.add(container);
-                } catch (e) {
-                    Util.erMes(e.message);
-                }
+                menumain.add(container);
                 break;
             case 'panels':
+                this.removeAllConditional(Util.AUTO_DESTROY_ON_REMOVE);
+
                 var gridParam = Ext.ComponentQuery.query('gridparam')[0],
                     gridPanels = Ext.ComponentQuery.query('gridpanels')[0],
                     container = Ext.ComponentQuery.query('#panel_container')[0];
@@ -404,7 +361,7 @@ Ext.define('Office.view.menumain.MenuMainC', {
                     gridParam = Ext.create('Office.view.panels.GridParamV', {
                         region: 'center',
                         margin: '10 0 0 10',
-                        width: 400
+                        width: 820
                     });
 
                 if (!gridPanels)
@@ -425,14 +382,11 @@ Ext.define('Office.view.menumain.MenuMainC', {
                         items: [gridPanels, gridParam]
                     });
 
-                try {
-                    menumain.removeAll(Util.AUTO_DESTROY_ON_REMOVE);
-                    menumain.add(container);
-                } catch (e) {
-                    Util.erMes(e.message);
-                }
+                menumain.add(container);
                 break;
             case 'virtual':
+                this.removeAllConditional(Util.AUTO_DESTROY_ON_REMOVE);
+
                 var gridVirtual = Ext.ComponentQuery.query('gridvirtual')[0];
 
                 if (!gridVirtual)
@@ -440,14 +394,11 @@ Ext.define('Office.view.menumain.MenuMainC', {
                         margin: '10 0 0 0'
                     });
 
-                try {
-                    menumain.removeAll(Util.AUTO_DESTROY_ON_REMOVE);
-                    menumain.add(gridVirtual);
-                } catch (e) {
-                    Util.erMes(e.message);
-                }
+                menumain.add(gridVirtual);
                 break;
             case 'scheduleforgamefield':
+                this.removeAllConditional(Util.AUTO_DESTROY_ON_REMOVE);
+
                 var gridScheduleforgamefield = Ext.ComponentQuery.query('gridscheduleforgamefield')[0];
 
                 if (!gridScheduleforgamefield)
@@ -455,27 +406,54 @@ Ext.define('Office.view.menumain.MenuMainC', {
                         margin: '10 0 0 0'
                     });
 
-                try {
-                    menumain.removeAll(Util.AUTO_DESTROY_ON_REMOVE);
-                    menumain.add(gridScheduleforgamefield);
-                } catch (e) {
-                    Util.erMes(e.message);
-                }
+                menumain.add(gridScheduleforgamefield);
                 break;
             case 'players':
-                var gridPlayers = Ext.ComponentQuery.query('gridplayers')[0];
+                this.removeAllConditional(Util.AUTO_DESTROY_ON_REMOVE);
+
+                var gridPlayers = Ext.ComponentQuery.query('gridplayers')[0],
+                    players_container = Ext.ComponentQuery.query('#players_container')[0];
 
                 if (!gridPlayers)
                     gridPlayers = Ext.create('Office.view.players.GridPlayersV', {
-                        margin: '10 0 0 0'
+                        //margin: '10 0 0 0',
+                        width: 200
                     });
 
-                try {
-                    menumain.removeAll(Util.AUTO_DESTROY_ON_REMOVE);
-                    menumain.add(gridPlayers);
-                } catch (e) {
-                    Util.erMes(e.message);
-                }
+                if (!players_container)
+                    players_container = Ext.create('Ext.container.Container', {
+                        layout: {
+                            type: 'vbox'
+                        },
+                        itemId: 'printline_container',
+                        margin: '10 0 0 0',
+                        items: [gridPlayers]
+                    });
+
+                menumain.add(players_container);
+                break;
+            case 'printline':
+                this.removeAllConditional(Util.AUTO_DESTROY_ON_REMOVE);
+
+                var formprintline = Ext.ComponentQuery.query('formprintline')[0],
+                    printline_container = Ext.ComponentQuery.query('#printline_container')[0];
+
+                if (!formprintline)
+                    formprintline = Ext.create('Office.view.session.FormPrintLineV', {
+                        width: 370
+                    });
+
+                if (!container)
+                    container = Ext.create('Ext.container.Container', {
+                        layout: {
+                            type: 'vbox'
+                        },
+                        itemId: 'printline_container',
+                        margin: '10 0 0 0',
+                        items: [formprintline]
+                    });
+
+                menumain.add(container);
                 break;
             case 'chat':
                 var win = Ext.ComponentQuery.query('#windowChat')[0];
@@ -556,13 +534,36 @@ Ext.define('Office.view.menumain.MenuMainC', {
                 me.startTaskChat(win, gridChatMes);
 
                 break;
+            case 'coords':
+                this.removeAllConditional(Util.AUTO_DESTROY_ON_REMOVE);
+
+                var gridCoords = Ext.ComponentQuery.query('gridcoords')[0];
+
+                if (!gridCoords)
+                    gridCoords = Ext.create('Office.view.coords.GridCoordsV', {
+                        margin: '10 0 0 0'
+                    });
+
+                menumain.add(gridCoords);
+                break;
             case 'exit':
                 Office.util.Setup.logout();
                 break;
         }
-        //menumainVM.set('sectionName', item.getItemId()); // * открытый раздел
-        //}
     },
+
+    // * не удалять fill из оперативки
+    removeAllConditional: function (mode) {
+        var fill = Ext.ComponentQuery.query('fill')[0],
+            menumain = this.getView();
+
+        //if (fill) {
+        //    menumain.removeAll(false);
+        //} else {
+        menumain.removeAll(mode);
+        // }
+    },
+
     // * старт задания для чата
     startTaskChat: function (win, gridChatMes) {
         var runner = new Ext.util.TaskRunner(),
@@ -577,60 +578,33 @@ Ext.define('Office.view.menumain.MenuMainC', {
             taskChat.stop();
         });
         taskChat.start();
-
-        //win.show();
     },
-    /*isHidden: function (itemId) {
-     var menumain = this.getView(),
-     selector = '#' + itemId,
-     item = Ext.ComponentQuery.query(selector)[0],
-     vm = menumain.getViewModel(),
-     globals = vm.getData().globals;
-     console.info(item);
-     if (item)
-     return globals.use_ndfl;
-     },*/
 
-    afterRender: function (menumain) {
-        //var menumain = Ext.ComponentQuery.query('menumain')[0];
-        this.loadSessionData();
-
+    onAfterRender: function (menumain) {
         // * сразу открывать определенный пункт меню после авторизации
-        var session = menumain.down('#' + Debug.DEFAULT_MENU_ITEM);
-        if (session && session.getEl())
-            session.getEl().dom.click();
+        // Ext.defer(function(){// * нужно дать время кнопкам отрендериться
+        function clickDefaultButton() {
+            var fill = menumain.down('#' + Debug.DEFAULT_MENU_ITEM);
 
-        // * сохраним ссылку на локальное хранилище
-        //var localStorage = Ext.util.LocalStorage.get('newpos');
-        //if (!localStorage)
-        //    localStorage = new Ext.util.LocalStorage({
-        //        id: 'newpos'
-        //    });
-        //menumain.getViewModel().set('localStorage',localStorage);
+            if (fill) {
+                if (fill.getEl()) {
+                    fill.getEl().dom.click();
+                    //fill.toggle(true);
 
-        // * скрыть пункты меню, которые не положено показывать (типа с признаком _use_ndfl)
-        //var menumain = Ext.ComponentQuery.query('menumain')[0],
-        //    arrUseNdfl = Ext.ComponentQuery.query('menumain [_use_ndfl=true], [_use_ndfl=false]'),
-        //    arrClub = Ext.ComponentQuery.query('menumain [_user_in_club=true], [_user_in_club=false]'),
-        //    arr = Ext.Array.merge(),
-        //    vm = menumain.getViewModel(),
-        //    globals = vm.getData().globals;
+                }
+                //Ext.ComponentQuery.query('menumain')[0].down('segmentedbutton #session').toggle()
+            } else {
+                var session = menumain.down('#session');
+                if (session) {
+                    if (session.getEl()) {
+                        session.getEl().dom.click();
+                    }
+                }
+            }
+        }
 
-        //Ext.Array.each(arrUseNdfl, function (item) {
-        //    if (globals.use_ndfl)
-        //        item.setHidden(!item._use_ndfl);
-        //    else
-        //        item.setHidden(item._use_ndfl);
-        //});
-        //
-        //Ext.Array.each(arrClub, function (item) {
-        //    if (globals.user_in_club)
-        //        item.setHidden(!item._user_in_club);
-        //    else
-        //        item.setHidden(item._user_in_club);
-        //});
-        // * подписываюсь на веб-сокеты по кэфам
-        //WsF.startLoadWS();
+        // },100,this);
+        this.loadSessionData(clickDefaultButton);
     },
 
     // * загрузка файлов markets.js, ru_prep.yaml
@@ -667,7 +641,7 @@ Ext.define('Office.view.menumain.MenuMainC', {
                         vm.set('markets', txt);
                     }
                 } else {
-                    Util.toast('Ошибка', 'Локализация не загружена. Повторная попытка загрузки.');
+                    Util.warnMes('Локализация не загружена. Повторная попытка загрузки.');
                     // * повторим попытку загрузки локали через 1с
                     Ext.defer(function () {
                         loadRuYaml();
@@ -682,23 +656,71 @@ Ext.define('Office.view.menumain.MenuMainC', {
                         txt = txt.replace(reg, 'UtilMarkets.t(');
                         txt = eval(txt);
                         vm.set('marketGroups', txt);
-
-
-                        /* Ext.defer(function () {
-                         _this.addEmptyCoefGrids(fill);
-                         }, 1000, this);*/
-
                     }
                 }
             };
         // * загрузка во viewmodel fill данных по markets, marketGroups, localeYaml
         loadRuYaml();
     },
+
     onDestroy: function (menumain) {
-        window.WS.UnsubscribeAll();
+        //window.WS.UnsubscribeAll();
 
         //var ls = Ext.util.LocalStorage.get('newpos');
         //ls.release();
     },
 
+    onAdd: function (store, rec) {
+        var storeId = store.getStoreId(),
+            idxGrid = ApplyChangedData.getGridIdx(storeId),
+            grid = Ext.ComponentQuery.query('grideventlive')[idxGrid];
+        this.setLiveCountProperty(store);
+    },
+
+    onEventStoreChange: function (store) {
+        var storeId = store.getStoreId(),
+            idxGrid = ApplyChangedData.getGridIdx(storeId),
+            grid = Ext.ComponentQuery.query('grideventlive')[idxGrid];
+
+        // * отфильтруем виды спорта в фильтре по видам спорта
+        if (storeId != 'rats'
+            && storeId != 'dayexpress'
+            && storeId != 'dayexpressDC') {
+
+            grid.getController().filterSports();
+
+            this.setLiveCountProperty(store);
+        }
+    },
+
+    setLiveCountProperty: function (store) {
+        var fill = Ext.ComponentQuery.query('fill')[0];
+        if (fill) {
+            if (store) {
+                var storeName = store.getStoreId();
+
+                Ext.defer(function () {
+                    var vmFill = fill.getViewModel();
+                    if (vmFill) {
+                        if (storeName == 'line')
+                            vmFill.set('line_count', store.count());
+                        else if (storeName == 'live')
+                            vmFill.set('live_count', store.count());
+                    }
+                }, 100, this);
+            } else {
+                Ext.defer(function () {
+                    var menumain = Ext.ComponentQuery.query('menumain')[0],
+                        vm = menumain.getViewModel(),
+                        storeLine = vm.getStore('line'),
+                        storeLive = vm.getStore('live'),
+                        vmFill = fill.getViewModel();
+                    if (vmFill) {
+                        vmFill.set('line_count', storeLine.count());
+                        vmFill.set('live_count', storeLive.count());
+                    }
+                }, 100, this);
+            }
+        }
+    },
 });

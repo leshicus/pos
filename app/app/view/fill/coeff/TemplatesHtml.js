@@ -34,7 +34,7 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
 
     rendererBetInBasketToolbar: function (val, metadata, rec, rI, cI) {
         if (val) {
-            var fill = Ext.ComponentQuery.query('#main')[0],
+            var fill = Ext.ComponentQuery.query('fill')[0],
                 vmFill = fill.getViewModel(),
                 storeBasket = vmFill.getStore('basket'),
                 arrSpan = Util.textFromHTMLString(val, 'span', 'data-coefid'),
@@ -56,9 +56,7 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
                         return JSON.stringify(item);
                     }) + "]");
                 }
-                /*else {
-                 arrBasis.push('');
-                 }*/
+
                 storeBasket.each(function (item) {
                     if (item.get('arrCoef')[0] == arrCoef[0])
                         metadata.tdCls = 'bg-in-basket';
@@ -102,13 +100,18 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
             return {x: x, y: y};
         }
 
-        var menu = Ext.create('Office.view.fill.contextmenu.MenuGridCoeffV', {
-            viewModel: {
-                data: {
-                    span: span
+        var menu = Ext.ComponentQuery.query('menugridcoeff')[0];
+        if (menu && menu.getViewModel())
+            menu.getViewModel().set('span', span);
+
+        if (!menu)
+            menu = Ext.create('Office.view.fill.contextmenu.MenuGridCoeffV', {
+                viewModel: {
+                    data: {
+                        span: span
+                    }
                 }
-            }
-        });
+            });
 
         var y = defPosition(evt).y,
             x = defPosition(evt).x;
@@ -136,7 +139,6 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
                         defaults: {
                             menuDisabled: true,
                             sortable: false,
-                            //flex: 1
                             width: 45,
                             renderer: this.rendererBetInBasketToolbar // * если здесь ошибка, то пишет Xtemplate each of null
                         },
@@ -144,7 +146,6 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
                     },
                     listeners: {
                         itemcontextmenu: this.onItemCM,
-                        //itemcontextmenu: this.onItemCM,
                         itemclick: this.onItemSelect
                     }
                 });
@@ -154,8 +155,8 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
         }
     },
 
-    addGridOnPanel: function (panel, arrTitle, arrTitleGrid, data, title, hideHeaders) {
-        //console.info(arguments);
+    // * обычные кэфы
+    addGridOnPanel: function (arrGrid, arrTitle, arrTitleGrid, data, title, hideHeaders) {
         if (arrTitle.length && data.length && arrTitleGrid.length) {
             var grid = new Ext.Component({
                 data: {
@@ -199,7 +200,7 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
                                 coefId = objSpan.coefid,
                                 className = 'market-table-td';
                             if (coefId) {
-                                var fill = Ext.ComponentQuery.query('#main')[0],
+                                var fill = Ext.ComponentQuery.query('fill')[0],
                                     vmFill = fill.getViewModel(),
                                     storeBasket = vmFill.getStore('basket');
                                 if (objSpan && Ext.Object.getSize(objSpan)) {
@@ -217,7 +218,7 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
             });
 
             if (data.length)
-                panel.add(grid);
+                arrGrid.push(grid);
         }
     },
 
@@ -227,7 +228,7 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
         if (arrTitle.length && data.length && arrTitleGrid.length) {
             var arrGrids = panel.query('gridpanel'); // * уже добавленные линии
             if (arrGrids && arrTitle.length) {
-                var fill = Ext.ComponentQuery.query('#main')[0],
+                var fill = Ext.ComponentQuery.query('fill')[0],
                     vmFill = fill.getViewModel(),
                     storeBasket = vmFill.getStore('basket');
 
@@ -250,7 +251,7 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
                         '<tpl if="hideHeaders == 0">',// * название колонки: Да, Нет...
                         '<tr class="market-table-columnname">',
                         '<tpl for="arrTitleGrid">',
-                        '<td align="center" class="market-table-td">' + '{[values.text]}' + '</td>',
+                        '<td align="center">' + '{[values.text]}' + '</td>',
                         '</tpl>',
                         '</tr>',
                         '</tpl>',
@@ -299,51 +300,6 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
         }
     },
 
-    // * раскраска кэфа если он изменился
-    //colorizeDiffCoeff: function (arrBasis, arrCoef) {
-    //    if (arrBasis) { // * есть надпись для кэфа (типа 0-1, гости (победа), базис)
-    //        var basis = typeof arrBasis == 'object' ? arrBasis[4] : arrBasis; // * если массив, то берем 4-й элемент, если строка, то ее и показываем
-    //        if (arrCoef[2] < arrCoef[3]) {
-    //            return '<span role="button" style="max-width: 90%;text-align: left;font-weight: 100;">' + basis + '</span><span role="button" style="float: right;font-weight: 600;color: red;" data-coefid="' + arrCoef[0] + '" data-qtip="' + arrCoef[3] + '">' + arrCoef[2] + '</span>';
-    //        }
-    //        if (arrCoef[2] > arrCoef[3]) {
-    //            return '<span role="button" style="max-width: 90%;text-align: left;font-weight: 100;">' + basis + '</span><span role="button" style="float: right;font-weight: 600;color: green;" data-coefid="' + arrCoef[0] + '" data-qtip="' + arrCoef[3] + '">' + arrCoef[2] + '</span>';
-    //        }
-    //        if (arrCoef[2] == arrCoef[3]) {
-    //            return '<span role="button" style="max-width: 90%;text-align: left;font-weight: 100;">' + basis + '</span><span role="button" style="float: right;font-weight: 600;color: #000000;" data-coefid="' + arrCoef[0] + '" data-qtip="' + arrCoef[3] + '">' + arrCoef[2] + '</span>';
-    //        }
-    //    } else { // * просто кэф
-    //        if (arrCoef[2] < arrCoef[3]) {
-    //            return '<span role="button" style="font-weight: 600;color: red;" data-coefid="' + arrCoef[0] + '" data-qtip="' + arrCoef[3] + '">' + arrCoef[2] + '</span>';
-    //        }
-    //        if (arrCoef[2] > arrCoef[3]) {
-    //            return '<span role="button" style="font-weight: 600;color: green;" data-coefid="' + arrCoef[0] + '" data-qtip="' + arrCoef[3] + '">' + arrCoef[2] + '</span>';
-    //        }
-    //        if (arrCoef[2] == arrCoef[3]) {
-    //            return '<span role="button" style="font-weight: 600;color: blue;" data-coefid="' + arrCoef[0] + '" data-qtip="' + arrCoef[3] + '">' + arrCoef[2] + '</span>';
-    //        }
-    //    }
-    //},
-    // * кэф справа, а базис слева
-    //spanCoeff: function (arrBasis, arrCoef) {
-    //    if (arrCoef[3]) { // * изменившееся значение кэфа
-    //        return this.colorizeDiffCoeff(arrBasis, arrCoef);
-    //    } else { // * кэф не изменился
-    //        var basis = typeof arrBasis == 'object' ? arrBasis[4].toString() : arrBasis; // * если массив, то берем 4-й элемент, если строка, то ее и показываем
-    //        return '<span role="button" style="max-width: 90%;text-align: left;font-weight: 100;">' + basis + '</span><span role="button" style="float: right; font-weight: 600;" data-coefid="' + arrCoef[0] + '">' + arrCoef[2] + '</span>';
-    //    }
-    //},
-    //spanCoeffRight: function (arrCoef) {
-    //    return '<span role="button" style="font-weight: 600;display: flex; justify-content: flex-end;" data-coefid="' + arrCoef[0] + '">' + arrCoef[2] + '</span>';
-    //},
-    //// * кэф по-центру
-    //spanOnlyCoeff: function (basis, arrCoef) {
-    //    if (arrCoef[3]) { // * изменившееся значение кэфа
-    //        return this.colorizeDiffCoeff(basis, arrCoef);
-    //    } else { // * кэф не изменился
-    //        return '<span role="button" style="font-weight: 600;display: flex; justify-content: center;" data-coefid="' + arrCoef[0] + '">' + arrCoef[2] + '</span>';
-    //    }
-    //},
     // * замена {H},{A} на названия команд
     replaceHA: function (txt, record) {
         if (txt.indexOf('{H}') > -1) {
@@ -368,25 +324,6 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
         }
         return txt;
     },
-    //setActiveSign: function (obj, markets, marketsGroups, record) {
-    //    var sportSlug = UtilMarkets.getSportSlug(record);
-    //    Ext.Object.each(obj, function (key, val) {
-    //        //console.info(key, val);
-    //        if (val[2] != 0) {
-    //            Ext.Array.each(markets, function (item, idx) {
-    //                if ((Util.in_array_like(key, item.dependencies, false)
-    //                    && (Util.in_array(sportSlug, item.sports, false) || !item.sports))
-    //                    || Util.in_array_like(key, item.odd, false)) { // * не только в dependencies смотрим, но и в блоке odd
-    //                    item['active'] = 1;
-    //                    if (!Util.in_array(item.group_id, marketsGroups, false))
-    //                        marketsGroups.push(item.group_id);
-    //                }
-    //            }, this);
-    //        }
-    //
-    //    }, this);
-    //    return marketsGroups;
-    //},
 
     // * в массиве объектов menumain::markets проставим признак active:1 если есть не нулевые кф, которые к нему относятся
     setActiveSign: function (obj, markets, marketsGroups, record) {// * obj -это cs+cse
@@ -463,8 +400,9 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
                     } else { // * базис не изменился, ищем среди имеющихся в eventstore
                         var activeTabIndex = BasketF.getActiveTabIndexEvent(),
                             grid = Ext.ComponentQuery.query('grideventlive')[activeTabIndex],
-                            vm = grid.getViewModel(),
-                            storeEvent = vm.getStore('eventstore'),
+                            menumain = Ext.ComponentQuery.query('menumain')[0],
+                            vm = menumain.getViewModel(),
+                            storeEvent = vm.getStore(grid.getItemId()),
                             rec = storeEvent.findRecord('event_id', record.get('event_id'), 0, false, true, true);
 
                         if (rec) {
@@ -511,10 +449,9 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
         }
 
         if (de_type == 0) // * пятерочка
-            var width = [305, 70, 150, 45, 45, 45];
+            var width = [240, 70, 150, 50, 50, 50];
         else // * Двойной шанс
-            var width = [170, 70, 150, 45, 45, 45, 45, 45, 45];
-
+            var width = [130, 70, 150, 45, 45, 45, 45, 45, 45];
 
         // * первая колонка: вид спорта и название турнира
         var sportSlug = UtilMarkets.getSportSlug(record),
@@ -547,7 +484,7 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
                 text: 'Дата',
                 dataIndex: header_2,
                 align: 'center',
-                width: width[1]
+                minWidth: width[1]
             };
         arrTitle.push(header_2);
         arrTitleGrid.push(objColumn_2);
@@ -595,7 +532,6 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
     },
 
     templateColumnList: function (obj, item, record, panel) {
-        //console.time('panel');
         var sportSlug = UtilMarkets.getSportSlug(record);
         var data = [],
             arrTitle = [],
@@ -645,7 +581,6 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
             var title = item.name;
         }
         this.addGridOnPanel(panel, arrTitle, arrTitleGrid, data, title);
-        // console.timeEnd('panel');
     },
     templateFora: function (obj, item, record, panel) {
         var sportSlug = UtilMarkets.getSportSlug(record);
@@ -659,13 +594,11 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
         arrTitle = [home, away];
         arrTitleGrid = [
             {
-                //text: home,
                 text: 'Хозяева',
                 dataIndex: home,
                 flex: 1
             },
             {
-                //text: away,
                 text: 'Гости',
                 dataIndex: away,
                 flex: 1
@@ -685,8 +618,9 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
             } else {
                 var activeTabIndex = BasketF.getActiveTabIndexEvent(),
                     grid = Ext.ComponentQuery.query('grideventlive')[activeTabIndex],
-                    vm = grid.getViewModel(),
-                    storeEvent = vm.getStore('eventstore'),
+                    menumain = Ext.ComponentQuery.query('menumain')[0],
+                    vm = menumain.getViewModel(),
+                    storeEvent = vm.getStore(grid.getItemId()),
                     rec = storeEvent.findRecord('event_id', record.get('event_id'), 0, false, true, true);
                 if (rec)
                     basis = UtilMarkets.cf(rec.getData(), basisMnemo);
@@ -826,18 +760,13 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
                         var rowTitle = row.title[sportSlug] || row.title["default"] || row.title;
                         o['rowTitle'] = rowTitle;
                         if (arrCoefYes[2]) {
-                            //o['YES'] = this.spanCoeff('', arrCoefYes, coeffYes);
                             o['YES'] = this.spanOnlyCoeff('', arrCoefYes);
                             arrAllCoeffs.push(coeffYes);
                         }
                         if (arrCoefNo[2]) {
-                            //o['NO'] = this.spanCoeff('', arrCoefNo, coeffNo);
                             o['NO'] = this.spanOnlyCoeff('', arrCoefNo);
                             arrAllCoeffs.push(coeffNo);
                         }
-
-                        /*o['YES'] = this.spanCoeff(yes, arrCoefYes, coeffYes);
-                         o['NO'] = this.spanCoeff(no, arrCoefNo, coeffNo);*/
 
                         data.push(o);
                         cnt++;
@@ -898,14 +827,12 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
             arrTitle = [home, away];
             arrTitleGrid = [
                 {
-                    //text: home,
                     text: 'Хозяева',
                     dataIndex: home,
                     flex: 1
                 },
                 {
                     text: 'Гости',
-                    //text: away,
                     dataIndex: away,
                     flex: 1
                 }
@@ -966,7 +893,7 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
                 arrBasis = Util.findByKeyLike(obj, basis),
                 arrCoeffG = Util.findByKeyLike(obj, coeffG);
             arrBasis[4] = ('(' + arrBasis[2] + ')').toString();
-            if (/*arrCoeffL[2] && arrCoeffG[2] && */arrBasis[2]) {
+            if (arrBasis[2]) {
                 if (arrCoeffL[2]) {
                     o[home] = this.spanCoeff(arrBasis, arrCoeffL);
                     o['basis'] = arrBasis[2];
@@ -1007,13 +934,11 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
             arrTitle = [home, away];
             arrTitleGrid = [
                 {
-                    //text: home,
                     text: 'Хозяева',
                     dataIndex: home,
                     flex: 1
                 },
                 {
-                    //text: away,
                     text: 'Гости',
                     dataIndex: away,
                     flex: 1
@@ -1081,17 +1006,13 @@ Ext.define('Office.view.fill.coeff.TemplatesHtml', {
                     var rowTitle = row.title[sportSlug] || row.title["default"] || row.title;
                     rowTitle = this.replaceHAImp(rowTitle, record);
                     o['rowTitle'] = rowTitle;
-                    /*o['YES'] = this.spanCoeff(yes, arrCoefYes, coeffYes);
-                     o['NO'] = this.spanCoeff(no, arrCoefNo, coeffNo);*/
 
                     if (arrCoefYes[2]) {
-                        //o['YES'] = this.spanCoeff('', arrCoefYes, coeffYes);
                         o['YES'] = this.spanOnlyCoeff('', arrCoefYes);
                         arrAllCoeffs.push(coeffYes);
                     }
                     if (arrCoefNo[2]) {
                         o['NO'] = this.spanOnlyCoeff('', arrCoefNo);
-                        //o['NO'] = this.spanCoeff('', arrCoefNo, coeffNo);
                         arrAllCoeffs.push(coeffNo);
                     }
                     data.push(o);

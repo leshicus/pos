@@ -44,7 +44,7 @@ Ext.define('Office.view.session.GridPaySlipC', {
                     }
                     var payslip = Ext.decode(response.responseText);
                     if (typeof payslip.success != 'undefined') {
-                        Util.toast('Внимание', 'Данные по ставкам к выплате не загружены');
+                        Util.warnMes('Данные по ставкам к выплате не загружены');
                     } else {
                         Ext.defer(function () {   // * иногда не успевает создаться
                             if (gridpayslip.getViewModel())
@@ -56,7 +56,7 @@ Ext.define('Office.view.session.GridPaySlipC', {
                     if (gridpayslip) {
                         gridpayslip.unmask();
                     }
-                    Util.toast('Внимание', 'Не загружены данные о ставках к выплате: ошибка сервера');
+                    Util.warnMes('Не загружены данные о ставках к выплате: ошибка сервера');
                 },
                 method: 'POST',
                 scope: this
@@ -124,12 +124,7 @@ Ext.define('Office.view.session.GridPaySlipC', {
                 win.show();
             },
             failure: function (response) {
-                Ext.toast({
-                    html: 'Не загружены данные о смене: ошибка сервера',
-                    title: 'Внимание',
-                    width: 200,
-                    align: 't'
-                })
+                Ext.warnMes('Не загружены данные о смене: ошибка сервера');
             },
             method: 'POST',
             scope: this
@@ -193,12 +188,7 @@ Ext.define('Office.view.session.GridPaySlipC', {
                 win.show();
             },
             failure: function (response) {
-                Ext.toast({
-                    html: 'Не загружены данные о смене: ошибка сервера',
-                    title: 'Внимание',
-                    width: 200,
-                    align: 't'
-                })
+                Ext.warnMes('Не загружены данные о смене: ошибка сервера');
             },
             method: 'POST',
             scope: this

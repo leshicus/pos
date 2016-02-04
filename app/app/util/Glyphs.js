@@ -82,6 +82,7 @@ Ext.define('Office.util.Glyphs', {
         flag:'xf11e', // finish flag
         warning:'xf071', // warning
         refresh: 'xf021',
+        table: 'xf0ce',
     },
 
     get  : function(glyph) {

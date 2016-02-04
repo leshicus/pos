@@ -1,93 +1,149 @@
 Ext.define('Office.view.fill.live.GridEventLiveC', {
     extend: 'Ext.app.ViewController',
     requires: [
-        'Office.view.fill.contextmenu.MenuGridCoeffV',
-        //'Office.view.fill.coeff.TemplatesWeb'
+        'Office.view.fill.contextmenu.MenuGridCoeffV'
     ],
     alias: 'controller.grideventlive',
 
     onRender: function (grid) {
-        var grid = this.getView(),
-            fill = grid.up('#main');
+        var fill = grid.up('fill');
 
+        fill.getController().onGridEventRender(grid);
+    },
+
+    onAdded: function (grid) {
         if (grid.getItemId() == 'rats') {
-            // * для grideventlive у Крыс не должно быть группировки
-            var feature = grid.getView().getFeature('groupFeatureId');
-            feature.disable();
-
-            // * для grideventlive у Крыс должно быть всегда 2 строки, пусть даже пустые
-            Ext.defer(function () {
-                var storeEvent = grid.getViewModel().getStore('eventstore');
-                storeEvent.loadData(Util.cloneObject(storeEvent._defaults));
-            }, 10, this);
-        }
-
-        fill.getController().onRender(grid);
-    },
-
-    onEventStoreChange: function (store) {
-        var activeTabIndex = BasketF.getActiveTabIndexEvent(),
-            grid = Ext.ComponentQuery.query('grideventlive')[activeTabIndex];
-
-        // * отфильтруем виды спорта в фильтре по видам спорта
-        if (grid.getItemId() != 'rats'
-            && grid.getItemId() != 'dayexpress'
-            && grid.getItemId() != 'dayexpressDC') {
-
-            this.filterSports();
+            this.loadInitDataToRats(grid);
         }
     },
 
-    /* загрузка данных из апи в модель, и приведение их понятному для ??? виду */
-    // * rawdata store load
-    loadRawData: function (store, records) {
-        var grid = this.getView(),
-            vmLive = grid.getViewModel(),
-            eventstore = vmLive.getStore('eventstore');
+    loadInitDataToRats: function (grid) {
+        // * для grideventlive у Крыс должно быть столько строк, сколько столов, пусть даже пустые
+        Ext.defer(function () {
+            var menumain = Ext.ComponentQuery.query('menumain')[0],
+                vm = menumain.getViewModel(),
+                storeEvent = vm.getStore(grid.getItemId()),
+                _defaults = [],
+                numTables = Util.getGlobalConst('COUNT_RAT_TABLES');
 
-        if (!records || !records.length) {
-            records = store.getRange();
-        }
+            for (var i = 1; i <= numTables; i++) {
+                var table = Util.getObjectItemByNum(Config.arrRatTableColors, i - 1);
+                if (table)
+                    var color = table['color'];
+                else
+                    var color = 'gray';
 
-        if (records && records.length) {
-            var matchdata = records[0].get('matchdata'),
-                objDiffs = records[0].get('diffs'),
-                dayExpress = records[0].get('dayExpress'); // * Экспресс дня
-
-            if (matchdata) { // * full
-                var objData = matchdata['data'], // * полная линия
-                    arrDiffs = matchdata['diffs'],// * изменения, их нужно будет смержить в основную коллекцию
-                    curLineVers = matchdata['current_line_version']; // * номер текущей линии
-
-                // * блок matchdata.data
-                ApplyChangedData.loadMatchdataData(objData, curLineVers, grid);
-
-                // * блок matchdata.diffs
-                ApplyChangedData.loadDiffs(arrDiffs, grid);
-            } else if (objDiffs) { // * diffs
-                ApplyChangedData.loadDiffs(objDiffs, grid);
-            } else if (dayExpress) { // * dayexpress
-                ApplyChangedData.loadDayExpress(dayExpress, grid);
+                var obj = {
+                    tournament_name: 'Стол ' + i,
+                    id: i,
+                    _fantom: true,
+                    _event_name: '<br><span style="color:' + color + ';font-size: 57px;">Стол ' + i + '</span>'
+                };
+                _defaults.push(obj);
             }
 
-            if (vmLive.get('firstFillFromLocal')) {
-                BasketF.fillBasketFromLocal(grid, 100);
-                vmLive.set('firstFillFromLocal', 0);
-            }
-        }
+            storeEvent._defaults = _defaults;
+            storeEvent.loadData(Util.cloneObject(storeEvent._defaults));
+        }, 10, this);
     },
+
+
+
+    //onAdd: function (store, rec) {
+    //    this.setLiveCountProperty(store);
+    //},
+    //
+    //onEventStoreChange: function (store) {
+    //    var grid = this.getView();
+    //
+    //    // * отфильтруем виды спорта в фильтре по видам спорта
+    //    if (grid.getItemId() != 'rats'
+    //        && grid.getItemId() != 'dayexpress'
+    //        && grid.getItemId() != 'dayexpressDC') {
+    //
+    //        this.filterSports();
+    //
+    //        this.setLiveCountProperty(store);
+    //    }
+    //},
+
+    //loadRawData: function (store, data) {
+    //    var grid = this.getView(),
+    //        vmLive = grid.getViewModel(),
+    //        eventstore = vmLive.getStore('eventstore');
+    //
+    //    if (store.getRange()[0].get('line_version') != vmLive.get('line_version')
+    //        || store.getRange()[0].get('dayExpress')) {
+    //
+    //        vmLive.set('line_version', store.getRange()[0].get('line_version'));
+    //
+    //        if (!data || !data.length) {
+    //            data = store.getRange();
+    //        }
+    //
+    //        if (data && data.length) {
+    //            var rec_0 = data[0],
+    //                type = rec_0.get('type'),
+    //                arrTournaments = rec_0.get('tournaments'),
+    //                dayExpress = rec_0.get('dayExpress'),
+    //                curLineVers = rec_0.get('line_version'); // * номер текущей линии
+    //
+    //            if (type == 'full') { // * full
+    //                ApplyChangedData.loadMatchdataData(arrTournaments, curLineVers, grid);
+    //            } else if (type == 'diffs') { // * diffs
+    //                ApplyChangedData.loadDiffs(arrTournaments, curLineVers, grid);
+    //            } else if (dayExpress) { // * dayexpress
+    //                ApplyChangedData.loadDayExpress(dayExpress, grid);
+    //            }
+    //
+    //            if (vmLive.get('firstFillFromLocal')) {
+    //                BasketF.fillBasketFromLocal(grid, 100);
+    //                vmLive.set('firstFillFromLocal', 0);
+    //            }
+    //        }
+    //    }
+    //},
+
+    // * загрузка данных напрямую, без rawdata store
+    //loadRawDataStright: function (data) {
+    //    var grid = this.getView(),
+    //        vmLive = grid.getViewModel(),
+    //        eventstore = vmLive.getStore('eventstore');
+    //
+    //    if (data) {
+    //        var type = data.type,
+    //            arrTournaments = data.tournaments,
+    //            dayExpress = data.dayExpress,
+    //            curLineVers = data.line_version; // * номер текущей линии
+    //
+    //        vmLive.set('line_version', data.line_version || '');
+    //
+    //        if (type == 'full') { // * full
+    //            ApplyChangedData.loadMatchdataData(arrTournaments, curLineVers, grid);
+    //        } else if (type == 'diffs') { // * diffs
+    //            ApplyChangedData.loadDiffs(arrTournaments, curLineVers, grid);
+    //        } else if (dayExpress) { // * dayexpress
+    //            ApplyChangedData.loadDayExpress(dayExpress, grid);
+    //        }
+    //
+    //        if (vmLive.get('firstFillFromLocal')) {
+    //            BasketF.fillBasketFromLocal(grid, 100);
+    //            vmLive.set('firstFillFromLocal', 0);
+    //        }
+    //    }
+    //},
 
     filterSports: function () {
         var grid = this.getView(),
-            vm = grid.getViewModel(),
-            sport_chained = vm.getStore('sport_chained'),
-            storeEvent = vm.getStore('eventstore'),
+            menumain = Ext.ComponentQuery.query('menumain')[0],
+            vm = menumain.getViewModel(),
+            storeEvent = vm.getStore(grid.getItemId()),
+            sportsslug = grid.getViewModel().getStore('sportsslug'),
             arrSports = Ext.Array.pluck(Ext.Array.pluck(storeEvent.getRange(), 'data'), 'sport_id'),
             arrSportUniq = Ext.Array.unique(arrSports);
-
-        if (sport_chained) {
-            sport_chained.clearFilter();
-            sport_chained.addFilter({
+        if (sportsslug) {
+            sportsslug.clearFilter();
+            sportsslug.addFilter({
                 filterFn: function (item) {
                     if (Ext.Array.contains(arrSportUniq, Number(item.get('id'))))
                         return true;
@@ -99,83 +155,85 @@ Ext.define('Office.view.fill.live.GridEventLiveC', {
 
     // * выбрали событие
     onSelect: function (row, record, idx) {
+        Ext.suspendLayouts();
+        this.showCoefs(record);
+        Ext.resumeLayouts(true);
+    },
+
+    showCoefs: function (record) {
         var gridLive = this.getView(),
-            fill = Ext.ComponentQuery.query('#main')[0],
+            fill = Ext.ComponentQuery.query('fill')[0],
             modeCoeff = fill.down('#modeCoeff'),
             tabEvent = fill.down('#eventstab'),
-            activeTabId = BasketF.getActiveTabEventId();
+            activeTabId = BasketF.getActiveTabEventId(),
+            vmEvent = gridLive.getViewModel(),
+            west = fill.down('container[region=west]'),
+            center = fill.down('container[region=center]');
 
-        if (record && record.get('sport_slug')) {
+        var isInDom = document.getElementById(center.getId()); // * объект показан
+
+        if (isInDom && record && record.get('sport_slug')) {
             if (activeTabId == 'rats') {// * крысы
                 var date = new Date(record.get('time')),
                     dateStr = Ext.Date.format(date, 'd F G:i');
                 title = record.get('tournament_name') + ', забег № ' + record.get('short_number') + ' (' + dateStr + ')';
                 MarketsHtml.ratsClick(gridLive, record);
             } else {
-                var activeTab = tabEvent.getActiveTab();
+                var activeTab = tabEvent.getActiveTab(),
+                    expanded = vmEvent.get('expanded');
+
                 if (activeTab && activeTab.getItemId() == gridLive.getItemId()) {
                     var title = record.get('home') + ' - ' + record.get('away');
-                    setTimeout(function () { // * чтобы эта ф-ия не тормозила выполнения последующего кода
-                        MarketsHtml.eventTypeFirstClick(gridLive, record);
-                    }, 10);
+
+                    MarketsHtml.eventTypeFirstClick(gridLive, record);
                 }
             }
             if (title)
                 fill.getViewModel().set('title', title);
-
-            // * запишем номер события в быстрый ввод и переведем туда курсор
-            var fastInput = fill.down('#fastInput');
-            fastInput.setValue(record.get('short_number') + ' ');
-            //fastInput.focus(); // * иначе при вводе серии ставок курсор переводится на поле быстрого ввода
         } else if (record && !record.get('sport_slug')) { // * крысные фантомные строки
-            FillF.clearCenterArea();
-            fill.getViewModel().set('title', null);
+            if (BasketF.isActiveEventTab(gridLive)) {
+                FillF.clearCenterArea();
+            }
         }
-    },
 
+    },
 
     // * поменяли выделение в гриде событий
     onSelectionChange: function (view, selected) {
-        var selection = this.getView().getSelectionModel().getSelection();
-        if (!selection.length) {
+        var grid = this.getView(),
+            selection = grid.getSelectionModel().getSelection()[0];
+
+        if (selection && BasketF.isActiveEventTab(this.getView())) {
             FillF.resetCenterArea();
         }
     },
 
-    //selectView: function (v) {
-    //    var grid = Ext.ComponentQuery.query('gridcoeff')[0],
-    //        vm = grid.getViewModel();
-    //    Ext.defer(function () {
-    //        grid.getView().setScrollY(vm.get('scrollPosition'), false);
-    //    }, 20);
-    //},
-
     // * дата и время матча
     dateText: function (val, column, rec) {
-        var eventIdText3 = UtilMarkets.durationText(rec.getData()),
-            activeTabId = BasketF.getActiveTabEventId();
+        var eventIdText3 = UtilMarkets.durationText(rec.getData());
+
+        if (!val)
+            return '';
 
         // * красным будем выделять время, если прием ставок приостановлен
-        if (activeTabId == 'rats') {
+        if (rec.get('_fantom')) {// * крысы
             var dateEvent = Ext.Date.parse(eventIdText3, "i:s");
 
             if (dateEvent) {
                 var minutes = dateEvent.getMinutes(),
                     seconds = dateEvent.getSeconds(),
-                    secondsAll = minutes * 60 + seconds;
+                    secondsAll = minutes * 60 + seconds,
+                    minTimeToEndBet = Util.getGlobalConst('COUNT_SECONDS_TO_BAN_BETS_ON_RATS');
 
-                if (secondsAll <= Util.RATS_TIME_TO_STOP_BETTING) {
+                if (secondsAll <= minTimeToEndBet) {
                     // * удалим ставки из купона
-                    if (secondsAll == Util.RATS_TIME_TO_STOP_BETTING) {
-                        var fill = Ext.ComponentQuery.query('#main')[0];
-                        fill.getController().clickClearBet();
-
+                    if (secondsAll == minTimeToEndBet) {
                         // * прекращение приема ставок
                         rec.set('betting_closed', true);
                     }
 
-                    return '<span style="color: red;">' + val + '<br>' + eventIdText3 + '</span>';
-                } else if (secondsAll > Util.RATS_TIME_TO_STOP_BETTING) {
+                    return '<span style="color: red;font-weight:bold">' + val + '<br>' + eventIdText3 + '</span>';
+                } else if (secondsAll > minTimeToEndBet && eventIdText3 != "00:00") {
                     return val + '<br>' + eventIdText3;
                 } else {
                     return val;
@@ -184,77 +242,84 @@ Ext.define('Office.view.fill.live.GridEventLiveC', {
                 return val;
             }
         } else {
-            if (eventIdText3 != '00:00') {
+            if (eventIdText3 == "00:00") {
+                return val;
+            } else {
                 if (rec.get('betting_closed')) {
-                    return '<span style="color: red;">' + val + '<br>' + eventIdText3 + '</span>';
+                    return '<span style="color: red;font-weight:bold">' + val + '<br>' + eventIdText3 + '</span>';
                 } else {
                     return val + '<br>' + eventIdText3;
                 }
-            } else
-                return val;
+            }
         }
-    },
-
-    deleteBetsFromCoupon: function () {
-        var fill = Ext.ComponentQuery.query('#main')[0],
-            vm = fill.getViewModel(),
-            storeBasket = vm.getStore('basket');
-
-        // * очищаем стор купона
-        storeBasket.removeAll();
     },
 
     onKeydown: function (field, n, o, e) {
         this.onAddFilter(field, n, o, e);
     },
 
+    onEnter: function (field, e) {
+        if (e.getKey() == e.ENTER) {
+            var fill = Ext.ComponentQuery.query('fill')[0],
+                vm = fill.getViewModel(),
+                n = vm.get('filters.filterEvent');
+            this.onAddFilter(field, n);
+        }
+    },
+
     onAddFilter: function (field, n, o, e) {
-        var gridLive = this.getView(),
-            storeLive = gridLive.store,
-        //storeLive = gridLive.getViewModel().getStore('eventstore_chained'),//todo в 5.1.2 поменять на eventstore_chained, т.к. пофиксили баг
-        //storeLive = gridLive.getViewModel().getStore('eventstore'),//todo в 5.1.2 поменять на eventstore_chained, т.к. пофиксили баг
+        var grid = this.getView(),
+            storeLive = grid.getViewModel().getStore('eventstore_chained'),
             all = 0;
 
+        storeLive.clearFilter();
+
         Ext.defer(function () {
-            var vm = gridLive.getViewModel(),
+            var vm = grid.getViewModel(),
                 arrChecked = vm.get('filters.cbSport'),
                 filterEvent = vm.get('filters.filterEvent'),
                 filterDate = vm.get('filters.filterDate'),
                 filterTime = vm.get('filters.filterTime');
 
-            storeLive.clearFilter();
+            if (n == null && field.getItemId() == 'filterDate')
+                filterDate = n;
 
-            if (arrChecked && arrChecked.length) {
-                storeLive.filterBy(function (item) {
+            if (n == null && field.getItemId() == 'filterTime')
+                filterTime = n;
+
+            function fooFilterSport(item) {
+                if (arrChecked && arrChecked.length) {
                     var sport_id = item.get('sport_id');
-                    if (Util.in_array(sport_id, arrChecked, false)
-                        || Util.in_array(all, arrChecked, false)
-                        || arrChecked.length == 0)
-                        return true;
-                });
-            }
-            if (filterEvent) {
-                storeLive.filterBy(function (item) {
-                    var home = item.get('home'),
-                        away = item.get('away');
-                    if (home && home.toString().toLowerCase().indexOf(filterEvent.toLowerCase()) > -1)
-                        return true;
-                    if (away && away.toString().toLowerCase().indexOf(filterEvent.toLowerCase()) > -1)
-                        return true;
-                });
+                    return (Util.in_array(sport_id, arrChecked, false)
+                    || Util.in_array(all, arrChecked, false)
+                    || arrChecked.length == 0);
+                } else
+                    return true;
             }
 
-            if (filterDate && n) { // * я не знаю почему при очистке поля filterDate не null, хотя n == null
-                storeLive.filterBy(function (item) {
-                    var date = Ext.Date.parse(item.get('time'), 'Y-m-d H:i:s'),
-                        filterDateEnd = Ext.Date.add(filterDate, Ext.Date.SECOND, 86399);// * чтобы для сравнения использовалась последняя секунда указанной даты
-                    if (date <= filterDateEnd)
-                        return true;
-                });
+            function fooFilterEvent(item) {
+                if (filterEvent) {
+                    var home = item.get('home'),
+                        away = item.get('away'),
+                        short_number = item.get('short_number');
+                    return ((home && home.toString().toLowerCase().indexOf(filterEvent.toLowerCase()) > -1)
+                    || (away && away.toString().toLowerCase().indexOf(filterEvent.toLowerCase()) > -1)
+                    || (short_number && short_number == filterEvent.toLowerCase()));
+                } else
+                    return true;
             }
-//todo тут есть баг: когда очищаешь поле Время сбрасывается фильтр по Дате (это из-за условия && n для filterDate)
-            if (filterTime) { // * я не знаю почему при очистке поля filterDate не null, хотя n == null
-                storeLive.filterBy(function (item) {
+
+            function fooFilterDate(item) {
+                if (filterDate) {
+                    var date = Ext.Date.parse(item.get('time'), 'Y-m-d H:i:s'),
+                        filterDateEnd = Ext.Date.add(filterDate, Ext.Date.SECOND, 86399);
+                    return (date <= filterDateEnd);
+                } else
+                    return true;
+            }
+
+            function fooFilterTime(item) {
+                if (filterTime) {
                     var date = Ext.Date.parse(item.get('time'), 'Y-m-d H:i:s'),
                         dateHour = date.getHours(),
                         dateMinutes = date.getMinutes(),
@@ -262,10 +327,40 @@ Ext.define('Office.view.fill.live.GridEventLiveC', {
                         filterTimeHour = filterTime.getHours(),
                         filterTimeMinutes = filterTime.getMinutes(),
                         filterTimeValue = filterTimeHour * 60 + filterTimeMinutes;
-                    if (dateValue <= filterTimeValue)
-                        return true;
-                });
+                    return (dateValue <= filterTimeValue);
+                } else
+                    return true;
+            }
+
+            storeLive.filterBy(function (item) {
+                return fooFilterSport(item) * fooFilterEvent(item) * fooFilterDate(item) * fooFilterTime(item);
+            });
+
+            var cnt = storeLive.count();
+            if (cnt == 0) {
+                Util.warnMes('События не найдены');
+            } else if (cnt == 1) { // * если найдено одно событие, то его выбираем
+                grid.setSelection(storeLive.getAt(0));
+                grid.fireEventArgs('itemclick', [{}, storeLive.getAt(0)]);
+            } else { // * очищаем центральную область
+                FillF.clearCenterArea();
             }
         }, 100, this);
+    },
+
+    // * всплывающая подсказка для поля Дата
+    onFilterDateTip: function (component) {
+        var tip = Ext.create('Ext.tip.ToolTip', {
+            target: component.id,
+            html: 'Дата по'
+        });
+    },
+
+    // * всплывающая подсказка для поля Время
+    onFilterTimeTip: function (component) {
+        var tip = Ext.create('Ext.tip.ToolTip', {
+            target: component.id,
+            html: 'Время по'
+        });
     }
 });

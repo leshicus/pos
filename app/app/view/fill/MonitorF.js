@@ -7,7 +7,7 @@ Ext.define('Office.view.fill.MonitorF', {
     sendBetsToMonitor: function () {
         //FayeClient.sendCommand({command: 'hide_modal'});
 
-        var fill = Ext.ComponentQuery.query('#main')[0],
+        var fill = Ext.ComponentQuery.query('fill')[0],
             vm = fill.getViewModel(),
             selectedGamer = vm.get('selectedGamer'),
             timeline_id = vm.get('timeline_id') || null,
@@ -23,7 +23,7 @@ Ext.define('Office.view.fill.MonitorF', {
             recSystem = comboSystem.getById(system_value),
             storeBasketSum = vmExpress.getStore('basketSum'),
             recBasketSum = storeBasketSum.getAt(0),
-            arr_total_value = Ext.Array.pluck(Ext.Array.pluck(Ext.ComponentQuery.query('#main')[0].getViewModel().getStore('basket').getRange(), 'data'), 'amount'), // * массив сумм ставок
+            arr_total_value = Ext.Array.pluck(Ext.Array.pluck(Ext.ComponentQuery.query('fill')[0].getViewModel().getStore('basket').getRange(), 'data'), 'amount'), // * массив сумм ставок
             type = BasketF.getBetType() == 'single' ? 'single' : 'multi',
             multi_value = type == "multi" ? recBasketSum.get('amount') : 0,
             total_possible_winning = 0,
@@ -138,22 +138,22 @@ Ext.define('Office.view.fill.MonitorF', {
                 bonus_type = "day_express";
                 rec['type'] = bonus_type;
 
-                var numberEvents = Util.getGlobalConst("NUMBER_EVENTS_IN_DAY_EXPRESS"),
+                var numberEvents = parseInt(Util.getGlobalConst("NUMBER_EVENTS_IN_DAY_EXPRESS")),
                     cntBasket = storeBasket.count();
 
                 // * количество ставок должно быть не меньше того, что указано в константах системы
-                if (cntBasket >= parseInt(numberEvents)) {
+                if (cntBasket >= numberEvents) {
                     state['bonus_type'] = bonus_type;
                 }
             } else if (rec['type'] == "dayexpressDC") {
                 bonus_type = "day_express_dc";
                 rec['type'] = bonus_type;
 
-                var numberEvents = Util.getGlobalConst("MIN_NUMBER_EVENTS_IN_COUPON_DAY_EXPRESS_DOUBLE_CHANCE"),
+                var numberEvents = parseInt(Util.getGlobalConst("MIN_NUMBER_EVENTS_IN_COUPON_DAY_EXPRESS_DOUBLE_CHANCE")),
                     cntBasket = storeBasket.count();
 
                 // * количество ставок должно быть не меньше того, что указано в константах системы
-                if (cntBasket >= parseInt(numberEvents)) {
+                if (cntBasket >= numberEvents) {
                     state['bonus_type'] = bonus_type;
                 }
             }
@@ -205,7 +205,7 @@ Ext.define('Office.view.fill.MonitorF', {
 
         var data = new Object(),
             bets = [],
-            fill = Ext.ComponentQuery.query('#main')[0],
+            fill = Ext.ComponentQuery.query('fill')[0],
             vm = fill.getViewModel(),
             storeBasket = vm.getStore('basket');
 
@@ -233,7 +233,7 @@ Ext.define('Office.view.fill.MonitorF', {
         };
 
         function addChangeBet(item, flag) {
-            console.info(arguments);
+            //console.info(arguments);
 
             if (flag) {
                 var coefIdSent = 'coefIdOld',

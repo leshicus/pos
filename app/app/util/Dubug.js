@@ -14,7 +14,7 @@ Ext.define('Office.util.Debug', {
     //barcode: '27472453',
     phone_number: '79261539419',
     //term: 'Ккк',
-    DEFAULT_MENU_ITEM:'session', // * раздел главного меню, открывающий по-умолчанию
+    DEFAULT_MENU_ITEM:'fill', // * раздел главного меню, открывающий по-умолчанию
 
     setLoginFields: function (win) {
         if (this.debug) {

@@ -9,7 +9,7 @@ Ext.define('Office.view.timeline.contextmenu.MenuTimelineC', {
     // * форма отправки смс
     showFormSms: function (phone, button, slipId) {
         var itemId = button.getItemId(),
-            //user_id = Ext.util.Cookies.get('userId'),
+        //user_id = Ext.util.Cookies.get('userId'),
             userLogin = Ext.util.Cookies.get('betzet_login'),
             userToken = Ext.util.Cookies.get('betzet_token'),
             type,
@@ -18,11 +18,7 @@ Ext.define('Office.view.timeline.contextmenu.MenuTimelineC', {
                 class: className,
                 params: {
                     slipId: slipId,
-                    code: null,
-                    //user_id: user_id || '',
-                    username: userLogin || '',
-                    token: Server.getToken(),
-                    secondTime: true
+                    code: null
                 }
             };
         switch (itemId) {
@@ -97,7 +93,7 @@ Ext.define('Office.view.timeline.contextmenu.MenuTimelineC', {
                         else
                             Util.erMes('Сервер не прислал номер телефона');
                     } else {
-                        Util.erMes('Не верный код:<br>'+ o.errors[0]);
+                        Util.erMes('Не верный код:<br>' + o.errors[0]);
                     }
                 } else {
                     Util.erMes('Нет ответа от сервера');
@@ -115,8 +111,10 @@ Ext.define('Office.view.timeline.contextmenu.MenuTimelineC', {
             formWithdraw = Ext.create('Office.view.timeline.FormWithdrawV', {
                 viewModel: {
                     data: {
-                        slipId:slipId,
-                        to_pay:''
+                        slipId: slipId,
+                        to_pay: '',
+                        balance: to_pay,
+                        withdrawal: 1
                         //to_pay:to_pay
                     }
                 }
@@ -124,7 +122,7 @@ Ext.define('Office.view.timeline.contextmenu.MenuTimelineC', {
             win = new Ext.window.Window({
                 modal: true,
                 constrain: true,
-                title: 'Частиное снятие c ТЛ ' + slipId,
+                title: 'Частичное снятие c ТЛ ' + slipId,
                 width: 480,
                 itemId: 'windowWithdraw',
                 defaultButton: 'sum',
@@ -152,7 +150,7 @@ Ext.define('Office.view.timeline.contextmenu.MenuTimelineC', {
                     },
                     '->',
                     {
-                        text:  'Отмена',
+                        text: 'Отмена',
                         glyph: Glyphs.get('cancel'),
                         scale: 'medium',
                         scope: formWithdraw.getController(),
@@ -172,8 +170,9 @@ Ext.define('Office.view.timeline.contextmenu.MenuTimelineC', {
             formWithdraw = Ext.create('Office.view.timeline.FormWithdrawV', {
                 viewModel: {
                     data: {
-                        slipId:slipId,
-                        to_pay:''
+                        slipId: slipId,
+                        to_pay: '',
+                        withdrawal: 0
                         //to_pay:to_pay
                     }
                 }
@@ -202,7 +201,7 @@ Ext.define('Office.view.timeline.contextmenu.MenuTimelineC', {
                     },
                     '->',
                     {
-                        text:  'Отмена',
+                        text: 'Отмена',
                         glyph: Glyphs.get('cancel'),
                         scale: 'medium',
                         scope: formWithdraw.getController(),
@@ -211,5 +210,77 @@ Ext.define('Office.view.timeline.contextmenu.MenuTimelineC', {
                 ]
             });
         win.show();
+    },
+
+    onClickButtonClose: function (button) {
+        var gridtimeline = Ext.ComponentQuery.query('gridtimeline')[0],
+            selection = gridtimeline.getSelectionModel().getSelection()[0],
+            slipId = selection.get('id'),
+            objUrl = {
+                class: 'Pos_Timeline_Xaction',
+                params: {
+                    xaction: 'canCloseTimeline',
+                    slipId: slipId
+                }
+            },
+            _this = this;
+        Ext.Ajax.request({
+            url: Server.getUrl(objUrl),
+            method: 'POST',
+            success: function (resp, opt) {
+                var res = Gui.JSONDecodeSafe(resp.responseText);
+                if (res) {
+                    if (res.success) {
+                        var text = 'Вы действительно хотите закрыть таймлайн ' + slipId + '?';
+                        Ext.Msg.confirm('Подтверждение', text, function (button) {
+                            if (button == 'yes') {
+                                _this.closeTL(slipId);
+                            }
+                        }, this);
+                    } else {
+                        Util.erMes(res.errors[0] || res);
+                    }
+                } else {
+                    Util.erMes('Нет ответа от сервера');
+                }
+            },
+            failure: function (resp, opt) {
+                Util.erMes('Ошибка проверки таймлайна на возможность его закрытия!');
+            }
+        });
+    },
+
+    closeTL: function (slipId) {
+        var gridtimeline = Ext.ComponentQuery.query('gridtimeline')[0],
+            selection = gridtimeline.getSelectionModel().getSelection()[0],
+            slipId = selection.get('id'),
+            objUrl = {
+                class: 'Pos_Timeline_Xaction',
+                params: {
+                    xaction: 'closeTimeline',
+                    slipId: slipId
+                }
+            },
+            _this = this;
+        Ext.Ajax.request({
+            url: Server.getUrl(objUrl),
+            method: 'POST',
+            success: function (resp, opt) {
+                var res = Gui.JSONDecodeSafe(resp.responseText);
+                if (res) {
+                    if (res.success) {
+                        Util.sucMes('Таймлайн ' + slipId + ' закрыт');
+                        gridtimeline.store.reload();
+                    } else {
+                        Util.erMes(res.errors[0] || res);
+                    }
+                } else {
+                    Util.erMes('Нет ответа от сервера');
+                }
+            },
+            failure: function (resp, opt) {
+                Util.erMes('Ошибка проверки таймлайна на возможность его закрытия!');
+            }
+        });
     }
 });

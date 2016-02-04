@@ -24,8 +24,6 @@ Ext.define('Office.view.panels.GridParamV', {
             clicksToEdit: 1
         }
     ],
-    /*glyph: Glyphs.get('card'),
-     cls: 'gridcard',*/
     bind: {store:'{param}'} ,
     listeners: {
         cellclick: 'onCellclick',
@@ -37,10 +35,26 @@ Ext.define('Office.view.panels.GridParamV', {
             params: [
                 'filters.panel_id',
                 'filters.task_id',
-                'filters.value',
-                'filters.id'
+                'parameter.value',
+                'parameter.id'
             ]
         });
+
+        var _this=this;
+
+        //_this.getViewModel().getStore('tournaments').load();
+        //var combo=Ext.create('Ext.form.field.ComboBox', {
+        //    editable: false,
+        //    //itemId: 'cbIsLive',
+        //    queryMode: 'local',
+        //    displayField: 'display_name',
+        //    valueField: 'id',
+        //    valueNotFoundText:'пусто',
+        //    bind: {
+        //        value: '{parameter.value}',
+        //        store:'{tournaments}'
+        //    }
+        //});
 
         this.columns = {
             defaults: {
@@ -56,22 +70,26 @@ Ext.define('Office.view.panels.GridParamV', {
                 {
                     text: 'Наименование',
                     dataIndex: 'description',
-                    flex:1
+                    width: 150
                 },
                 {
                     text: 'Значение',
                     dataIndex: 'value',
-                    width: 100,
-                    editor:{
-                        xtype:'textfield',
-                        bind:{
-                            value:'{filters.value}'
-                        }
-                    }
+                    width: 600,
+                    getEditor: _this.getController().getParamEditor,
+                    renderer: _this.getController().getRenderer
                 }
             ]
         }
 
+        this.tools = [
+            {
+                type: 'refresh',
+                tooltip: 'Обновить'
+            }
+        ]
+
         this.callParent();
     }
+
 });

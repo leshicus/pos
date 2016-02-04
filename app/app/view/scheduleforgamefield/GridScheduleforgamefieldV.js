@@ -18,12 +18,7 @@ Ext.define('Office.view.scheduleforgamefield.GridScheduleforgamefieldV', {
         stripeRows: true,
         loadMask: false // * чтобы сообщение loading не показывалось
     },
-    /*glyph: Glyphs.get('virtual'),
-    cls: 'gridvirtual',*/
     bind: '{scheduleforgamefield}',
-    listeners:{
-      render:'onRender'
-    },
     initComponent: function () {
         Util.initClassParams({
             scope: this,
@@ -33,35 +28,14 @@ Ext.define('Office.view.scheduleforgamefield.GridScheduleforgamefieldV', {
             ]
         });
 
-        // * создаю taskRunner- менеджер заданий для данного раздела
-        //Util.createTaskRunner(this);
-
-       /* var short_number = Ext.create('Ext.form.field.Text', {
-                _fireEventOnEnter: true, // * change event будет работать только по нажатию на Enter
-                itemId: 'bidNum',
-                bind:'{filters.short_number}',
-                listeners: {
-                    specialkey: 'onEnter'
-                }
-            }),
-            placeId = Ext.create('Ext.form.field.Text', {
-                _fireEventOnEnter: true,
-                itemId: 'placeId',
-                bind:'{filters.place_id}',
-                listeners: {
-                    specialkey: 'onEnter'
-                }
-            });*/
-        
         var fieldCurrentTime = Ext.create('Ext.form.field.Text', {
-            width: 200,
+            width: 100,
             selectOnFocus: true,
+            emptyText:'Время',
             itemId: 'currentTime',
-          //  id: 'currentTime',
             listeners:{
                 afterrender: 'getTimeTimeZone'
             }
-
         });
 
         this.tbar = [
@@ -73,19 +47,14 @@ Ext.define('Office.view.scheduleforgamefield.GridScheduleforgamefieldV', {
             {
                 xtype: 'combobox',
                 emptyText: 'Часовой пояс',
-                width: 170,
+                width: 150,
                 margin: '2 2 0 0',
                 padding: '5 0 0 0',
                 itemId: 'cbTimezone',
-              //  id: 'cbTimezone',
                 editable: false,
                 queryMode: 'local',
                 displayField: 'value',
                 valueField: 'name',
-               // _checkField: 'checked',
-                /*_func: function (combo, n) {
-                 me.controller.onAddFilter(combo, n);
-                 },*/
                 bind: {
                     store: '{timezone}',
                     selection: '{cbTimezone_model}',
@@ -95,40 +64,7 @@ Ext.define('Office.view.scheduleforgamefield.GridScheduleforgamefieldV', {
                     change: 'getTimeTimeZone'
                 }
             },
-           /*  {
-                    xtype: 'combobox',
-                    itemId: 'cbIsLive',
-                    width: 170,
-                    //labelWidth: 50,
-                    // margin: '2 2 2 30',
-                    emptyText: 'Лайв',
-                    queryMode: 'local',
-                    displayField: 'name',
-                    valueField: 'id',
-                    editable: false,
-                    bind: {
-                        store: '{live}',
-                        selection: '{cbIsLive_model}',
-                        value: '{filters.cbIsLive}'
-                    },
-                    listeners: {
-                        change: 'onAddFilter'
-                    }
-                },*/
             fieldCurrentTime,
-            /*{
-                xtype: 'checkbox',
-                itemId: 'includeArchieved',
-                margin: '2 2 2 5',
-                inputValue: true,
-                uncheckedValue: false,
-                boxLabel: 'Архивные',
-                flex: 1,
-                bind: {
-                    value: '{filters.includeArchieved}'
-                }
-            }*/
-
         ];
 
         this.columns = {
@@ -145,45 +81,31 @@ Ext.define('Office.view.scheduleforgamefield.GridScheduleforgamefieldV', {
                     text: 'id',
                     dataIndex: 'id',
                     itemId: 'id',
-                    width: 50,
-                    /*defaults: {
-                        enableKeyEvents: true,
-                        margin: 2
-                    },
-                    items: [
-                        short_number
-                    ]*/
+                    width: 70
                 },
                 {
                     text: '№ события',
                     dataIndex: 'event_id',
                     itemId: 'event_id',
-                    width: 120,
-                    /*defaults: {
-                        enableKeyEvents: true,
-                        margin: 2
-                    },
-                    items: [
-                        placeId
-                    ]*/
+                    width: 100
                 },
                 {
                     text: 'Событие',
                     dataIndex: 'event_name',
                     itemId: 'event_name',
-                    width: 80
+                    width: 150
                 },
                 {
                     text: 'Турнир',
                     dataIndex: 'tournament_name',
                     itemId: 'tournament_name',
-                    width: 80
+                    width: 140
                 },
                 {
                     text: 'Дата',
                     dataIndex: 'start_date_time',
                     itemId: 'start_date_time',
-                    width: 150
+                    width: 140
                 },
                 {
                     text: 'ТВ канал',
@@ -214,7 +136,7 @@ Ext.define('Office.view.scheduleforgamefield.GridScheduleforgamefieldV', {
                     text: 'Телефон',
                     dataIndex: 'phone',
                     itemId: 'phone',
-                    width: 150
+                    width: 110
                 },
             ]
         }

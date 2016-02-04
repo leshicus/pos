@@ -25,13 +25,19 @@ Ext.define('Office.view.card.FormKladrV', {
             scope: this,
             params: [
                 'filters.zip',
+                'filters.city',
                 'filters.cityId',
                 'filters.cityCombo',
+                'filters.street',
                 'filters.streetId',
                 'filters.streetCombo',
+                'filters.building',
                 'filters.buildingId',
                 'filters.buildingCombo',
-                'filters.flat'
+                'filters.flat',
+                'filters.region',
+                'filters.district',
+                'filters.city_grand'
             ]
         });
 
@@ -53,6 +59,54 @@ Ext.define('Office.view.card.FormKladrV', {
 
         this.items = [
             {
+                xtype: 'checkbox',
+                fieldLabel: 'Ручной ввод',
+                inputValue: '1',
+                uncheckedValue: '0',
+                //name: 'is_resident',
+                itemId: 'manual',
+                handler: 'clickManual',
+                bind: {
+                    value: '{manual}'
+                }
+            },
+            {
+                xtype: 'textfield',
+                fieldLabel: 'Индекс',
+                bind: {
+                    value: '{filters.zip}',
+                    disabled: '{!manual}'
+                },
+                itemId: 'zip'
+            },
+            {
+                xtype: 'textfield',
+                fieldLabel: 'Регион',
+                bind: {
+                    value: '{filters.region}',
+                    disabled: '{!manual}'
+                },
+                itemId: 'region'
+            },
+            {
+                xtype: 'textfield',
+                fieldLabel: 'Район',
+                bind: {
+                    value: '{filters.district}',
+                    disabled: '{!manual}'
+                },
+                itemId: 'district'
+            },
+            {
+                xtype: 'textfield',
+                fieldLabel: 'Город',
+                bind: {
+                    value: '{filters.city_grand}',
+                    disabled: '{!manual}'
+                },
+                itemId: 'city_grand'
+            },
+            {
                 fieldLabel: 'Населенный пункт',
                 xtype: 'combo',
                 bind: {
@@ -63,15 +117,17 @@ Ext.define('Office.view.card.FormKladrV', {
                 displayField: 'name',
                 valueField: 'id',
                 editable: true,
+                autoSelect: false,
                 itemId: 'comboLocality',
                 queryMode: 'remote',
                 minChars: 0,
                 _contentType: 'city',
+                enableKeyEvents: true,
                 /* то, что показывается в списке */
                 tpl: comboLocTpl,
                 listeners: {
                     change: 'onChangeKladr',
-                    //beforequery:'beforequery',
+                    keydown: 'onKeydownKladr',
                     scope: 'controller'
                 }
             },
@@ -86,6 +142,8 @@ Ext.define('Office.view.card.FormKladrV', {
                 displayField: 'name',
                 valueField: 'id',
                 editable: true,
+                autoSelect: false,
+                enableKeyEvents: true,
                 itemId: 'comboStreet',
                 queryMode: 'remote',
                 minChars: 0,
@@ -93,6 +151,7 @@ Ext.define('Office.view.card.FormKladrV', {
                 tpl: comboStreetTpl,
                 listeners: {
                     change: 'onChangeKladr',
+                    keydown: 'onKeydownKladr',
                     scope: 'controller'
                 }
             },
@@ -107,6 +166,8 @@ Ext.define('Office.view.card.FormKladrV', {
                 displayField: 'name',
                 valueField: 'id',
                 editable: true,
+                autoSelect: false,
+                enableKeyEvents: true,
                 itemId: 'comboBuilding',
                 queryMode: 'remote',
                 minChars: 0,
@@ -114,6 +175,7 @@ Ext.define('Office.view.card.FormKladrV', {
                 tpl: comboStreetTpl,
                 listeners: {
                     change: 'onChangeKladr',
+                    keydown: 'onKeydownKladr',
                     scope: 'controller'
                 }
             },

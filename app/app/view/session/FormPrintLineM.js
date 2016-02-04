@@ -33,8 +33,7 @@ Ext.define('Office.view.session.FormPrintLineM', {
                     token: '{token}',
                     params: {
                         sport_id: '{filters.cbSport}',
-                        mode:0,
-
+                        mode: 0
                     }
                 }),
                 reader: {

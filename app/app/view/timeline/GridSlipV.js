@@ -2,6 +2,7 @@ Ext.define('Office.view.timeline.GridSlipV', {
     extend: 'Ext.tree.Panel',
     requires: [
         'Office.view.timeline.GridSlipM',
+        'Office.view.timeline.GridSlipC',
         'Office.plugin.GridColumnsDefaults',
         'Ext.tree.View',
         'Ext.tree.Panel',
@@ -10,20 +11,32 @@ Ext.define('Office.view.timeline.GridSlipV', {
     viewModel: {
         type: 'gridslip'
     },
+    controller: 'gridslip',
     columnLines: true,
     rowLines: true,
+    frame: true,
     title: 'Параметры таймлайна',
     rootVisible: false,
     _collapsed: true,
     viewConfig: {
         stripeRows: true,
         loadMask: false, // * чтобы сообщение loading не показывалось
-        enableTextSelection: true
+        enableTextSelection: true,
+        listeners: {
+            // * чтобы колонка Действие по ширине расширялась если текст большой
+            refresh: function(dataview) {
+                Ext.each(dataview.panel.columns, function(column) {
+                    if (column._autoSizeColumn === true)
+                        column.autoSize();
+                })
+            }
+        }
     },
     //enableLocking: true, // * глючит с деревьями
     /*glyph: Glyphs.get('list_1'),
-    cls: 'gridslip',*/
+     cls: 'gridslip',*/
     bind: '{slip}',
+
     initComponent: function () {
         /*
          1) сохраняем токен в VM, чтобы его потом параметризировать там
@@ -32,7 +45,16 @@ Ext.define('Office.view.timeline.GridSlipV', {
 
         Util.initClassParams({
             scope: this,
-            params: ['filters.timelineId']
+            params: [
+                'filters.timelineId',
+                'filters.timelineactions',
+                'filters.stakefrom',
+                'filters.staketo',
+                'filters.limit',
+                'filters.made_datetime_from',
+                'filters.made_datetime_to',
+                'filters.sports'
+            ]
         });
 
         this.columns = {
@@ -50,48 +72,192 @@ Ext.define('Office.view.timeline.GridSlipV', {
                     text: 'Действие',
                     dataIndex: 'operation',
                     itemId: 'gridslip-operation',
-                    flex:1
-                  //  locked: true,
+                    minWidth: 350,
+                    maxWidth: 580,
+                    _autoSizeColumn:true
                 },
                 {
                     text: 'Сумма',
                     dataIndex: 'stake',
-                    //itemId: 'stake',
-                    width: 130
+                    width: 130,
+                    layout: {
+                        type: 'vbox',
+                        align: 'stretch'
+                    },
+                    items: [
+                        {
+                            xtype: 'textfield',
+                            emptyText: 'От',
+                            enableKeyEvents: true,
+                            itemId: 'stakefrom',
+                            margin: '0 2 0 2',
+                            listeners: {
+                                specialkey: 'onEnter'
+                            },
+                            bind: {
+                                value: '{filters.stakefrom}'
+                            }
+                        },
+                        {
+                            xtype: 'textfield',
+                            emptyText: 'До',
+                            enableKeyEvents: true,
+                            itemId: 'staketo',
+                            margin: '2 2 2 2',
+                            listeners: {
+                                specialkey: 'onEnter'
+                            },
+                            bind: {
+                                value: '{filters.staketo}'
+                            }
+                        }
+                    ]
                 },
                 {
                     text: 'Коэф.',
                     dataIndex: 'coefficient',
-                    //itemId: 'coefficient',
-                    width: 180
+                    width: 70
                 },
                 {
                     text: 'Результат',
                     dataIndex: 'result_text',
-                    //itemId: 'result_text',
                     width: 130,
                     renderer: Util.renderResult
                 },
                 {
                     text: 'Совершена',
                     dataIndex: 'made_datetime',
-                    //itemId: 'made_datetime',
-                    width: 130
+                    width: 130,
+                    layout: {
+                        type: 'vbox',
+                        align: 'stretch'
+                    },
+                    items: [
+                        {
+                            xtype: 'datefield',
+                            emptyText: 'Дата с',
+                            margin: '0 2 0 2',
+                            format: 'Y-m-d',
+                            enableKeyEvents: true,
+                            itemId: 'made_datetime_from',
+                            listeners: {
+                                specialkey: 'onEnter'
+                            },
+                            bind: {
+                                value: '{filters.made_datetime_from}'
+                            }
+                        },
+                        {
+                            xtype: 'datefield',
+                            emptyText: 'Дата по',
+                            margin: '2 2 2 2',
+                            format: 'Y-m-d',
+                            enableKeyEvents: true,
+                            itemId: 'made_datetime_to',
+                            listeners: {
+                                specialkey: 'onEnter'
+                            },
+                            bind: {
+                                value: '{filters.made_datetime_to}'
+                            }
+                        }
+                    ]
+                },
+                {
+                    text: 'Рассчитана',
+                    dataIndex: 'calc_datetime',
+                    width: 130,
+                    layout: {
+                        type: 'vbox',
+                        align: 'stretch'
+                    }
                 },
                 {
                     text: 'Выигрыш',
                     dataIndex: 'win_sum',
-                    //itemId: 'win_sum',
                     width: 130
                 },
                 {
                     text: 'Лайв',
                     dataIndex: 'is_live',
-                    //itemId: 'is_live',
-                    width: 130
+                    width: 55,
+                    renderer: function (val, meta, rec) {
+                        if (val == 'Да') {
+                            meta.align = 'center';
+                            return '<span role="button" class="fa fa-check" style="color: green" data-qtip="Да"></span>';
+                        } else if (val == 'Нет') {
+                            return '';
+                        } else {
+                            return val;
+                        }
+                    }
                 }
             ]
-        }
+        };
+
+        this.tbar = [
+            {
+                xtype: 'combobox',
+                itemId: 'limit',
+                width: 110,
+                emptyText: 'Количество',
+                queryMode: 'local',
+                displayField: 'name',
+                value: 100,
+                valueField: 'id',
+                editable: false,
+                bind: {
+                    store: '{limit}',
+                    selection: '{limit_model}',
+                    value: '{filters.limit}'
+                }
+            },
+            {
+                xtype: 'combocheck',
+                emptyText: 'Действие',
+                width: 170,
+                itemId: 'timelineactions',
+                editable: false,
+                queryMode: 'local',
+                displayField: 'value',
+                valueField: 'id',
+                padding:'5 0 0 0',
+                _checkField: 'checked',
+                _bind: {
+                    store: '{timelineactions}',
+                    //selection: '{timelineactions_model}',
+                    value: '{filters.timelineactions}'
+                }
+            },
+            {
+                xtype: 'combocheck',
+                emptyText: 'Вид спорта',
+                width: 170,
+                itemId: 'cbSport',
+                editable: false,
+                queryMode: 'local',
+                displayField: 'value',
+                valueField: 'id',
+                padding:'5 0 0 0',
+                _checkField: 'checked',
+                _bind: {
+                    store: '{sport}',
+                    //selection: '{cbSport_model}',
+                    value: '{filters.sports}'
+                }
+            }
+        ];
+
+        this.tools = [
+            {
+                type: 'refresh',
+                tooltip: 'Обновить'
+            },
+            {
+                type: 'close',
+                tooltip: 'Удалить фильтры'
+            }
+        ];
 
         this.callParent();
     }

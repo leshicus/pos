@@ -10,7 +10,7 @@ Ext.define('Office.util.TaskF', {
             taskSession = this.getTaskById(runner, 'taskSession');
 
         if (!taskSession) {
-            var taskSession = runner.newTask({
+            taskSession = runner.newTask({
                 run: function () {
                     menumain.getController().loadSessionData();
                 },
@@ -27,86 +27,95 @@ Ext.define('Office.util.TaskF', {
         taskSession.start();
     },
 
-    taskTimerStart: function (fill) {
-        var vmFill = fill.getViewModel(),
-            runner = vmFill.get('taskRunner'),
-            taskSeconds = this.getTaskById(runner, 'taskSeconds_' + fill.getItemId());
+    taskSecondsStart: function (storeName) {
+        var menumain = Ext.ComponentQuery.query('menumain')[0],
+            vm = menumain.getViewModel(),
+            runner = vm.get('taskRunner'),
+            taskSeconds = this.getTaskById(runner, 'taskSeconds_' + storeName),
+            store = vm.getStore(storeName); // * объект показан
 
         if (!taskSeconds) {
             taskSeconds = runner.newTask({
                 run: function () {
-                    vmFill.set('timer', vmFill.get('timer') + 1);
+                    store.suspendEvents();
+                    store.each(function (rec) {
+                        if (rec) {
+                            var _current_second = rec.get('_current_second');
+                            if (!rec.get('timer_stopped') && _current_second >= 0) {
+                                rec.set('_current_second', _current_second + 1);
+                            }
+                        }
+                    });
+                    store.resumeEvents();
+
+                    if (store && typeof store.commitChanges == 'function') {
+                        store.commitChanges();
+                    }
                 },
                 interval: 1000 * 1, // в секундах
-                _taskId: 'taskSeconds_' + fill.getItemId()
+                _taskId: 'taskSeconds_' + storeName
             });
-        } else
-            taskSeconds.stop();
 
-        // * регистрация события на остановку таймера после закрытия раздела
-        fill.on('destroy', function () {
-            taskSeconds.stop();
-        });
+            taskSeconds.start();
 
-        taskSeconds.start();
+            // * регистрация события на остановку таймера после закрытия раздела
+            menumain.on('destroy', function () {
+                taskSeconds.stop();
+            });
+        }
     },
 
-    taskSecondsStart: function (grid) {
-        var fill = Ext.ComponentQuery.query('#main')[0],
-            vmFill = fill.getViewModel(),
-            runner = vmFill.get('taskRunner'),
-            taskSeconds = this.getTaskById(runner, 'taskSeconds_' + grid.getItemId()),
-            vm = grid.getViewModel(),
-            isInDom = Ext.get(grid.getId()); // * объект показан
+    // * периодически обновляет список событий
+    taskEventReload: function () {
+        var menumain = Ext.ComponentQuery.query('menumain')[0],
+            vm = menumain.getViewModel(),
+            runner = vm.get('taskRunner'),
+            task = this.getTaskById(runner, 'taskEventReload');
 
-        if (isInDom) {
-            Ext.defer(function () {// * из-за того, что в VM определил сторы в конструкторе, они перестали успевать сформироваться
-                var store = vm.getStore('eventstore_chained');
+        if (!task) {
+            task = runner.newTask({
+                run: function () {
+                    //store.suspendEvents();
+                    // * сохраним выделенную запись события
+                    var activeTabEvent = BasketF.getActiveTabIndexEvent(),
+                        fill = Ext.ComponentQuery.query('fill')[0];
+                    if (activeTabEvent && activeTabEvent <= 2 && fill) {
+                        var gridEvent = fill.query('grideventlive')[activeTabEvent],
+                            selection = gridEvent.selection;
+                    }
 
-                if (!taskSeconds && store) {
-                    taskSeconds = runner.newTask({
-                        run: function () {
-                            store.each(function (rec) {
-                                if (!rec.get('timer_stopped')) {
-                                    rec.set('_current_second', rec.get('_current_second') + 1);
-                                    rec.commit();
-                                }
+
+                    MatchdataTransport.reconnect('inplay');
+                    MatchdataTransport.reconnect('prematch');
+                    FillF.getDayExpressData();
+
+                    // * восстановим выделение
+                    if (selection && gridEvent) {
+                        // * выделим событие
+                        Ext.defer(function () {
+                            gridEvent.ensureVisible(selection, {
+                                animate: false,
+                                highlight: true,
+                                select: true,
+                                focus: false
                             });
+                            //gridEvent.fireEvent('itemclick', gridEvent);
+                            //gridEvent.setSelection(selection);
+                            //gridEvent.getController().showCoefs(selection);
+                        }, 2000, this);
+                    }
+                    //store.resumeEvents();
+                },
+                interval: 1000 * 10 * 1, // в минутах
+                _taskId: 'taskEventReload'
+            });
 
-                            if(store&&typeof store.commitChanges == 'function')
-                            store.commitChanges();
-                            //var recordsInStore = store.getRange();
-                            //
-                            //// * проходим каждый раз по всем записям стора и обновляем таймер
-                            //Ext.Array.each(recordsInStore, function (rec) {
-                            //    if (rec && !rec.get('timer_stopped')) {
-                            //        rec.set('_current_second', rec.get('_current_second') + 1);
-                            //        rec.commit();
-                            //        //var recCurrent = store.findRecord('id', rec.get('id'), 0, false, true, true);
-                            //        //if (recCurrent) {
-                            //        //    var _current_second = recCurrent.get('_current_second');
-                            //        //    if (_current_second >= 0) {
-                            //        //        recCurrent.set('_current_second', _current_second + 1);
-                            //        //        recCurrent.commit();
-                            //        //    }
-                            //        //}
-                            //    }
-                            //});
-                        },
-                        interval: 1000 * 1, // в секундах
-                        _taskId: 'taskSeconds_' + grid.getItemId()
-                    });
-                } else
-                    taskSeconds.stop();
+            task.start();
 
-                // * регистрация события на остановку таймера после закрытия раздела
-                grid.on('destroy', function () {
-                    taskSeconds.stop();
-                });
-
-                //if (grideventlive.getItemId() == 'live')
-                taskSeconds.start();
-            }, 10, this);
+            // * регистрация события на остановку таймера после закрытия раздела
+            menumain.on('destroy', function () {
+                task.stop();
+            });
         }
     },
 
@@ -119,128 +128,153 @@ Ext.define('Office.util.TaskF', {
     },
 
     // * периодически подчищает eventstore, удаляя просроченные события (только из line и rats)
-    startTaskClearEventStore: function (grid,intParam) {
-        var fill = Ext.ComponentQuery.query('#main')[0],
-            vmFill = fill.getViewModel(),
-            runner = vmFill.get('taskRunner'),
-            taskFilter = this.getTaskById(runner, 'taskFilter_' + grid.getItemId()),
-            vm = grid.getViewModel(),
-            rawdata = vm.getStore('rawdata'),
-            _this = this;
+    startTaskClearEventStore: function (grid, interval) {
+        var menumain = Ext.ComponentQuery.query('menumain')[0],
+            vm = menumain.getViewModel(),
+            runner = vm.get('taskRunner'),
+            storeName = grid.getItemId(),
+            taskFilter = this.getTaskById(runner, 'taskFilter_' + storeName);
 
         if (!taskFilter) {
+            var _this = this,
+                store = vm.getStore(storeName),
+                delayToDelete = parseInt(Util.getGlobalConst("COUNT_MINUTS_FOR_HIDE_BEFORE_LIVE")) * 60; // * За сколько минут до начала события убирать его из линии. В минутах.
+
             taskFilter = runner.newTask({
                 run: function () {
-                    var isInDom = document.getElementById(grid.getId()); // * объект показан
-                    if (isInDom) {
+                    var currentTime = new Date(),
+                        strCurrentTime = Ext.Date.format(currentTime, 'timestamp'),
+                        arrBasketToDelete = [],// * список ставок в купоне к удалению
+                        arrEventToDelete = [],// * список событий к удалению
+                        arrEventSetToDefault = [],// * список событий, которые нужно не удалить, а сбросить на дефолтные
+                        arrEventToDeleteBasket = [], // * список событий, по которым нужно удалить ставки из купрна
+                        fill = Ext.ComponentQuery.query('fill')[0];
 
-                        var store = grid.getViewModel().getStore('eventstore'),
-                        // var store = grid.getViewModel().getStore('eventstore_chained'),
-                            currentTime = new Date(),
-                            strCurrentTime = Ext.Date.format(currentTime, 'timestamp'),
-                            arrBasketToDelete = [],
-                            arrEventToDelete = [],
-                            arrEventSetToDefault = [];
-
+                    if (store) {
                         store.each(function (item) {
                             var time = new Date(item.get('time')),
                                 strTime = Ext.Date.format(time, 'timestamp');
-                            //if(item.get('type') == 'line' && item.get('short_number') == 4892)
-                            //    console.info(strTime < strCurrentTime,strTime,strCurrentTime,item);
+
                             if (item
-                                && ((item.get('type') == 'line' && strTime < strCurrentTime)
-                                    /*|| (item.get('sport_slug') == 'sport_rats'
-                                     && strTime < strCurrentTime
-                                     && !item.get('_fantom'))*/ // * чтобы не удалялись фантомные строки в крысах
+                                && ((item.get('type') == 'line' && (strTime - delayToDelete < strCurrentTime) )
                                 || (item.get('finished') == 1))) {
 
-                                // * перед удалением события проверим, может оно сейчас выделено,
-                                // * тогда очистим центральную область, очистим заголовок, поле быстрого ввода
-                                var selection = grid.selection;
-                                if (item == selection) {
-                                    FillF.clearCenterArea();
-
-                                    var fastInput = fill.down('#fastInput');
-                                    fastInput.reset();
-
-                                    vmFill.set('title', null);
-                                }
-
-                                //// * для раздела Крысы-ставки, будем при этом обновлять грид Крысы: история ставок
-                                //var gridrat = fill.down('gridrat'),
-                                //    str = 'Событие закончилось: ' + '№ ' + item.get('short_number');
-                                //
-                                //if (gridrat && grid.getItemId() == 'rats') {
-                                //    gridrat.store.reload();
-                                //} else
-                                //    str += '<br>' + item.get('home') + ' - ' + item.get('away');
-                                //Util.warnMes(str); // * очень назойливое уведомление
-
                                 arrEventToDelete.push(item);
+                                arrEventToDeleteBasket.push(item);
                             } else if (item  // * фантомные строки Крыс
                                 && ((item.get('sport_slug') == 'sport_rats'
                                 && strTime < strCurrentTime
                                 && item.get('_fantom')))) {
 
                                 arrEventSetToDefault.push(item);
-
-                                FillF.clearCenterArea();
-                                fill.getViewModel().set('title', null);
+                                arrEventToDeleteBasket.push(item);
 
                                 // * для раздела Крысы-ставки, будем при этом обновлять грид Крысы: история ставок
-                                var gridrat = fill.down('gridrat'),
-                                    str = 'Событие закончилось: ' + '№ ' + item.get('short_number');
-
-                                if (gridrat && grid.getItemId() == 'rats') {
-                                    gridrat.store.reload();
-                                } else
-                                    str += '<br>' + item.get('home') + ' - ' + item.get('away');
+                                if (fill) {
+                                    var gridrat = fill.down('gridrat');
+                                    if (gridrat && storeName == 'rats') {
+                                        gridrat.store.reload();
+                                    }
+                                }
                             }
                         }, this);
 
                         if (arrEventToDelete.length) {
-                            // store.clearFilter(); // * иначе группировка и скрол сбиваются- появляются пропуски
-                            store.remove(arrEventToDelete);
-                            grid.getView().refresh();
-                        }
+                            if (grid && grid.getViewModel()) {
+                                // * перед удалением события проверим, может оно сейчас выделено,
+                                // * тогда очистим центральную область, очистим заголовок, поле быстрого ввода
+                                var selection = grid.selection;
+                                if (Ext.Array.contains(arrEventToDelete, selection) && BasketF.isActiveEventTab(grid)) {
+                                    FillF.clearCenterArea();
+                                }
 
-                        if (arrEventSetToDefault.length) {
-                            _this.setFantomToDefault(arrEventSetToDefault, grid);
-                        }
+                                // * подавляем выполнение всех ивентов и вызываем только конкретное действие- для увеличения производительности
+                                store.suspendEvents();
+                                store.remove(arrEventToDelete);
+                                menumain.getController().setLiveCountProperty(store);
+                                store.resumeEvents();
 
+                                // * чтобы удалялось и из отфильтрованного стора (если были применены фильтры)
+                                //var store_chained = grid.getViewModel().getStore('eventstore_chained');
+                                //if (store_chained.getFilters().length) {
+                                //    if (store_chained.data)
+                                //        store_chained.data.clear();
+                                //}
+
+                                // * !!!костыль, борющийся с пустыми пространствами в обновившемся гриде!!!
+                                _this.doBufferRenderUpdate(grid, store);
+                            }
+                        }
+                    }
+
+                    if (arrEventToDeleteBasket.length) {
                         // * удалим из купона исходы удаленных событий (проверяется только существует ли событие)
-                        if (grid.getItemId() == BasketF.getActiveTabEventId()) {// * делаем это только если относится к выделенной вкладке, т.к. в купон исходы добавляются из localstorage
-                            var storeBasket = vmFill.getStore('basket');
-
-                            storeBasket.each(function (itm) {
+                        if (fill) {
+                            var vmFill = fill.getViewModel(),
+                                storeBasket = vmFill.getStore('basket');
+                            Ext.Array.each(arrEventToDeleteBasket, function (itm) {
                                 var event_id = itm.get('event_id'),
-                                    event = store.findRecord('event_id', event_id, 0, false, true, true);
+                                    bet = storeBasket.findRecord('event_id', event_id, 0, false, true, true);
 
-                                if (!event) {
+                                if (bet) {
                                     arrBasketToDelete.push(itm);
                                 }
                             });
-
-                            if (arrBasketToDelete.length)
+                            if (arrBasketToDelete.length) {
                                 storeBasket.remove(arrBasketToDelete);
+                            }
                         }
                     }
-                },
-                interval: 1000 * intParam, // в милисекундах
-                _taskId: 'taskFilter_' + grid.getItemId()
-            });
-        } else
-            taskFilter.stop();
 
-        grid.on('destroy', function () {
-            taskFilter.stop();
-        });
-        taskFilter.start();
+                    if (arrEventSetToDefault.length) {
+                        var selection = grid.selection;
+                        if (Ext.Array.contains(arrEventSetToDefault, selection) && BasketF.isActiveEventTab(grid)) {
+                            FillF.clearCenterArea();
+                        }
+
+                        _this.setFantomToDefault(arrEventSetToDefault);
+                    }
+                },
+                interval: 1000 * interval, // в миллисекундах
+                _taskId: 'taskFilter_' + storeName
+            });
+
+            taskFilter.start();
+
+            menumain.on('destroy', function () {
+                taskFilter.stop();
+            });
+        }
+    },
+
+    // * исправление бага, когда в гриде с BufferedRenderer при добавлении/удалении строк появляются пустые места
+    // * фильтрация, удаление фильтров, восстановление позиции скролбара и выделения
+    doBufferRenderUpdate: function (grid, store) {
+        if (grid.getEl() && grid.getPlugins()) {
+            var selection = grid.getSelectionModel().getSelection()[0],
+                scrollPosition = grid.getEl().down('.x-grid-view').getScroll();
+
+            store.suspendEvents();
+            store.filterBy(function () {
+                return false;
+            });
+            store.clearFilter();
+            store.resumeEvents();
+
+            if (scrollPosition)
+                grid.getView().scrollBy(0, scrollPosition.top, false);
+            if (selection && BasketF.isActiveEventTab(grid)) {
+                grid.setSelection(selection);
+                grid.getController().showCoefs(selection);
+            }
+        }
     },
 
     // * сбросить данные в фантомной ячейке Крыс на дефолтное
-    setFantomToDefault: function (arrEvent, grid) {
-        var storeEvent = grid.getViewModel().getStore('eventstore'),
+    setFantomToDefault: function (arrEvent) {
+        var menumain = Ext.ComponentQuery.query('menumain')[0],
+            vm = menumain.getViewModel(),
+            storeEvent = vm.getStore('rats'),
             arrDefaults = storeEvent._defaults;
 
         Ext.Array.each(arrEvent, function (item) {
@@ -267,123 +301,51 @@ Ext.define('Office.util.TaskF', {
                 run: function () {
                     var isInDom = document.getElementById(grid.getId()); // * объект показан
                     if (isInDom) {
-                        if (storeVirtual)
+                        if (storeVirtual) {
+                            storeVirtual.suspendEvents();
                             storeVirtual.reload();
+                            storeVirtual.resumeEvents();
+                        }
                     }
                 },
                 interval: 1000 * 5, // в миллисекундах
                 _taskId: 'taskRefresh'
             });
-        } else
-            taskName.stop();
 
-        grid.on('destroy', function () {
-            taskName.stop();
-        });
+            grid.on('destroy', function () {
+                taskName.stop();
+            });
 
-        taskName.start();
+            taskName.start();
+        }
     },
 
     // * периодически обновляет данные по Экспрессу дня
-    startTaskDayExpressLoad: function (grid, func) {
-        var vm = grid.getViewModel(),
+    startTaskDayExpressLoad: function (func) {
+        var menumain = Ext.ComponentQuery.query('menumain')[0],
+            vm = menumain.getViewModel(),
             runner = vm.get('taskRunner'),
             taskName = this.getTaskById(runner, 'taskDayExpressLoad');
 
         if (!taskName) {
             taskName = runner.newTask({
                 run: function () {
-                    var isInDom = document.getElementById(grid.getId()); // * объект показан
-                    if (isInDom) {
-                        func();
-                    }
+                    //var isInDom = document.getElementById(grid.getId()); // * объект показан
+                    //if (isInDom) {
+                    func();
+                    //}
                 },
-                interval: 1000 * 5,
+                interval: 1000 * 10,
                 _taskId: 'taskDayExpressLoad'
             });
-        } else
-            taskName.stop();
 
-        grid.on('destroy', function () {
-            taskName.stop();
-        });
+            menumain.on('destroy', function () {
+                taskName.stop();
+            });
 
-        taskName.start();
+            taskName.start();
+        }
     },
-
-    //startTaskWs: function (grid) {
-    //    var fill = Ext.ComponentQuery.query('#main')[0],
-    //        vmFill = fill.getViewModel(),
-    //        runner = vmFill.get('taskRunner'),
-    //        taskGetCoef = this.getTaskById(runner, 'taskGetCoef');
-    //
-    //    var vm = grid.getViewModel();
-    //    vm.runnerTaskWs = new Ext.util.TaskRunner();
-    //    var rawdata = vm.getStore('rawdata'),
-    //        task = vm.runnerTaskWs.newTask({
-    //            run: function () {
-    //                rawdata.load();
-    //            },
-    //            interval: 1000 * Util.COEFF_ASK_INTERVAL // в секундах
-    //        });
-    //
-    //    task.stop();
-    //    grid.on('destroy', function () {
-    //        task.stop();
-    //    });
-    //
-    //    task.start();
-    //},
-    //
-    //startTaskWs1: function () {
-    //    var runnerTaskWs = new Ext.util.TaskRunner();
-    //    var task = runnerTaskWs.newTask({
-    //        run: function () {
-    //            window.WS.relaunch();
-    //            WS.init(
-    //                function (ws) {
-    //                    ws.onMessage = function (objData, channel, lang) {
-    //                        var type = channel == 'inplay' ? 1 : 0,
-    //                            gridLive = Ext.ComponentQuery.query('grideventlive')[type];
-    //                        if (gridLive) {// * может не быть, если уже закрыли раздел, а данные еще приходят
-    //                            var vmLive = gridLive.getViewModel(),
-    //                                storeRawLive = vmLive.getStore('rawdata');
-    //                            var result = storeRawLive.loadRawData(objData);
-    //                            if (!result) {
-    //                                ws.unsubscribe(channel, lang);
-    //                            } else {
-    //                                vmLive.runnerTaskWs = null;
-    //                            }
-    //                        }
-    //                        //TaskF.startTaskWs(gridLive);
-    //                    };
-    //                    ws.onClose = function () {
-    //                        //ваш код обработчик
-    //                    };
-    //                    ws.onReopen = function (m) {
-    //                        //ваш код обработчик
-    //                        ws.subscribe('inplay', 'ru', null);
-    //                        ws.subscribe('prematch', 'ru', null);
-    //                    };
-    //
-    //                    ws.subscribe('inplay', 'ru', null);
-    //                    ws.subscribe('prematch', 'ru', null);
-    //
-    //                    var gridLive = Ext.ComponentQuery.query('grideventlive')[1];
-    //                    //TaskF.startTaskWs(gridLive);
-    //                },
-    //                function () {
-    //                    console.log('Браузер не поддерживает web sockets');
-    //                }
-    //            );
-    //        },
-    //        interval: 1000 * 5 // в секундах
-    //    });
-    //
-    //    task.stop();
-    //
-    //    task.start();
-    //},
 
     // * остановить задание по имени
     stopTask: function (taskName) {
@@ -391,7 +353,8 @@ Ext.define('Office.util.TaskF', {
             vm = menumain.getViewModel(),
             runner = vm.get('taskRunner'),
             task = this.getTaskById(runner, taskName);
-        task.stop();
+        if (task)
+            task.stop();
     },
 
     startQueueDelay: function (window) {
@@ -410,8 +373,9 @@ Ext.define('Office.util.TaskF', {
                 run: function () {
                     delay--;
 
-                    if (vmwin)
+                    if (vmwin) {
                         vmwin.set('delay', delay);
+                    }
 
                     if (delay <= 0) {
                         task.stop();

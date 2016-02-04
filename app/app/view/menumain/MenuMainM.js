@@ -2,10 +2,7 @@ Ext.define('Office.view.menumain.MenuMainM', {
     extend: 'Ext.app.ViewModel',
     requires: [],
     alias: 'viewmodel.menumain',
-    // * в data добавляется theSession после обновления данных по сессии
-    /* data:{
-     isGlobalSession:'isGlobalSession'
-     },*/
+
     stores: {
         // * нужен исключительно для того, чтобы получить поле slug для markets.
         // * Виды спорта грузим отдельно
@@ -25,6 +22,7 @@ Ext.define('Office.view.menumain.MenuMainM', {
                 load: 'loadMarkets' // * ex onFillRender
             }
         },
+
         outcomes: {
             fields: [],
             proxy: {
@@ -47,6 +45,81 @@ Ext.define('Office.view.menumain.MenuMainM', {
                 type: 'localstorage',
                 id: 'newpos_basket'
             }
+        },
+        line: {
+            fields: [],
+            proxy: {
+                type: 'sessionstorage',
+                id  : 'myProxyKey',
+                reader: {
+                    type: 'json'
+                }
+            },
+            storeId: 'line',
+            listeners: {
+                datachanged: 'onEventStoreChange',
+                add:'onAdd'
+            }
+        },
+        live: {
+            fields: [],
+            proxy: {
+                type: 'sessionstorage',
+                id  : 'myProxyKey',
+                reader: {
+                    type: 'json'
+                }
+            },
+            storeId: 'live',
+            listeners: {
+                datachanged: 'onEventStoreChange',
+                add:'onAdd'
+            }
+        },
+        rats: {
+            fields: [],
+            proxy: {
+                type: 'sessionstorage',
+                id  : 'myProxyKey',
+                reader: {
+                    type: 'json'
+                }
+            },
+            storeId: 'rats',
+            listeners: {
+                datachanged: 'onEventStoreChange',
+                add:'onAdd'
+            }
+        },
+        dayexpress: {
+            fields: [],
+            proxy: {
+                type: 'sessionstorage',
+                id  : 'myProxyKey',
+                reader: {
+                    type: 'json'
+                }
+            },
+            storeId: 'dayexpress',
+            //listeners: {
+            //    datachanged: 'onEventStoreChange',
+            //    add:'onAdd'
+            //}
+        },
+        dayexpressDC: {
+            fields: [],
+            proxy: {
+                type: 'sessionstorage',
+                id  : 'myProxyKey',
+                reader: {
+                    type: 'json'
+                }
+            },
+            storeId: 'dayexpressDC',
+            //listeners: {
+            //    datachanged: 'onEventStoreChange',
+            //    add:'onAdd'
+            //}
         }
     },
     formulas: {
@@ -56,12 +129,6 @@ Ext.define('Office.view.menumain.MenuMainM', {
                 return openDatetime == 'Глобальная смена';
             }
         },
-        //getShowButtonPay: {
-        //    get: function (data) {
-        //        var globals = Ext.ComponentQuery.query('menumain')[0].getViewModel().get('globals');
-        //        return globals.use_ndfl || globals.keepRecordsOfPlayers;
-        //    }
-        //},
         getShowButtonGameacc: {
             get: function (data) {
                 var globals = Ext.ComponentQuery.query('menumain')[0].getViewModel().get('globals');
@@ -90,6 +157,11 @@ Ext.define('Office.view.menumain.MenuMainM', {
             get: function (data) {
                 var globals = Ext.ComponentQuery.query('menumain')[0].getViewModel().get('globals');
                 return globals.use_ndfl || globals.keepRecordsOfPlayers;
+            }
+        },
+        showButtonInfo: {
+            get: function (data) {
+                return parseInt(Util.getGlobalConst('ACCESS_TO_VIEW_GENERAL_RULES_IN_OFFICE_CANCEL'));
             }
         },
         isGlobalSession: function(get) {

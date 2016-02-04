@@ -1,7 +1,7 @@
 Ext.define('Office.view.players.GridPlayersV', {
     extend: 'Ext.grid.Panel',
     requires: [
-        'Ext.Img',
+       // 'Ext.Img',
         'Office.view.players.GridPlayersM',
         'Office.view.players.GridPlayersC'
     ],
@@ -29,26 +29,6 @@ Ext.define('Office.view.players.GridPlayersV', {
             scope: this
         });
 
-        // * создаю taskRunner- менеджер заданий для данного раздела
-        //Util.createTaskRunner(this);
-
-        /*var short_number = Ext.create('Ext.form.field.Text', {
-                _fireEventOnEnter: true, // * change event будет работать только по нажатию на Enter
-                itemId: 'bidNum',
-                bind:'{filters.short_number}',
-                listeners: {
-                    specialkey: 'onEnter'
-                }
-            }),
-            placeId = Ext.create('Ext.form.field.Text', {
-                _fireEventOnEnter: true,
-                itemId: 'placeId',
-                bind:'{filters.place_id}',
-                listeners: {
-                    specialkey: 'onEnter'
-                }
-            });*/
-
         this.columns = {
             defaults: {
                 menuDisabled: true,
@@ -63,7 +43,8 @@ Ext.define('Office.view.players.GridPlayersV', {
                     text: 'Клиенты кассы',
                     dataIndex: 'text',
                     itemId: 'text',
-                    width: 200
+                    flex:1
+                   // width: 200
                 }
                 
             ]

@@ -8,15 +8,13 @@ Ext.define('Office.view.fill.basket.GridBasketProtoC', {
         var columnHeader = view.ownerCt.columns[cellIndex].text;
 
         if (columnHeader == 'Cancel') {
-            var fill = Ext.ComponentQuery.query('#main')[0],
+            var fill = Ext.ComponentQuery.query('fill')[0],
                 vm = fill.getViewModel(),
                 gridbasketexpress = fill.down('gridbasketexpress'),
                 tabpanel = gridbasketexpress.up('tabpanel'),
                 store = vm.getStore('basket');
 
             store.removeAt(rowIndex);
-
-            gridbasketexpress.getViewModel().set('system_count', null);
 
             // * снимем чекер Серия ставок
             var gridbasketsingle = fill.down('gridbasketsingle'),
@@ -26,6 +24,11 @@ Ext.define('Office.view.fill.basket.GridBasketProtoC', {
             // * получить данные по min max
             BasketF.getMaxMin();
         }
+    },
+
+    // * выбрали ставку в купоне - будем пытаться выбрать событие
+    onSelect: function (view, td, idxRow, idxCol, e, record, tr) {
+        BasketF.selectRowInEvents(record);
     }
 
 });

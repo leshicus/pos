@@ -18,7 +18,7 @@ Ext.define('Office.view.session.FormPrintLineV', {
         type: 'vbox',
         align: 'stretch'
     },
-    collapsible: true,
+    //collapsible: true,
     title: 'Печать линии',
     defaults: {
         // labelWidth: 150,

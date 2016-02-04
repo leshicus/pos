@@ -7,6 +7,17 @@ Ext.define('Office.view.timeline.contextmenu.MenuTimelineV', {
     controller: 'menutimeline',
     itemId: 'menutimeline',
     border: false,
+    defaults:{
+        disabled:true
+    },
+    listeners: {
+        // * чтобы меню разрушалось каждый раз при закрытии. closeAction:'destroy' не работает
+        hide:function(menu, opt){
+            Ext.defer(function(){
+                Ext.destroy(menu);
+            },500,this);
+        }
+    },
     initComponent: function () {
         this.items = [
             {
@@ -43,6 +54,13 @@ Ext.define('Office.view.timeline.contextmenu.MenuTimelineV', {
                 glyph: Glyphs.get('plus'),
                 cls: 'plus',
                 handler:'onClickButtonPayin'
+            },
+            {
+                text: 'Закрыть ТЛ',
+                itemId: 'menuClose',
+                glyph: Glyphs.get('cancel'),
+                cls: 'cancel',
+                handler:'onClickButtonClose'
             }
         ]
         this.callParent(arguments);

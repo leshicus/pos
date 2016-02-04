@@ -25,6 +25,34 @@ Ext.define('Office.view.card.FormKladrC', {
         window.close();
     },
 
+    clickManual: function (field, value) {
+        var form = this.getView();
+
+        if (value == false) {
+            form.down('#zip').reset();
+            form.down('#region').reset();
+            form.down('#district').reset();
+            form.down('#city_grand').reset();
+        } else {
+            form.down('#comboLocality').reset();
+            form.down('#comboStreet').reset();
+            form.down('#comboBuilding').reset();
+            form.down('#flat').reset();
+        }
+    },
+
+    onKeydownKladr: function (field) {
+        Ext.defer(function () {
+            var form = this.getView(),
+                vm = form.getViewModel(),
+                manual = vm.get('manual'),
+                value = field.getRawValue();
+            if (manual) {
+                vm.set('filters.' + field._contentType, value);
+            }
+        }, 100, this);
+    },
+
     // * после изменения значения в комбо
     onChangeKladr: function (field, newValue, oldValue) {
         if (field.getItemId() != 'address') {
@@ -37,13 +65,16 @@ Ext.define('Office.view.card.FormKladrC', {
                     street.reset();
                     building.reset();
                     flat.reset();
+
                     break;
                 case 'street':
                     building.reset();
                     flat.reset();
+
                     break;
                 case 'building':
                     flat.reset();
+
                     break;
             }
         }

@@ -7,14 +7,13 @@ Ext.define('Office.view.timeline.FormWithdrawV', {
     xtype: 'formwithdraw',
     controller: 'formwithdraw',
     layout: {
-        type: 'vbox',
-        align: 'stretch'
+        type: 'hbox',
+        //align: 'end'
     },
     defaults: {
-        labelWidth: 150,
         margin: 5
     },
-
+    flex: 1,
     initComponent: function () {
         this.items = [
             {
@@ -26,15 +25,36 @@ Ext.define('Office.view.timeline.FormWithdrawV', {
                 bind: {
                     value: '{to_pay}'
                 },
-                listeners:{
+                labelWidth: 70,
+                listeners: {
                     render: 'registerClickEvent',
-                    specialkey: 'onEnter'
+                    specialkey: 'onEnter',
+                    afterrender: Util.validate
                 },
-                maskRe:/^[0-9.]$/,
+                maskRe: /^[0-9.]$/,
                 validator: function (val) { // * определяет корректность структуры введенного значения
-                    var regex = /^\d+(\.\d+)?$/;
-                    if(val<=0)
+                    var regex = /^\d+(\.\d+)?$/,
+                        val = parseInt(val),
+                        form = this.up('form'),
+                        vm = form.getViewModel(),
+                        balance = vm.get('balance'),
+                        withdrawal = vm.get('withdrawal');
+
+                    if (val <= 0)
                         return 'Число должно быть положительным';
+
+                    if (withdrawal == 1) {// * снятие
+                        if (val > balance)
+                            return 'Сумма больше остатка на ТЛ';
+                    } else if (withdrawal == 0) { // * пополнение
+                        var minSum = parseInt(Util.getGlobalConst('MIN_TIMELINE_PAYIN_SUM'));
+                        if (val < minSum)
+                            return 'Минимальная сумма пополнения ТЛ: ' + minSum;
+
+                        var maxTL = parseInt(Util.getGlobalConst('LIMIT_FOR_TIMELINE'));
+                        if (val > maxTL)
+                            return 'Максимальная сумма пополнения ТЛ: ' + maxTL;
+                    }
 
                     if (!regex.test(val)) {
                         return 'Допустимо только число (разделитель - точка)';
@@ -42,6 +62,16 @@ Ext.define('Office.view.timeline.FormWithdrawV', {
                         return true;
                     }
                 }
+            },
+            {
+                xtype: 'button',
+                bind: {
+                    text: 'Вся сумма ({balance})',
+                    hidden: '{!withdrawal}'
+                },
+                itemId: 'buttonBalance',
+                glyph: Glyphs.get('plus'),
+                handler: 'onClickButtonBalance'
             }
         ];
 

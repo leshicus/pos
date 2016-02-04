@@ -9,8 +9,11 @@ Ext.define('Office.view.card.GridCardM', {
                 'lastname',
                 'firstname',
                 'patronymic_name',
+                'country',
+                'birthday',
                 'passport_number',
                 'is_resident',
+                'document_type',
                 'passport_issuer',
                 'passport_issue_datetime',
 
@@ -33,20 +36,20 @@ Ext.define('Office.view.card.GridCardM', {
                  },
                  persist: false
                  },*/
-                {
-                    name: 'passer',
-                    calculate: function (data) {
-                        return Gui.getPassportSerie(data.passport_number, data.is_resident == 1);
-                    },
-                    persist: false
-                },
-                {
-                    name: 'pasnom',
-                    calculate: function (data) {
-                        return Gui.getPassportNumber(data.passport_number, data.is_resident == 1);
-                    },
-                    persist: false
-                }
+                //{
+                //    name: 'passer',
+                //    calculate: function (data) {
+                //        return Gui.getPassportSerie(data.passport_number, data.is_resident == 1);
+                //    },
+                //    persist: false
+                //},
+                //{
+                //    name: 'pasnom',
+                //    calculate: function (data) {
+                //        return Gui.getPassportNumber(data.passport_number, data.is_resident == 1);
+                //    },
+                //    persist: false
+                //}
             ],
             proxy: {
                 type: 'ajax',

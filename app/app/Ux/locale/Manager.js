@@ -15,10 +15,11 @@ Ext.define('Ux.locale.Manager', {
     _language   : navigator.language? navigator.language.split('-')[0] : navigator.userLanguage.split('-')[0],
     _loaded     : true,
     _loadingInd : true,
+    _abbr       :'',
     _locale     : {},
     _locales    : [
-        { abbr : 'ru', text : 'Русский' },
-        { abbr : 'en', text : 'English'  }
+        { abbr : 'ru', text : 'Русский'},
+        { abbr : 'en', text : 'English'}
     ],
     _tpl        : '',
     _type       : 'script',
@@ -55,7 +56,8 @@ Ext.define('Ux.locale.Manager', {
 
         var ajaxConfig = Ext.apply({}, me._ajaxConfig),
             language   = me._language,
-            path       = me._tpl.replace('{locale}', language),
+            abbr   = me._abbr,
+            path       = me._tpl.replace('{locale}', abbr),
             decoder    = me._decoder,
             params     = ajaxConfig.params || {},
             json;
@@ -157,10 +159,10 @@ Ext.define('Ux.locale.Manager', {
         }
     },
 
-    updateLocale : function(locale) {
-        //console.info(arguments);
+    updateLocale : function(val) {
         var me = this;
-        me._language = locale;
+        me._language = me.getLanguageText(val);
+        me._abbr = me.getLanguageAbbr(val);
         if (me._loadingInd && Ext.Viewport.setMasked) {
             Ext.Viewport.setMasked({
                 xtype     : 'loadmask',
@@ -180,10 +182,12 @@ Ext.define('Ux.locale.Manager', {
     getLanguage : function() {
         return this._language;
     },
-
     // * Русский, English
     getLanguageText : function(val) {
         return Util.findByKey(this._locales, 'abbr', val)['text'] ;
+    },
+    getLanguageAbbr : function(val) {
+        return Util.findByKey(this._locales, 'abbr', val)['abbr'] ;
     },
     // * текущая локаль
     getCurrentLocale : function() {

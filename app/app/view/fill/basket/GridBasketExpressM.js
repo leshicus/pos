@@ -24,10 +24,10 @@ Ext.define('Office.view.fill.basket.GridBasketExpressM', {
             fields: ['id', 'name','system_variants'],
             storeId: 'systemCombo'
         },
-        basket_chained: {
-            source: '{basket}'
-            //isLoadBlocked: Ext.emptyFn, // * todo обход бага в 5.1.0
-        }
+        //basket_chained: {
+        //    source: '{basket}',
+        //    isLoadBlocked: Ext.emptyFn, // * todo обход бага в 5.1.0
+        //}
     },
     formulas: {
         showSystemCombo: {

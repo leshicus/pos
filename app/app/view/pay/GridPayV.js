@@ -17,10 +17,9 @@ Ext.define('Office.view.pay.GridPayV', {
         stripeRows: true
     },
     bind: '{pay}',
-    glyph: Glyphs.get('dollar'),
-    cls: 'gridpay',
     listeners: {
-        celldblclick: 'onCelldblclick'
+        celldblclick: 'onCelldblclick',
+        added: 'focusSlipId'
     },
     initComponent: function () {
         Util.initClassParams({
@@ -32,8 +31,6 @@ Ext.define('Office.view.pay.GridPayV', {
 
         var slipId = Ext.create('Ext.form.field.Text', {
             emptyText: 'Номер квитанции',
-            //margin: '0 0 0 15',
-            //itemId: 'slipIdField',
             enableKeyEvents: true,
             _fireEventOnEnter: true,
             itemId: 'slipId',
@@ -43,23 +40,23 @@ Ext.define('Office.view.pay.GridPayV', {
             regex: /^[0-9]+[xхчХЧX]?[0-9]+$/,
             maskRe: /[0-9xхчХЧX]+$/,
             listeners: {
-                specialkey: 'onEnter',
-                render: 'focusSlipId'
+                specialkey: 'onEnter'
             },
             triggers: {// * значек лупы
                 one: {
                     cls: 'x-form-search-trigger',
-                    handler:'onPressLoupe'
+                    handler: 'onPressLoupe'
                 }
             }
         });
 
+        var BET_TYPE = 'Тип ставки';
 
         // * определяет состав параметров, наименование и порядок полей для отображения
         // * нижнее подчеркивание _параметр означает, что этот параметр введен мной и ему не соответствует напрямую ни один входной параметр json
         // * может быть либо рассчетным, либо просто вспомогательным текстом, типа заголовка
         this.getViewModel().set('pattern', {
-            operation: 'Тип ставки',
+            operation: BET_TYPE,
             stake: 'Сумма ставки',
             coefficient: 'Коэффициент',
             _ndfl: 'НДФЛ',
@@ -86,17 +83,29 @@ Ext.define('Office.view.pay.GridPayV', {
                     text: 'Параметр',
                     dataIndex: 'param',
                     itemId: 'param',
-                    width: 150,
-                    cls: 'wrapText'
+                    width: 150
                 },
                 {
                     text: 'Значение',
                     dataIndex: 'value',
                     itemId: 'value',
-                    //flex: 1,
-                    cls: 'wrapText',
                     width: 250,
-                    renderer: function (val) {
+                    renderer: function (val, metaData, rec) {
+                        metaData.style = 'white-space:normal !important;';
+
+                        // * преобразуем написание одинара
+                        var param = rec.get('param');
+                        if (param == BET_TYPE) {
+                            var grid = this,
+                                vm = grid.getViewModel(),
+                                type = vm.get('slipInfoTransaction').type,
+                                id = vm.get('slipInfoTransaction').slipId;
+                            if (type && id && type == 0) {
+                                val = 'Одинар №' + id;
+                            }
+                        }
+
+                        // * преобразуем написание статуса
                         switch (val) {
                             case 'ставка выиграла':
                                 return '<b><font color="green">' + val + '</font></b>';
@@ -117,9 +126,8 @@ Ext.define('Office.view.pay.GridPayV', {
                     text: 'Событие',
                     dataIndex: 'event',
                     itemId: 'event',
-                    //flex: 1,
-                    itemCls: 'wrapText',
-                    width: 250
+                    renderer: Util.wrapTextInGrid,
+                    width: 280
                 },
                 {
                     text: 'Коэфф.',
@@ -131,14 +139,14 @@ Ext.define('Office.view.pay.GridPayV', {
                     text: 'Результат',
                     dataIndex: 'result',
                     itemId: 'result',
-                    width: 100
+                    width: 100,
+                    renderer:Util.renderResult
                 },
                 {
                     text: 'Счет',
                     dataIndex: 'score',
                     itemId: 'score',
-                    width: 100,
-                    cls: 'wrapText'
+                    width: 160
                 }
             ]
         };
@@ -157,19 +165,16 @@ Ext.define('Office.view.pay.GridPayV', {
         this.bbar = [
             {
                 xtype: 'toolbar',
-                //layout:'hbox',
                 itemId: 'buttonsMake',
-                // hidden: true,
                 items: [
                     {
                         xtype: 'button',
                         text: 'Выплатить с чеком',
                         handler: 'onButtonMakeBill',
-                        //itemId: 'buttonMake',
                         id: 'buttonPayWithPrint',
                         glyph: Glyphs.get('print'),
                         bind: {
-                            disabled: '{!get_showMakeButtonCheck}'
+                            disabled: '{!showButtonPayWithPrint}'
                         },
                         cls: 'print'
                     },
@@ -178,10 +183,9 @@ Ext.define('Office.view.pay.GridPayV', {
                         text: 'Выплатить без чека',
                         handler: 'onButtonMake',
                         id: 'buttonPayWithoutPrint',
-                        //itemId: 'buttonMake',
                         glyph: Glyphs.get('dollar'),
                         bind: {
-                            disabled: '{!get_showMakeButtons}'
+                            disabled: '{!showButtonPayWithoutPrint}'
                         },
                         cls: 'plus'
                     }

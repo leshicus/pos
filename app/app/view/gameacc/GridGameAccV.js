@@ -52,8 +52,6 @@ Ext.define('Office.view.gameacc.GridGameAccV', {
                 {
                     text: 'Телефон',
                     dataIndex: 'mobile_phone',
-
-                    //width: 120
                     flex: 1
                 },
                 {
@@ -126,7 +124,10 @@ Ext.define('Office.view.gameacc.GridGameAccV', {
                 itemId: 'inputCash',
                 glyph: Glyphs.get('plus'),
                 cls: 'plus',
-                disabled: true
+                bind:{
+                    disabled: '{disableInputButton}'
+                }
+
             },
             {
                 text: 'Изъять',
@@ -134,7 +135,9 @@ Ext.define('Office.view.gameacc.GridGameAccV', {
                 itemId: 'outputCash',
                 glyph: Glyphs.get('minus'),
                 cls: 'cancel',
-                disabled: true
+                bind:{
+                    disabled: '{disableInputButton}'
+                }
             }
         ]
 

@@ -8,7 +8,7 @@ Ext.define('Office.view.gameacc.GridGameAccM', {
             proxy: {
                 type: 'ajax',
                 //url: Ext.util.Format.format(Server.accountsRead(), '{token}', '{filters.user_id}', '{filters.username}', '{filters.mobile_phone}', '{filters.min_balance}', '{filters.max_balance}'),
-                url:Server.getUrl({
+                url: Server.getUrl({
                     class: 'Pos_Accounts_Read',
                     token: '{token}',
                     params: {
@@ -23,7 +23,26 @@ Ext.define('Office.view.gameacc.GridGameAccM', {
                 }
             },
             storeId: 'gameacc',
-            autoLoad: true
+            autoLoad: true,
+            listeners: {
+                load: 'onLoad'
+            }
+        }
+    },
+    formulas: {
+        // * определяет, нужно ли показывать кнопку Внести
+        disableInputButton: {
+            get: function (data) {
+                var minBalance = Util.getGlobalConst('MINIMAL_CLUB_DEPOSIT_BALANCE'),
+                    clubBalance = Util.getGlobalProp('balanceClub'),
+                    isActiveDeposit = Util.getGlobalProp('isActiveDeposit');
+
+                if ((isActiveDeposit == '1' && parseFloat(clubBalance) >= parseFloat(minBalance))
+                    || isActiveDeposit == '0')
+                    return 0;
+                else
+                    return 1;
+            }
         }
     }
 });

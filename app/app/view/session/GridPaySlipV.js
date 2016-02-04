@@ -16,10 +16,8 @@ Ext.define('Office.view.session.GridPaySlipV', {
         stripeRows: true
     },
     controller: 'gridpayslip',
-    /*glyph: Glyphs.get('card'),
-     cls: 'gridcard',*/
     sortableColumns: false,
-    collapsible: true,
+    //collapsible: true,
     bind: {
         source: {
             slipToOutpay: '{thePaySlip.slipToOutpay}',

@@ -11,7 +11,8 @@ Ext.define('Office.view.fill.coeff.TemplatesRats', {
             activeTabIndexEvent = BasketF.getActiveTabIndexEvent(),
             gridEvent = Ext.ComponentQuery.query('grideventlive')[activeTabIndexEvent] /*|| Ext.ComponentQuery.query('grideventrats')[0]*/,
             selected = gridEvent.selection;
-        MarketsHtml.addToBasket(coefId,'',selected);
+        MarketsHtml.addToBasket(coefId, '', selected);
+        //BasketF.getMaxMin();
     },
 
     renderRatsCoef: function (value, metadata, rec, rowIndex, colIndex) {
@@ -152,6 +153,171 @@ Ext.define('Office.view.fill.coeff.TemplatesRats', {
         }
     },
 
+    addGridRatsMainHtml: function (panel, arrTitle, arrTitleGrid, data, title, hideHeaders) {
+        if (arrTitle.length && data.length && arrTitleGrid.length) {
+            var grid = new Ext.Component({
+                data: {
+                    data: data,
+                    title: title,
+                    arrTitleGrid: arrTitleGrid,
+                    hideHeaders: hideHeaders
+                },
+                tpl: new Ext.XTemplate(
+                    '<table width="100%" class="market-table" >',
+
+                    //'<tr class="market-table-title">',// * заголовок: Проход, Хозяева...
+                    //'<td align="left" colspan="' + '{arrTitleGrid.length}' + '"><span class="market-table-title-span">' + '{title}' + '</span></td>',
+                    //'</tr>',
+
+                    '<tpl if="hideHeaders == undefined">',// * название колонки: Да, Нет...
+                    //'{[this.getDataIndex(xkey,parent,values,values.hideHeaders)]}',
+                    '<tr class="market-table-columnname">',
+                    '<tpl for="arrTitleGrid">',
+                    '<td align="center" class="market-table-td">' + '{[values.text]}' + '</td>',
+                    '</tpl>',
+                    '</tr>',
+                    '</tpl>',
+
+                    '<tpl for="data">',// * перебор строк внутри блока
+                    '<tr class="market-table-tr">',
+                    '<tpl exec="values.parent = parent;"></tpl>',// * чтобы можно было обращаться в родительский scope
+                    '<tpl foreach=".">',// * перебор свойств: YES, NO...
+                    '<tpl if="xkey != \'parent\'">',// * не печатать служебное поле parent (scope вышестоящего tpl)
+                    '<td align="left" class="' + '{[this.getClass(values)]}' + '"  onmouseover="bgColor=\'#e2eff8\'" onmouseout="bgColor=\'white\'" oncontextmenu="return OfficeGlobalNS.config.coefContextMenuClick(this,event);" onClick="OfficeGlobalNS.config.addToBasket(this);">' + '{[parent[xkey]]}' + '</td>',// * data[i][YES], data[i][NO]
+                    '</tpl>',
+                    '</tpl>',
+                    '</tr>',
+                    '</tpl>',
+
+                    '</table>',
+                    {
+                        // * если ставка уже в купоне, то пометить ее желтым
+                        getClass: function (span) {
+                            var objSpan = Util.getDataset(span, 'span'),
+                                coefId = objSpan.coefid,
+                                className = 'market-table-td';
+                            if (coefId) {
+                                var fill = Ext.ComponentQuery.query('fill')[0],
+                                    vmFill = fill.getViewModel(),
+                                    storeBasket = vmFill.getStore('basket');
+                                if (objSpan && Ext.Object.getSize(objSpan)) {
+                                    if (storeBasket)
+                                        storeBasket.each(function (item) {
+                                            if (item.get('arrCoef')[0] == objSpan.coefid)
+                                                className = 'market-table-td-in-basket';
+                                        });
+                                }
+                            }
+                            return className;
+                        }
+                    }
+                )
+            });
+
+            if (data.length)
+            //arrGrid.push(grid);
+                panel.add(grid);
+        }
+    },
+
+    addGridExtraHtml: function (panel, arrData) {
+        var grid = new Ext.Component({
+            data: {
+                arrData: arrData
+            },
+            tpl: new Ext.XTemplate(
+                '<table width="100%" class="market-table" >',
+
+                '<tpl for="arrData">',
+                '<tpl if="xindex  == 1">',
+                '<tr>',
+                '<td align="center" class="market-table-title-rats" colspan="6">' + '{[values]}' + '</td>',
+                '</tr>',
+                '<tr>',
+                '</tpl>',
+
+                '<tpl if="xindex  == 2 || xindex  == 3">',
+                '<td align="center" class="' + '{[this.getClass(values)]}' + '"  onmouseover="bgColor=\'#e2eff8\'" onmouseout="bgColor=\'white\'" oncontextmenu="return OfficeGlobalNS.config.coefContextMenuClick(this,event);" onClick="OfficeGlobalNS.config.addToBasket(this);" colspan="3" >' + '{[values]}' + '</td>',
+                '</tpl>',
+
+                '<tpl if="xindex == 4">',
+                '</tr>',
+                '<tr>',
+                '<td align="center" class="market-table-title-rats" colspan="6">' + '{[values]}' + '</td>',
+                '</tr>',
+                '<tr>',
+                '</tpl>',
+
+                '<tpl if="xindex  == 5">',
+                '<td align="center" class="' + '{[this.getClass(values,xindex)]}' + '"  onmouseover="bgColor=\'#e2eff8\'" onmouseout="bgColor=\'white\'" oncontextmenu="return OfficeGlobalNS.config.coefContextMenuClick(this,event);" onClick="OfficeGlobalNS.config.addToBasket(this);"  colspan="3">' + '{[values]}' + '</td>',
+                '</tpl>',
+
+                '<tpl if="xindex  == 6">',
+                '<td align="center" class="' + '{[this.getClass(values,xindex)]}' + '"  onmouseover="bgColor=\'#e2eff8\'" onmouseout="bgColor=\'white\'" oncontextmenu="return OfficeGlobalNS.config.coefContextMenuClick(this,event);" onClick="OfficeGlobalNS.config.addToBasket(this);"  colspan="3">' + '{[values]}' + '</td>',
+                '</tpl>',
+
+                '<tpl if="xindex == 7">',
+                '<tr>',
+                '<td align="center" class="market-table-title-rats" colspan="6">' + '{[values]}' + '</td>',
+                '</tr>',
+                '<tr>',
+                '</tpl>',
+
+                '<tpl if="xindex  == 8 || xindex  == 9 || xindex  == 10">',
+                '<td align="center" class="' + '{[this.getClass(values)]}' + '"  onmouseover="bgColor=\'#e2eff8\'" onmouseout="bgColor=\'white\'" oncontextmenu="return OfficeGlobalNS.config.coefContextMenuClick(this,event);" onClick="OfficeGlobalNS.config.addToBasket(this);" colspan="2">' + '{[values]}' + '</td>',
+                '</tpl>',
+
+                '<tpl if="xindex == 11">',
+                '<tr>',
+                '<td align="center" class="market-table-title-rats" colspan="6">' + '{[values]}' + '</td>',
+                '</tr>',
+                '<tr>',
+                '</tpl>',
+
+                '<tpl if="xindex  == 12 || xindex  == 13">',
+                '<td align="center" class="' + '{[this.getClass(values)]}' + '"  onmouseover="bgColor=\'#e2eff8\'" onmouseout="bgColor=\'white\'" oncontextmenu="return OfficeGlobalNS.config.coefContextMenuClick(this,event);" onClick="OfficeGlobalNS.config.addToBasket(this);" colspan="3">' + '{[values]}' + '</td>',
+                '</tpl>',
+
+                '</tpl>',
+                '</tr>',
+
+                '</table>',
+                {
+                    // * если ставка уже в купоне, то пометить ее желтым
+                    getClass: function (span, xindex) {
+                        var objSpan = Util.getDataset(span, 'span'),
+                            coefId = objSpan.coefid,
+                            className = 'market-table-cell-td',
+                            flag = false;
+                        if (coefId) {
+                            var fill = Ext.ComponentQuery.query('fill')[0],
+                                vmFill = fill.getViewModel(),
+                                storeBasket = vmFill.getStore('basket');
+                            if (objSpan && Ext.Object.getSize(objSpan)) {
+                                if (storeBasket)
+                                    storeBasket.each(function (item) {
+                                        if (item.get('arrCoef')[0] == objSpan.coefid) {
+                                            className = 'market-table-td-in-basket';
+                                            flag = true;
+                                        }
+                                    });
+                            }
+                        }
+
+                        if (xindex == 5 && !flag)
+                            return 'bg-red-ratcoef';
+                        else if (xindex == 6 && !flag)
+                            return 'bg-black-ratcoef';
+                        else
+                            return className;
+                    }
+                }
+            )
+        });
+
+        panel.add(grid);
+    },
+
     // * кэф справа, а базис слева
     //spanCoeff: function (basis, arrCoef) {
     //    if (arrCoef[3]) { // * изменившееся значение кэфа
@@ -227,77 +393,142 @@ Ext.define('Office.view.fill.coeff.TemplatesRats', {
         }
 
         //var title = 'Крысиные бега, забег № (дата)';
-        this.addGridRatsMain(panel, arrTitle, arrTitleGrid, data, '');
+        //this.addGridRatsMain(panel, arrTitle, arrTitleGrid, data, '');
+        this.addGridRatsMainHtml(panel, arrTitle, arrTitleGrid, data, '');
     },
+
     // * дополнительные исходы
     templateRatsExtra: function (obj, record, panel) {
+        var arrData = [];
+        //this.templateRatsExtraGeneralHtml(obj, record, panel,
+        //    [
+        //        [
+        //            {
+        //                title: 'Чет',
+        //                coef: 'coeff_EVEN_ODD_OF_THE_RUN_R_EVEN'
+        //            },
+        //            {
+        //                title: 'Нечет',
+        //                coef: 'coeff_EVEN_ODD_OF_THE_RUN_R_ODD'
+        //            }
+        //        ],
+        //        [
+        //            {
+        //                title: 'красный',
+        //                coef: 'coeff_RED_BLACK_OF_THE_RUN_R_RED'
+        //            },
+        //            {
+        //                title: 'чёрный',
+        //                coef: 'coeff_RED_BLACK_OF_THE_RUN_R_BLACK'
+        //            }
+        //        ],
+        //        [
+        //            {
+        //                title: '1-4',
+        //                coef: 'coeff_QUAD_OF_THE_RUN_R_Q1'
+        //            },
+        //            {
+        //                title: '5-8',
+        //                coef: 'coeff_QUAD_OF_THE_RUN_R_Q2'
+        //            },
+        //            {
+        //                title: '9-12',
+        //                coef: 'coeff_QUAD_OF_THE_RUN_R_Q3'
+        //            }
+        //        ],
+        //        [
+        //            {
+        //                title: '1-6',
+        //                coef: 'coeff_HALF_OF_THE_RUN_R_H1'
+        //            },
+        //            {
+        //                title: '7-12',
+        //                coef: 'coeff_HALF_OF_THE_RUN_R_H2'
+        //            }
+        //        ]
+        //    ],
+        //    [
+        //        'Номер дорожки победителя',
+        //        'Цвет дорожки победителя',
+        //        'Дорожка победителя (группы по 4)',
+        //        'Дорожка победителя (группы по 6)'
+        //    ]
+        //);
         // * Номер дорожки победителя
-        this.templateRatsExtraGeneral(obj, record, panel,
-            [
-                {
-                    title: 'Чет',
-                    coef: 'coeff_EVEN_ODD_OF_THE_RUN_R_EVEN'
-                },
-                {
-                    title: 'Нечет',
-                    coef: 'coeff_EVEN_ODD_OF_THE_RUN_R_ODD'
-                }
-            ],
-            'Номер дорожки победителя');
+        arrData.push('Номер дорожки победителя');
+        arrData.push(this.templateRatsExtraGeneralHtml(obj, record,
+            {
+                title: 'Чет',
+                coef: 'coeff_EVEN_ODD_OF_THE_RUN_R_EVEN'
+            }
+        ));
+        arrData.push(this.templateRatsExtraGeneralHtml(obj, record,
+            {
+                title: 'Нечет',
+                coef: 'coeff_EVEN_ODD_OF_THE_RUN_R_ODD'
+            }
+        ));
 
         // * Цвет дорожки победителя
-        this.templateRatsExtraGeneral(obj, record, panel,
-            [
-                {
-                    title: 'красный',
-                    coef: 'coeff_RED_BLACK_OF_THE_RUN_R_RED'
-                },
-                {
-                    title: 'чёрный',
-                    coef: 'coeff_RED_BLACK_OF_THE_RUN_R_BLACK'
-                }
-            ],
-            'Цвет дорожки победителя', this.renderRatsCoef);
+        arrData.push('Цвет дорожки победителя');
+        arrData.push(this.templateRatsExtraGeneralHtml(obj, record,
+            {
+                title: 'красный',
+                coef: 'coeff_RED_BLACK_OF_THE_RUN_R_RED'
+            }));
+        arrData.push(this.templateRatsExtraGeneralHtml(obj, record,
+            {
+                title: 'чёрный',
+                coef: 'coeff_RED_BLACK_OF_THE_RUN_R_BLACK'
+            }
+        ));
 
         // * Дорожка победителя (группы по 4)
-        this.templateRatsExtraGeneral(obj, record, panel,
-            [
-                {
-                    title: '1-4',
-                    coef: 'coeff_QUAD_OF_THE_RUN_R_Q1'
-                },
-                {
-                    title: '5-8',
-                    coef: 'coeff_QUAD_OF_THE_RUN_R_Q2'
-                },
-                {
-                    title: '9-12',
-                    coef: 'coeff_QUAD_OF_THE_RUN_R_Q3'
-                }
-            ],
-            'Дорожка победителя (группы по 4)');
+        arrData.push('Дорожка победителя (группы по 4)');
+        arrData.push(this.templateRatsExtraGeneralHtml(obj, record,
+            {
+                title: '1-4',
+                coef: 'coeff_QUAD_OF_THE_RUN_R_Q1'
+            }
+        ));
+        arrData.push(this.templateRatsExtraGeneralHtml(obj, record,
+            {
+                title: '5-8',
+                coef: 'coeff_QUAD_OF_THE_RUN_R_Q2'
+            }
+        ));
+        arrData.push(this.templateRatsExtraGeneralHtml(obj, record,
+            {
+                title: '9-12',
+                coef: 'coeff_QUAD_OF_THE_RUN_R_Q3'
+            }
+        ));
 
         // * Дорожка победителя (группы по 6)
-        this.templateRatsExtraGeneral(obj, record, panel,
-            [
-                {
-                    title: '1-6',
-                    coef: 'coeff_HALF_OF_THE_RUN_R_H1'
-                },
-                {
-                    title: '7-12',
-                    coef: 'coeff_HALF_OF_THE_RUN_R_H2'
-                }
-            ],
-            'Дорожка победителя (группы по 6)');
+        arrData.push('Дорожка победителя (группы по 6)');
+        arrData.push(this.templateRatsExtraGeneralHtml(obj, record,
+            {
+                title: '1-6',
+                coef: 'coeff_HALF_OF_THE_RUN_R_H1'
+            }
+        ));
+        arrData.push(this.templateRatsExtraGeneralHtml(obj, record,
+            {
+                title: '7-12',
+                coef: 'coeff_HALF_OF_THE_RUN_R_H2'
+            }
+        ));
+
+        this.addGridExtraHtml(panel, arrData);
     },
+
     templateRatsExtraGeneral: function (obj, record, panel, arrParam, title, fuRenderer) { // * numCol- количество колонок
         var data = [],
             arrTitle = [],
             arrTitleGrid = [];
         for (var i = 0; i < arrParam.length; i++) {
             arrTitle.push('param_' + i);
-            if(fuRenderer){
+            if (fuRenderer) {
                 arrTitleGrid.push(
                     {
                         dataIndex: 'param_' + i,
@@ -305,7 +536,7 @@ Ext.define('Office.view.fill.coeff.TemplatesRats', {
                         renderer: fuRenderer
                     }
                 );
-            }else{
+            } else {
                 arrTitleGrid.push(
                     {
                         dataIndex: 'param_' + i,
@@ -333,6 +564,18 @@ Ext.define('Office.view.fill.coeff.TemplatesRats', {
         }
 
         this.addGridOnPanel(panel, arrTitle, arrTitleGrid, data, title, true);
+    },
+
+    templateRatsExtraGeneralHtml: function (obj, record, param) { // * numCol- количество колонок
+        var coefName = param.coef,
+            txt = '',
+            arrCoef = Util.findByKeyLike(obj, coefName);
+
+        if (arrCoef && arrCoef[2]) {
+            txt = this.spanCoeffRow(param.title, arrCoef);
+        }
+
+        return txt;
     },
 
     // * табы с доп исходами

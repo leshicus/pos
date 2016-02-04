@@ -9,19 +9,6 @@ Ext.define('Office.view.timeline.FormTimelineC', {
     ],
     alias: 'controller.formtimeline',
 
-    //onDestroy: function (form) {
-    //    console.info(arguments);
-    //    var vm = form.getViewModel(),
-    //        theStake = vm.get('theStake');
-    //    theStake.reject();
-    //},
-
-    //onClickBack: function (button) {
-    //    var formTimeline = this.getView(),
-    //        layout = formTimeline.getLayout();
-    //    layout.setActiveItem('card-1');
-    //},
-
     createSmsForm: function (timeline) {
         var formsmscode = Ext.create('Office.view.timeline.FormSmsCodeV', {
                 viewModel: {
@@ -82,23 +69,7 @@ Ext.define('Office.view.timeline.FormTimelineC', {
 
     // * создание таймлайн
     createTimeline: function (values) {
-        //var window = Ext.ComponentQuery.query('#windowSearch')[0];
-        //formtimeline = window.down('formtimeline'),
-        //type = formtimeline.down('#type').getValue(),
-        //sum = formtimeline.down('#sum').getValue(),
-        //ttl = formtimeline.down('#ttl').getValue();
-        //var objUrlCreate = {
-        //    class: 'Pos_Timeline_Create',
-        //    params: {
-        //        player: values,
-        //        type: type,
-        //        sum: sum,
-        //        ttl: ttl
-        //    }
-        //};
-
         this.getUnfinishedLimitedTimelines(values);
-        //this.createTimelineRequest(objUrlCreate);
     },
 
     // * получить список неоконченных таймлайнов
@@ -107,7 +78,6 @@ Ext.define('Office.view.timeline.FormTimelineC', {
             formtimeline = window.down('formtimeline'),
             type = formtimeline.down('#type').getValue(),
             sum = formtimeline.down('#sum').getValue(),
-        //ttl = formtimeline.down('#ttl').getValue(),
             _this = this;
 
         window.getEl().mask(Util.maskText);
@@ -132,7 +102,6 @@ Ext.define('Office.view.timeline.FormTimelineC', {
                             player: values,
                             type: type,
                             sum: sum
-                            //ttl: ttl
                         }
                     };
 
@@ -201,23 +170,22 @@ Ext.define('Office.view.timeline.FormTimelineC', {
         });
     },
 
-    onClickSave: function (button) {
-        var window = button.up('window'),
+    onClickSave: function () {
+        var window = Ext.ComponentQuery.query('#windowSearch')[0],
             formtimeline = window.down('formtimeline'),
             formcard = formtimeline.down('formcard').getForm(),
             values = formcard.getRecord().getData();
-        if (formcard.isValid()) {
-            values['passport_number'] = values['passer'] + values['pasnom'];
+        if (formcard.isValid() && formtimeline.getForm().isValid()) {
+           // values['passport_number'] = values['passer'] + values['pasnom'];
             // * сохраним изменения персональных данных клиента
             this.saveClientData(values);
+        }else{
+            Util.erMes(Config.STR_FORM_ERROR);
         }
     },
 
     onClickCancel: function (button) {
         var window = button.up('window');
-            //grid = Ext.ComponentQuery.query('gridtimeline')[0],
-           // store = grid.getViewModel().getStore('timeline');
-        //store.rejectChanges();
         window.close();
     },
 
@@ -231,64 +199,8 @@ Ext.define('Office.view.timeline.FormTimelineC', {
         }
     },
 
-    // * выбрали клиента в списке поиска
-    //onCellDblclick: function (grid, td, cellIndex, record, tr, rowIndex, e) {
-    //    if (record.get('enabled') == 1 && record.get('is_blacklisted') == 0 && record.get('is_demo') == 0) {
-    //        var gridSearch = this.getView(),
-    //            selected = gridSearch.getSelectionModel().getSelection()[0],
-    //            window = gridSearch.up('window'),
-    //            formCard = window.down('#card-2').down('formcard'),
-    //            formTimeline = window.down('formtimeline'),
-    //            layout = formTimeline.getLayout();
-    //        formCard.reset();
-    //
-    //        var passport_number = selected.get('passport_number'),
-    //            is_resident = selected.get('is_resident'),
-    //            passport_issue_datetime = selected.get('passport_issue_datetime');
-    //
-    //        if (parseInt(is_resident)) {
-    //            console.info(is_resident);
-    //            // * для резидентов серия паспорта обязательна
-    //            var fieldPasser = formCard.down('#passer');
-    //            fieldPasser.allowBlank = false;
-    //
-    //            // * приведем формат полей к тому, как они хранятся в форме
-    //            selected.set('passer', Gui.getPassportSerie(passport_number, is_resident));
-    //            selected.set('pasnom', Gui.getPassportNumber(passport_number, is_resident));
-    //        } else {
-    //            selected.set('pasnom', passport_number);
-    //        }
-    //        console.info(selected);
-    //        selected.set('passport_issue_datetime', Gui.formatPassportIssueDate(passport_issue_datetime));
-    //
-    //        formCard.loadRecord(selected);
-    //        layout.setActiveItem('card-2');
-    //        window.setTitle('Параметры таймлайн');
-    //
-    //        // * сделать не пустые поля не редактируемыми
-    //        Ext.defer(function () {
-    //            Util.setNotEditable(formCard);
-    //            //form.down('#is_resident').setReadOnly(true );
-    //        }, 100);
-    //    } else {
-    //        var str = record.get('enabled') != 1 ? 'не активен; ' : '';
-    //        str += record.get('is_blacklisted') == 1 ? 'в черном списке; ' : '';
-    //        str += record.get('is_demo') == 1 ? 'демо; ' : '';
-    //        Util.toast('Внимание', 'Нельзя создать таймлайн: ' + str);
-    //    }
-    //},
-
-    //onTypeSelect: function (field, recs) {
-    //    var form = this.getView(),
-    //        comboLifetime = form.down('#ttl');
-    //    if (field.getValue()) {
-    //        comboLifetime.select(comboLifetime.getStore().getAt(0));
-    //    } else {
-    //        comboLifetime.reset();
-    //    }
-    //},
-
     onTypeRender: function (field) {
+        Util.validate(field);
         var form = this.getView(),
             timelinetype = form.getViewModel().getStore('timelinetype');
         Ext.defer(function () {
@@ -302,27 +214,32 @@ Ext.define('Office.view.timeline.FormTimelineC', {
             grid = Ext.ComponentQuery.query('gridtimeline')[0];
 
         if (grid) {
-            var selected = grid.getSelectionModel().getSelection()[0];
+            var selected = this.getView().getViewModel().get('theClient');
 
-            var formKladr = Ext.create('Office.view.card.FormKladrV', {
-                viewModel: {
-                    data: {
-                        theClient: selected.get('player')
-                    }
-                }
-            });
+            var formKladr = Ext.create('Office.view.card.FormKladrV');
+            formKladr.getViewModel().set('theClient', selected.get('player'));
 
             var window = Ext.create('Ext.Window', {
                 width: 400,
                 title: 'Заполнение адреса',
                 constrain: true,
-                closable: false,
+                closable: true,
                 modal: true,
                 layout: 'fit'
             });
             window.add(formKladr);
             window.show();
         }
+    },
+
+    onAfterRender: function (form) {
+        var formTimeline = Ext.ComponentQuery.query('formtimeline')[0],
+            term = formTimeline.down('#sum');
+        term.focus();
+
+        var formcard = formTimeline.down('formcard');
+
+        FormCardF.afterRender(formcard);
     }
 
 });

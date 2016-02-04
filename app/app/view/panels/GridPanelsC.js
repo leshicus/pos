@@ -4,30 +4,34 @@ Ext.define('Office.view.panels.GridPanelsC', {
     alias: 'controller.gridpanels',
     listen: {
         component: {
-            '#': {
-
-            },
+            '#': {},
             'tool[type=refresh]': {
                 click: function (tool) {
                     var grid = tool.up('panel'),
-                        gridParam = grid.up('menumain').down('gridparam');
+                        vmPanel =grid.getViewModel(),
+                        gridParam = grid.up('menumain').down('gridparam'),
+                        vmParam =gridParam.getViewModel(),
+                        storeParam = gridParam.getViewModel().getStore('param');
+
+                    vmPanel.set('filters',null)
+                    vmParam.set('filters',null)
+                    vmParam.set('parameters',null)
+
                     grid.store.reload();
+                    grid.getSelectionModel().deselectAll();
+
+                    Ext.defer(function(){
+                        storeParam.load();
+                    },10,this);
                 }
             }
         },
         store: {
-            '#panels': {
-                /*load: function (store, arr, success, resp) {
-                    if(!success || !resp._response || !resp._response.responseText){
-                        Util.toast('Ошибка', 'Ошибка загрузки стора: ' + store.getStoreId());
-                    }
-                }*/
-            },
             '#workmode': {
                 load: function (store, arr, success, resp) {
                     var mainController = Office.app.getController('Main');
-                    if(mainController.askLogoutIfAccessDenied(store)){
-                        if(!store.isLoading()){
+                    if (mainController.askLogoutIfAccessDenied(store)) {
+                        if (!store.isLoading()) {
                             var storePanels = Ext.data.StoreManager.lookup('panels');
                             storePanels.load();
                         }
@@ -43,7 +47,7 @@ Ext.define('Office.view.panels.GridPanelsC', {
             gridPanels = this.getView(),
             gridParam = gridPanels.up('menumain').down('gridparam'),
             selected = gridPanels.getSelectionModel().getSelection()[0];
-        if(selected){
+        if (selected) {
             var panel_id = selected.get('panel_num'),
                 task_id = selected.get('task_id');
             gridPanels.getViewModel().set('filters.panel_id', panel_id);

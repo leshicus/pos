@@ -5,15 +5,7 @@ Ext.define('Office.view.accept.AcceptF', {
 
 // * кнопка Сохранить в форме редактирования данных Игрока
     onClickSave: function (btn) {
-        console.log('edit player');
         var grid = Ext.ComponentQuery.query('gridaccept')[0];
-         /*   vm = grid.getViewModel(),
-            selection = grid.getSelectionModel().getSelection()[0];
-            console.log(grid);*/
-        
-       /*,
-            slipId = vm.get('get_slipId'),
-            code = vm.get('get_code');*/
 
         var window = btn.up('window'),
             form = window.down('form'),
@@ -22,11 +14,11 @@ Ext.define('Office.view.accept.AcceptF', {
             is_resident = vmForm.get('is_resident'),
             callbackFn = vmForm.get('callbackFn'),// * makeOutputTransaction или checkPlayerAndReturnSlip- последний параметр PayF.editUserDataIfNeedAndMakeAction
             _this = grid.getController(); // * иначе this считается FormCardC, а мне нужно GridPayC
-        var  slipId = vmForm.get('slipId');
-        
+        var slipId = vmForm.get('slipId');
+
         if (form.getForm().isValid()) {
             var player = form.getRecord().getData();
-            player['passport_number'] = player['passer'] + player['pasnom'];
+           // player['passport_number'] = player['passer'] + player['pasnom'];
 
             // * сохранение данных клиента
             var objUrl = {
@@ -55,7 +47,7 @@ Ext.define('Office.view.accept.AcceptF', {
                                     slip_id: slipId
                                 }
                             };
-console.log('запрос');
+
                             Ext.Ajax.request({
                                 url: Server.getUrl(objUrlDec),
                                 //url: 'store/decompensateSlip.php',
@@ -76,7 +68,7 @@ console.log('запрос');
                             if (mes != '') {
                                 Util.infoMes('Отмена компенсации конца света выполнена ', mes);
                             }
-                            console.log('колбек');
+                            //console.log('колбек');
                             callbackFn(slipId, printCheck, newPlayer);
                         }
                     } else {
@@ -89,6 +81,8 @@ console.log('запрос');
             });
 
             window.close();
+        } else {
+            Util.erMes(Config.STR_FORM_ERROR);
         }
     },
 
@@ -96,7 +90,6 @@ console.log('запрос');
         var window = btn.up('window'),
             grid = Ext.ComponentQuery.query('gridaccept')[0];
         grid.store.rejectChanges();
-       // grid.getViewModel().set('slipInfo', null);
         window.close();
     },
 
@@ -107,7 +100,7 @@ console.log('запрос');
         } catch (e) {
             return;
         }
-    },
+    }
 
 
 });

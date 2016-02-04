@@ -11,22 +11,21 @@ Ext.define('Office.view.timeline.FormWithdrawC', {
         },
         store: {}
     },
+
     registerClickEvent: function (field) {
         field.getEl().on('click', function () {
             var form = this.getView(),
-                sumField = form.down('#sum');
-            sumField.reset();
+                vm = form.getViewModel();
+            vm.set('to_pay', "");
         }, this);
     },
+
     // * форма отправки смс
     showFormSms: function (phone, to_pay, slipId, isPrintable) {
         var objUrlXaction = {
                 class: 'Pos_Pageprinter_Print',
                 params: {
-                    //xaction: 'checkCode',
                     slipId: slipId,
-                    login: Ext.util.Cookies.get('betzet_login') || '',
-                    token: Server.getToken(),
                     complexMode: 'STAKE_AND_RETURN'
                 }
             },
@@ -35,7 +34,7 @@ Ext.define('Office.view.timeline.FormWithdrawC', {
                     data: {
                         theTimeline: {player: {mobile_phone: phone}},
                         slipId: slipId,
-                        sum: to_pay,
+                        sum: parseFloat(to_pay),
                         objUrlXaction: objUrlXaction,
                         isPrintable: isPrintable
                     }
@@ -66,7 +65,8 @@ Ext.define('Office.view.timeline.FormWithdrawC', {
         var windowWithdraw = Ext.ComponentQuery.query('#windowWithdraw')[0];
         windowWithdraw.close();
     },
-    sendSms: function (button, isPrintable) {
+
+    sendSms: function (isPrintable) {
         var formWithdraw = this.getView(),
             vmformWithdraw = formWithdraw.getViewModel(),
             slipId = vmformWithdraw.get('slipId'),
@@ -76,7 +76,7 @@ Ext.define('Office.view.timeline.FormWithdrawC', {
                 params: {
                     xaction: 'sendSmsKeyForPayout',
                     slipId: slipId,
-                    sum: to_pay
+                    sum: parseFloat(to_pay)
                 }
             };
         Ext.Ajax.request({
@@ -101,28 +101,30 @@ Ext.define('Office.view.timeline.FormWithdrawC', {
             scope: this
         });
     },
+
     // * печать с чеком. Форма отправки смс
     onClickPayPrint: function (button) {
         var formWithdraw = this.getView(),
             vmformWithdraw = formWithdraw.getViewModel(),
             slipId = vmformWithdraw.get('slipId'),
             to_pay = vmformWithdraw.get('to_pay');
-        //if(to_pay > 0)
-        //{
         if (formWithdraw.isValid())
-            this.sendSms(button, true);
-        //}
-        //else
-        //{
-        //    Util.erMes('Сумма не может быть меньше или равна 0!');
-        //}
+            this.sendSms( true);
+        else{
+            Util.erMes(Config.STR_FORM_ERROR);
+        }
     },
+
     // * печать без чека. Форма отправки смс
     onClickPay: function (button) {
         var formWithdraw = this.getView();
         if (formWithdraw.isValid())
-            this.sendSms(button, false);
+            this.sendSms( false);
+        else{
+            Util.erMes(Config.STR_FORM_ERROR);
+        }
     },
+
     onClickCancel: function (button) {
         var windowWithdraw = button.up('window');
         windowWithdraw.close();
@@ -139,7 +141,7 @@ Ext.define('Office.view.timeline.FormWithdrawC', {
                 params: {
                     xaction: 'confirmPayin',
                     slipId: slipId,
-                    sum: to_pay
+                    sum: parseFloat(to_pay)
                 }
             };
         if (formWithdraw.isValid()) {
@@ -163,11 +165,9 @@ Ext.define('Office.view.timeline.FormWithdrawC', {
                 },
                 scope: this
             });
+        }else{
+            Util.erMes(Config.STR_FORM_ERROR);
         }
-        //else
-        //{
-        //    Util.erMes('Сумма не может быть меньше или равна 0!');
-        //}
     },
 
     // * сообщение о подтверждении внесения денег
@@ -183,7 +183,7 @@ Ext.define('Office.view.timeline.FormWithdrawC', {
                     params: {
                         xaction: 'payin',
                         slipId: slipId,
-                        sum: to_pay
+                        sum: parseFloat(to_pay)
                     }
                 };
                 Ext.Ajax.request({
@@ -204,8 +204,6 @@ Ext.define('Office.view.timeline.FormWithdrawC', {
                                         params: {
                                             slipId: slipId,
                                             code: o.rows.new_sms_key,
-                                            token: Server.getToken(),
-                                            login: Ext.util.Cookies.get('betzet_login'),
                                             t: o.rows.transaction_id
                                         }
                                     };
@@ -235,7 +233,22 @@ Ext.define('Office.view.timeline.FormWithdrawC', {
 
     onEnter: function (field, e) {
         if (e.getKey() == e.ENTER) {
-            this.onClickPayin();
+            var form = field.up('form'),
+                vm = form.getViewModel();
+            if(form.isValid()){
+                if (vm.get('withdrawal'))
+                    this.onClickPayPrint();
+                else
+                    this.onClickPayin();
+            }else{
+                Util.erMes(Config.STR_FORM_ERROR);
+            }
         }
     },
+
+    onClickButtonBalance: function (btn) {
+        var form = btn.up('form'),
+            vm = form.getViewModel();
+        vm.set('to_pay', vm.get('balance'));
+    }
 });

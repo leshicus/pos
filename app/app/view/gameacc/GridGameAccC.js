@@ -17,14 +17,31 @@ Ext.define('Office.view.gameacc.GridGameAccC', {
         store: {
             '#gameacc': {
                 /*load: function (store, arr, success, resp) {
-                    var o = Ext.decode(resp._response.responseText);
-                    if (!success) {
-                        Util.erMes('Ошибка', o.message);
-                    }
-                }*/
+                 var o = Ext.decode(resp._response.responseText);
+                 if (!success) {
+                 Util.erMes('Ошибка', o.message);
+                 }
+                 }*/
             }
         }
     },
+
+    onLoad: function (store, arrRecs) {
+        var grid = this.getView(),
+            vm = grid.getViewModel(),
+            filters = vm.get('filters'),
+            flag = false; // * признак, что имеются фильтры
+
+        // * будем сообщать, только если установлены фильтры
+        Ext.Object.each(filters, function (key, val) {
+            if (val)
+                flag = true;
+        });
+
+        if (!arrRecs.length && flag)
+            Util.warnMes('Игровой счет не найден');
+    },
+
     onEnter: function (field, e) {
         if (e.getKey() == e.ENTER) {
             var mainController = Office.app.getController('Main'),
@@ -46,25 +63,35 @@ Ext.define('Office.view.gameacc.GridGameAccC', {
             inputCash = gridGameAcc.down('#inputCash'),
             outputCash = gridGameAcc.down('#outputCash');
         //Filters.setFilters(section, 'player_id', player_id);
-        gridGameAction.getViewModel().set('filters.player_id',player_id);
+        gridGameAction.getViewModel().set('filters.player_id', player_id);
         //mainController.storeLoad(section, storeGameAction, gridGameAction);
         mainController.storeLoadVm(gridGameAction);
         // * сделаем доступными кнопки внесения и изъятия
-        if (enabled) {
-            inputCash.enable();
-            outputCash.enable();
-        }
+        //if (enabled) {
+        //    inputCash.enable();
+        //    outputCash.enable();
+        //}
     },
     // * внести
     onInputCash: function (btn) {
         var gridGameAcc = this.getView(),
-            selected = gridGameAcc.getSelectionModel().getSelection()[0];
+            selected = gridGameAcc.getSelectionModel().getSelection()[0],
+            mobile_phone = gridGameAcc.getViewModel().get('filters.mobile_phone');
+
+        if (selected) {
+            mobile_phone = selected.get('mobile_phone');
+
+            if (selected.get('enabled') != 1 || selected.get('is_blacklisted') == 1)
+                mobile_phone = '';
+        }
+
         Ext.defer(function () {
             var forminputcash = Ext.create('Office.view.gameacc.FormInputCashGameaccV', {
                     _type: 'input', // * чтобы различать в контроллере внесение и изъятие
                     viewModel: {
                         data: {
-                            theClient: selected
+                            theClient: selected,
+                            mobile_phone: mobile_phone
                         }
                     }
                 }),
@@ -91,21 +118,29 @@ Ext.define('Office.view.gameacc.GridGameAccC', {
     // * изъять
     onOutputCash: function (btn) {
         var gridGameAcc = this.getView(),
-            selected = gridGameAcc.getSelectionModel().getSelection()[0];
+            selected = gridGameAcc.getSelectionModel().getSelection()[0],
+            mobile_phone = gridGameAcc.getViewModel().get('filters.mobile_phone');
+
+        if (selected) {
+            mobile_phone = selected.get('mobile_phone');
+
+            if (selected.get('enabled') != 1 || selected.get('is_blacklisted') == 1)
+                mobile_phone = '';
+        }
         Ext.defer(function () {
             var forminputcash = Ext.create('Office.view.gameacc.FormInputCashGameaccV', {
                     _type: 'output',
                     viewModel: {
                         data: {
-                            theClient: selected
+                            theClient: selected,
+                            mobile_phone: mobile_phone
                         }
                     }
                 }),
                 win = new Ext.window.Window({
                     title: 'Изъять',
                     modal: true,
-                    itemId:'windowOutput',
-                    closable: false,
+                    itemId: 'windowOutput',
                     width: 360,
                     layout: {
                         type: 'vbox',

@@ -93,7 +93,6 @@ Ext.define('Office.view.fill.UtilMarkets', {
                 var sports = storeSport.getRange(),
                     sportData = Ext.Array.pluck(sports, 'data'),
                     sportNames = Ext.Array.pluck(sportData, 'slug');
-                //console.info(storeSport,sports,sportNames);
                 return sportNames;
             }, 3000);
         }
@@ -108,31 +107,31 @@ Ext.define('Office.view.fill.UtilMarkets', {
         }
     },
 
-//todo 11.07 параметры не все правильно показываются (баскетбол)
     // * ф-ии для отображения счета, и пр. информации, приходящей с кэфами
     cf: function (event, mnemonicName) {
-        var cs = Util.cloneObject(event['cs']),
-            cse = Util.cloneObject(event['cse']);
-        Ext.Object.merge(cs, cse);
-        if (cs && cs[mnemonicName])
-            return cs[mnemonicName];
-        return false;
+        if (event['cs'] && event['cs'][mnemonicName])
+            return event['cs'][mnemonicName];
+        if (event['cse'] && event['cse'][mnemonicName])
+            return event['cse'][mnemonicName];
+
+        return null;
     },
 
     getCoefByCoefId: function (grid, event_id, coefId) {
-        var vmGrid = grid.getViewModel(),
-            eventstore = vmGrid.getStore('eventstore'),
+        var menumain = Ext.ComponentQuery.query('menumain')[0],
+            vm = menumain.getViewModel(),
+            eventstore = vm.getStore(grid.getItemId()),
             event = eventstore.findRecord('event_id', event_id, 0, false, true, true),
             out = null;
 
         if (event) {
-            var cs = Util.cloneObject(event.get('cs')),
-                cse = Util.cloneObject(event.get('cse'));
-            // console.info(cs,cse);
-            //var cs = event.get('cs'),
-            //     cse = event.get('cse');
-            Ext.Object.merge(cs, cse);
-            Ext.Object.each(cs, function (key, val) {
+            Ext.Object.each(event.get('cs'), function (key, val) {
+                if (val[0].toString() == coefId) {
+                    out = val;
+                }
+            }, this);
+
+            Ext.Object.each(event.get('cse'), function (key, val) {
                 if (val[0].toString() == coefId) {
                     out = val;
                 }
@@ -141,16 +140,20 @@ Ext.define('Office.view.fill.UtilMarkets', {
         return out;
     },
     getMnemonicByCoefId: function (grid, event_id, coefId) {
-        var vmGrid = grid.getViewModel(),
-            eventstore = vmGrid.getStore('eventstore'),
+        var menumain = Ext.ComponentQuery.query('menumain')[0],
+            vm = menumain.getViewModel(),
+            eventstore = vm.getStore(grid.getItemId()),
             event = eventstore.findRecord('event_id', event_id, 0, false, true, true),
             out = null;
 
         if (event) {
-            var cs = Util.cloneObject(event.get('cs')),
-                cse = Util.cloneObject(event.get('cse'));
-            Ext.Object.merge(cs, cse);
-            Ext.Object.each(cs, function (key, val) {
+            Ext.Object.each(event.get('cs'), function (key, val) {
+                if (val[0].toString() == coefId) {
+                    out = key;
+                }
+            }, this);
+
+            Ext.Object.each(event.get('cse'), function (key, val) {
                 if (val[0].toString() == coefId) {
                     out = key;
                 }
@@ -166,6 +169,7 @@ Ext.define('Office.view.fill.UtilMarkets', {
             recOutcomes = storeOutcomes.getAt(0), // * модель, в которой поля объекты: groupNames, mnemonics и др. outcomes
             oddsOutcomeIdsByOutcomeId = recOutcomes.get('oddsOutcomeIdsByOutcomeId'),// * соответствие coefId : basisId
             coef = this.getCoefByCoefId(grid, event_id, coefId);
+
         if (coef) {
             var coefTypeId = coef[1],
                 basisTypeId = oddsOutcomeIdsByOutcomeId[coefTypeId],
@@ -183,11 +187,9 @@ Ext.define('Office.view.fill.UtilMarkets', {
             recOutcomes = storeOutcomes.getAt(0), // * модель, в которой поля объекты: groupNames, mnemonics и др. outcomes
             mnemonics = recOutcomes.get('mnemonics'),
             coeffName = mnemonics[coefTypeId],// * например coeff_INTERVAL_30_IYC_YES
-            vmGrid = grid.getViewModel(),
-            eventstore = vmGrid.getStore('eventstore');
+            eventstore = vmmenumain.getStore(grid.getItemId());
 
-        while (eventstore.isLoading()) {
-        }// * подождем пока не загрузится eventstore, и идем дальше
+        while (eventstore.isLoading()) {}// * подождем пока не загрузится eventstore, и идем дальше
 
         var event = eventstore.findRecord('event_id', event_id, 0, false, true, true);
         if (event)
@@ -197,63 +199,38 @@ Ext.define('Office.view.fill.UtilMarkets', {
     },
 
     getCF: function (event, mnemonicName, isFora) {
-        /*       if(event['cse']&&mnemonicName=='coeff_SCORE_CURRENT_SERVICE')
-         console.info(event['cse'][mnemonicName]);*/
         var coef = this.cf(event, mnemonicName);
-        if (!coef || isFora)
+        if (coef == null || isFora)
             return null;
-        return coef[2];
+        return coef[2].toString();
     },
 
-    // * Возвращает текущую часть матча, если не овертайм. Пример:  Тайм: 2. Во время перерыва или окончания матча пишет статус соответственно
-    part: function (event) {
-        var overtime = this.partOver(event),
-            status = this.status(event),
-            name = this.partName(event),
-            num = this.partNum(event);
-        if (overtime) {
-            return overtime;
-        }
-        if (status) {
-            return status;
-        } else if (name) {
-            return name + ':' + num;
-        } else
-            return null;
+    // * проверка, является ли кэф служебным
+    isNotServiceCoef: function (key) {
+        return key.indexOf('coeff_SCORE_') == -1;
     },
 
-    // * Возвращает счет по периодам/таймам в формате H1:A1, H2:A2
-    parts: function (event) {
-        var p = this.getParts(event);
-        if (p.length) {
-            p = p.map(function (el) {
-                return el.join(':');
-            });
-            return '(' + p.join(', ') + ')';
-        }
-        return null;
-    },
     is_ended: function (event) {
         return this.getCF(event, 'coeff_SCORE_ENDED') == 1 ? true : false;
     },
     is_paused: function (event) {
-        return this.getCF(event, 'coeff_SCORE_PAUSE') >= 1 ? true : false;
+        return this.getCF(event, 'coeff_SCORE_PAUSE') >= 1  && this.getCF(event, 'coeff_SCORE_IS_BREAKNOW')==1 ? true : false;
     },
     is_stopped: function (event) {
-        return this.getCF(event, 'coeff_SCORE_TIMER_STOPPED') == 1 ? true : false;
+        return this.getCF(event, 'coeff_SCORE_TIMER_STOPPED') || event['timer_stopped'] == 1 /*&& this.getCF(event, 'coeff_SCORE_PAUSE') == 0  && this.getCF(event, 'coeff_SCORE_IS_BREAKNOW')==1*/ ? true : false;
+    },
+    getMinute: function (event) {
+        return this.getCF(event, 'coeff_SCORE_MINUT') ? this.secondsToString(this.getCF(event, 'coeff_SCORE_MINUT') * 60) : '';
     },
     getPart: function (event) {
         var part = this.getCF(event, 'coeff_SCORE_HALF');
-        if (part > 1 && (this.is_paused(event) || this.is_stopped(event))) {
-            part--;
-        }
         return part;
     },
     // * Номер тайма, периода...
     partNum: function (event) {
         var part = this.getPart(event);
         if (!part)
-            return null;
+            return 0;
         else
             return part;
     },
@@ -275,6 +252,7 @@ Ext.define('Office.view.fill.UtilMarkets', {
                 message = this.t('parts.quarter');
                 break;
             case 'soccer':
+            case 'futsal':
             case 'handball':
                 message = this.t('parts.time');
                 break;
@@ -284,45 +262,23 @@ Ext.define('Office.view.fill.UtilMarkets', {
 
     // * Если сейчас доп время
     partOver: function (event) {
-        if (this.getCF(event, 'coeff_SCORE_TIMER_STOPPED'))
+        if (this.getCF(event, 'coeff_SCORE_OVERTIME'))
             return this.t('parts.overtime');
     },
 
-    //getSportSlug: function (event) {
-    //    var menumain = Ext.ComponentQuery.query('menumain')[0],
-    //        vmFill = menumain.getViewModel(),
-    //        storeSportsslug = vmFill.getStore('sportsslug');
-    //    if (event['sport_id']) {
-    //        var recSportsslug = storeSportsslug.findRecord('id', event['sport_id'], 0, false, true, true);
-    //        if (recSportsslug) {
-    //            var sport_slug = recSportsslug.get('slug');
-    //        } else {
-    //            // * таким вот извращенным способом я борюсь с тем, что стор storeSportsslug еще не загрузился, а мы к нему уже обращаемся
-    //            // * todo надо бы как-то по-другому решать этот вопрос?
-    //            //Ext.defer(function(){
-    //            recSportsslug = storeSportsslug.findRecord('id', event['sport_id'], 0, false, true, true);
-    //            if (recSportsslug) {
-    //                var sport_slug = recSportsslug.get('slug');
-    //            } else {
-    //                Util.toast('Ошибка', 'Не загружены виды спорта. Перезагрузите раздел.');
-    //                return null;
-    //            }
-    //            //},200,this);
-    //        }
-    //        return sport_slug;
-    //    }
-    //    return null;
-    //},
-
     secondsToString: function (seconds) {
-        var min = Math.floor(seconds / 60),
-            sec = seconds % 60;
-        // * добавление ведущего 0
-        min = Util.leadZero(min);
-        sec = Util.leadZero(sec);
+        if (seconds >= 0) {
+            var min = Math.floor(seconds / 60),
+                sec = seconds % 60;
+            // * добавление ведущего 0
+            min = Util.leadZero(min);
+            sec = Util.leadZero(sec);
 
-        var strTime = min + ':' + sec;
-        return strTime;
+            var strTime = min + ':' + sec;
+
+            return strTime;
+        } else
+            return null;
     },
 
     _get_seconds: function (event) {
@@ -335,7 +291,7 @@ Ext.define('Office.view.fill.UtilMarkets', {
                 difDate = timestamp - curDate;
 
             if (difDate > 0) {
-                    return this.secondsToString(difDate);
+                return this.secondsToString(difDate);
             } else
                 return 0;
         } else {
@@ -356,14 +312,15 @@ Ext.define('Office.view.fill.UtilMarkets', {
             return null;
     },
 
-    // * Возвращает текущее время матча, если перерыв или окончание матча, то ничего не выводит
+    // * Возвращает текущее время матча. Если перерыв или окончание матча, то ничего не выводит
     durationText: function (event) {
-        if (this.status(event))
-            return '';
         var time = this.duration(event);
-        if (time)
-            return time;
-        else
+        if (time) {
+            if (this.status(event))
+                return Util.colorText('gray', time, 1);
+            else
+                return time;
+        } else
             return '';
     },
 
@@ -374,12 +331,11 @@ Ext.define('Office.view.fill.UtilMarkets', {
             if (event['current_second'] && event['current_second'] < 0) {
                 label = this.t('templates.match_not_started');
             } else if (this.is_ended(event)) {
-                //console.warn('ended: ', event['home'], event);
                 event['finished'] = 1;
                 label = this.t('templates.match_over');
             } else if (this.is_paused(event)) {
                 label = this.t('templates.break');
-            } else if (this.is_stopped(event)) {
+            } else if (this.is_stopped(event) && !this.is_paused(event)) {
                 label = this.t('templates.stopped');
             }
         }
@@ -387,9 +343,12 @@ Ext.define('Office.view.fill.UtilMarkets', {
     },
     compensatedTime: function (event) {
         var time = this.getCF(event, 'coeff_SCORE_COMPENSATED_TIME');
-        if (time)
+        if (time == null)
+            return false;
+        else if (time == 0)
+            return null;
+        else if (time)
             return '+' + time + this.t('templates.minutes');
-        else return null;
     },
     // * Возвращает общий счет в матче
     score: function (event) {
@@ -405,56 +364,25 @@ Ext.define('Office.view.fill.UtilMarkets', {
         return this.getCF(event, 'coeff_SCORE_AWAY');
     },
 
-    // *  Получить текущий период
-    getHalf: function (event) {
-        return this.getCF(event, 'coeff_SCORE_HALF');
-    },
-
-    getParts: function (event) {
-        var parts = [],
-            part = this.partNum(event),
-            sport_slug = event['sport_slug'],
-            index = 1;
-        if (index <= part) {
-            while (index <= part) {
-                var currentIndex = '';
-                if (index > 1)
-                    currentIndex = index;
-                var home_score = this.getCF(event, "coeff_SCORE_HOME_HT" + currentIndex),
-                    away_score = this.getCF(event, "coeff_SCORE_AWAY_HT" + currentIndex);
-                if (home_score != null || away_score != null) {
-                    parts.push([home_score || 0, away_score || 0]);
-                }
-
-                index++;
-            }
-        }
-
-        if (this.getCF(event, 'coeff_SCORE_OVERTIME'))
-            parts.push([this.getCF(event, 'coeff_SCORE_OVERTIME_HOME') || 0, this.getCF(event, 'coeff_SCORE_OVERTIME_AWAY') || 0]);
-
-        /*if (parts.length && sport_slug == 'volleyball')
-         parts[parts.length - 1] = this.gameBase(event, true);*/
-
-        return parts;
-    },
-    _getPartsH: function (event) {
+    _getPartsH: function (event, oldRecData) {
         var parts = {},
-            part = this.partNum(event),
+            part = this.partNum(oldRecData),
+            part_ = this.partNum(event),
             sport_slug = event['sport_slug'],
             index = 1;
+
+        if (part_ && part && part_ > part)
+            part = part_;
+
         if (index <= part) {
             while (index <= part) {
                 var currentIndex = '';
                 if (index > 1)
                     currentIndex = index;
                 var home_score = this.getCF(event, "coeff_SCORE_HOME_HT" + currentIndex);
-                if (sport_slug == 'volleyball' && index == part) {
-                    break;
-                }
-                if (home_score != null) {
-                    parts[index] = home_score || '0';
-                }
+
+                parts[index] = home_score || '0';
+
                 index++;
             }
         }
@@ -462,14 +390,11 @@ Ext.define('Office.view.fill.UtilMarkets', {
         if (this.getCF(event, 'coeff_SCORE_OVERTIME'))
             parts[part] = this.getCF(event, 'coeff_SCORE_OVERTIME_HOME');
 
-        /*if (parts.length && sport_slug == 'volleyball')
-         parts[parts.length - 1] = this.gameBase(event, true);*/
-
         return parts;
     },
-    _getPartsA: function (event) {
+    _getPartsA: function (event, oldRecData) {
         var parts = {},
-            part = this.partNum(event),
+            part = this.partNum(oldRecData),
             sport_slug = event['sport_slug'],
             index = 1;
         if (index <= part) {
@@ -478,21 +403,13 @@ Ext.define('Office.view.fill.UtilMarkets', {
                 if (index > 1)
                     currentIndex = index;
                 var away_score = this.getCF(event, "coeff_SCORE_AWAY_HT" + currentIndex);
-                if (sport_slug == 'volleyball' && index == part) {
-                    break;
-                }
-                if (away_score != null) {
-                    parts[index] = away_score || '0';
-                }
+                parts[index] = away_score || '0';
                 index++;
             }
         }
 
         if (this.getCF(event, 'coeff_SCORE_OVERTIME'))
             parts[part] = this.getCF(event, 'coeff_SCORE_OVERTIME_AWAY');
-
-        /*if (parts.length && sport_slug == 'volleyball')
-         parts[parts.length - 1] = this.gameBase(event, true);*/
 
         return parts;
     },
@@ -503,8 +420,17 @@ Ext.define('Office.view.fill.UtilMarkets', {
     _getScoreAwayGame: function (event) {
         return this.getCF(event, 'coeff_SCORE_AWAY_GAME');
     },
-    _getScoreTiebreak: function (event) {
-        return this.getCF(event, 'coeff_SCORE_TIEBREAK');
+    _getScoreTiebreak: function (event, oldRec) {
+        if (oldRec) {
+            var tiebreak_ = this.getCF(event, 'coeff_SCORE_TIEBREAK'),
+                tiebreak = this.getCF(oldRec, 'coeff_SCORE_TIEBREAK');
+            if (tiebreak_ == null)
+                return tiebreak;
+            else return tiebreak_;
+        } else {
+            var tiebreak_ = this.getCF(event, 'coeff_SCORE_TIEBREAK');
+            return tiebreak_;
+        }
     },
     _getScoreTiebreakHome: function (event) {
         return this.getCF(event, 'coeff_SCORE_HOME_TIEBREAK');
@@ -513,31 +439,9 @@ Ext.define('Office.view.fill.UtilMarkets', {
         return this.getCF(event, 'coeff_SCORE_AWAY_TIEBREAK');
     },
 
-    // * Получает результаты сета тенниса
-    /*_get_scores_tennis: function (event) {
-     var scoreHome = this._getScoreHomeGame(event),
-     scoreAway = this._getScoreAwayGame(event),
-     tiebreak = this._getScoreTiebreak(event),
-     tiebreakAway = this._getScoreTiebreakAway(event),
-     tiebreakHome = this._getScoreTiebreakHome(event);
-     if (tiebreak) {
-     return {
-     score_h: +tiebreakHome === 50 ? 'A' : tiebreakHome,
-     score_a: +tiebreakAway === 50 ? 'A' : tiebreakAway
-     };
-     } else {
-     if(scoreHome||scoreAway){
-     return {
-     score_h: +scoreHome === 50 ? 'A' : scoreHome,
-     score_a: +scoreAway === 50 ? 'A' : scoreAway
-     };
-     }
-     }
-     return null;
-     },*/
-    _get_scores_tennisH: function (event) {
+    _get_scores_tennisH: function (event, oldRec) {
         var scoreHome = this._getScoreHomeGame(event),
-            tiebreak = this._getScoreTiebreak(event),
+            tiebreak = this._getScoreTiebreak(event, oldRec),
             tiebreakHome = this._getScoreTiebreakHome(event);
         if (tiebreak) {
             return {
@@ -552,9 +456,9 @@ Ext.define('Office.view.fill.UtilMarkets', {
         }
         return null;
     },
-    _get_scores_tennisA: function (event) {
+    _get_scores_tennisA: function (event, oldRec) {
         var scoreAway = this._getScoreAwayGame(event),
-            tiebreak = this._getScoreTiebreak(event),
+            tiebreak = this._getScoreTiebreak(event, oldRec),
             tiebreakAway = this._getScoreTiebreakAway(event);
         if (tiebreak) {
             return {
@@ -569,26 +473,7 @@ Ext.define('Office.view.fill.UtilMarkets', {
         }
         return null;
     },
-    // * Получает результаты гейма волейбола
-    /*_get_scores_volleyball: function (event) {
-     var score_a, score_h, _set;
-     _set = 5;
-     while (this.getCF(event, "coeff_SCORE_HOME_HT" + _set) === "") {
-     if (_set === '') {
-     break;
-     }
-     _set--;
-     if (_set === 1) {
-     _set = '';
-     }
-     }
-     score_h = this.getCF(event, "coeff_SCORE_HOME_HT" + _set) || '0';
-     score_a = this.getCF(event, "coeff_SCORE_AWAY_HT" + _set) || '0';
-     return {
-     score_h: score_h,
-     score_a: score_a
-     };
-     },*/
+
     _get_scores_volleyballH: function (event) {
         var score_h, _set;
         _set = 5;
@@ -623,47 +508,12 @@ Ext.define('Office.view.fill.UtilMarkets', {
             score_a: score_a
         };
     },
-    // * Подачи для тениса и воллейбола
-    /*gameBase: function (event, volleyball) {
-     var feed, scores, service, sport_slug, tiebreak;
-     sport_slug = event['sport_slug'];
-     switch (sport_slug) {
-     case 'volleyball':
-     if (volleyball)
-     scores = this._get_scores_volleyball(event);
-     else
-     return null;
-     break;
-     case 'tennis':
-     scores = this._get_scores_tennis(event);
-     break;
-     default:
-     return null;
-     }
-
-     service = this.getCF(event, 'coeff_SCORE_CURRENT_SERVICE');
-     feed = '<span style="font-weight: 600;color:#ff3300;font-size: 18px;">*</span>';
-     //feed = '*';
-     if (1 == service) {
-     scores.score_h = feed + "" + scores.score_h;
-     } else if (2 == service) {
-     scores.score_a = scores.score_a + "" + feed;
-     }
-
-     if (this.getCF(event, 'coeff_SCORE_TIEBREAK')) {
-     tiebreak = this.t('markets.tennis.tiebreak') + " ";
-     scores.score_h = tiebreak + scores.score_h;
-     }
-
-     return [scores.score_h, scores.score_a];
-
-
-     },*/
 
     _getScoreService: function (event) {
         return this.getCF(event, 'coeff_SCORE_CURRENT_SERVICE');
     },
-    _gameBaseH: function (event, volleyball) {
+
+    _gameBaseH: function (event, volleyball, oldRec) {
         var feed, scores, service, sport_slug, tiebreak;
         sport_slug = event['sport_slug'];
         switch (sport_slug) {
@@ -675,28 +525,18 @@ Ext.define('Office.view.fill.UtilMarkets', {
                     return null;
                 break;
             case 'tennis':
-                scores = this._get_scores_tennisH(event);
+                scores = this._get_scores_tennisH(event, oldRec);
                 break;
             default:
                 return null;
         }
-        /*service = this._getScoreService(event);
-         if(service){
-         feed = '<span style="font-weight: 600;color:#ff3300;font-size: 18px;">*</span>';
-         if (1 == service) {
-         scores.score_h = feed + "" + scores.score_h;
-         }
-         }
-         tiebreak = this._getScoreTiebreak(event);
-         if(tiebreak){
-         tiebreak = this.t('markets.tennis.tiebreak') + " ";
-         scores.score_h = tiebreak + scores.score_h;
-         }*/
-        if (scores && scores.score_h)
+
+        if (scores && scores.score_h != null)
             return scores.score_h.toString();
         else return null;
     },
-    _gameBaseA: function (event, volleyball) {
+
+    _gameBaseA: function (event, volleyball, oldRec) {
         var feed, scores, service, sport_slug, tiebreak;
         sport_slug = event['sport_slug'];
         switch (sport_slug) {
@@ -708,37 +548,17 @@ Ext.define('Office.view.fill.UtilMarkets', {
                     return null;
                 break;
             case 'tennis':
-                scores = this._get_scores_tennisA(event);
+                scores = this._get_scores_tennisA(event, oldRec);
                 break;
             default:
                 return null;
         }
 
-        /*service = this._getScoreService(event);
-         if(service){
-         feed = '<span style="font-weight: 600;color:#ff3300;font-size: 18px;">*</span>';
-         if (1 == service) {
-         scores.score_a = feed + "" + scores.score_a;
-         }
-         }
-         tiebreak = this._getScoreTiebreak(event);
-         if(tiebreak){
-         tiebreak = this.t('markets.tennis.tiebreak') + " ";
-         scores.score_a = tiebreak + scores.score_a;
-         }*/
-
-        if (scores && scores.score_a)
+        if (scores && scores.score_a != null)
             return scores.score_a.toString();
         else return null;
     },
-    // * Подачи для тениса и воллейбола, форматирование
-    /*game: function (event) {
-     var score;
 
-     score = this.gameBase(event);
-
-     return score && ("(" + (score.join('-')) + ")") || '';
-     },*/
     // * Иннинги для бейсбола
     inning: function (event) {
         var score, sport_slug;
@@ -777,28 +597,16 @@ Ext.define('Office.view.fill.UtilMarkets', {
         }
 
         return "" + (this.t('templates.penalty', {
-            penalty: [home, away].join(':')
-        }));
-    },
-    // * Возвращает текущий счет удалений. Если удалений нет. Возвращает false
-    removals: function (event) {
-        var away, home;
-        home = this.getCF(event, 'coeff_SCORE_HOME_REMOVALS') || this.getCF(event, 'coeff_SCORE_HOME_RED_CARDS') || 0;
-        away = this.getCF(event, 'coeff_SCORE_AWAY_REMOVALS') || this.getCF(event, 'coeff_SCORE_AWAY_RED_CARDS') || 0;
-        if (!home && !away) {
-            return false;
-        }
-        return [home, away];
-    },
-    removalsFull: function (event) {
-        var removals;
-        removals = this.removals(event);
-        if (removals) {
-            return "" + (this.t('templates.removals', {
-                removals: [removals[0], removals[1]].join(':')
+                penalty: [home, away].join(':')
             }));
-        }
-        return "";
+    },
+
+    removalsH: function (event) {
+        return this.getCF(event, 'coeff_SCORE_HOME_REMOVALS') || this.getCF(event, 'coeff_SCORE_HOME_RED_CARDS');
+    },
+
+    removalsA: function (event) {
+        return this.getCF(event, 'coeff_SCORE_AWAY_REMOVALS') || this.getCF(event, 'coeff_SCORE_AWAY_RED_CARDS');
     },
 
     mergeCoefs: function (record) {
@@ -831,9 +639,11 @@ Ext.define('Office.view.fill.UtilMarkets', {
         var menumain = Ext.ComponentQuery.query('menumain')[0],
             vmMenumain = menumain.getViewModel(),
             storeSportsSlug = vmMenumain.getStore('sportsslug'),
-            recSlug = storeSportsSlug.findRecord('id', sport_id, 0, false, true, true),
-            sportSlug = recSlug.get('slug');
-        return sportSlug;
+            recSlug = storeSportsSlug.findRecord('id', sport_id, 0, false, true, true);
+        if(recSlug)
+            return recSlug.get('slug');
+        else
+            return null;
     },
 
     getSportName: function (record) {
@@ -856,7 +666,8 @@ Ext.define('Office.view.fill.UtilMarkets', {
             storeSportslug = menumain.getViewModel().getStore('sportsslug');
         if (storeSportslug) {
             var rec = storeSportslug.findRecord('slug', "sport_rats", 0, false, true, true);
-            return rec.get('id');
+            if (rec)
+                return rec.get('id');
         }
         return null;
     },

@@ -14,7 +14,6 @@ Ext.define('Office.view.card.GridCardV', {
     flex: 1, // * растягивает по верт до низу
     title: 'Клубные карты',
     frame: true,
-    //border:1,
     controller: 'gridcard',
     viewConfig: {
         stripeRows: true,
@@ -26,8 +25,6 @@ Ext.define('Office.view.card.GridCardV', {
     },
     referenceHolder: true,
     reference: 'gridcardRef',
-    glyph: Glyphs.get('card'),
-    cls: 'gridcard',
     bind: '{card}',
     /*bbar: {
         xtype: 'pagingtoolbar',
@@ -39,10 +36,6 @@ Ext.define('Office.view.card.GridCardV', {
         emptyMsg: "Нет записей для отображения"
     },*/
     initComponent: function () {
-        /*
-         1) itemId: 'user' пока в фамилии, имени и паспорте.
-         */
-
         Util.initClassParams({
             scope: this,
             params: [
@@ -87,11 +80,6 @@ Ext.define('Office.view.card.GridCardV', {
                 //}
             });
 
-        // * устанавливает начальное значение поля "Фамилия"
-        //Debug.setCardFio(this.getViewModel(), 'filters.lastname');
-        // * устанавливает начальное значение поля "Проверить штрих-код"
-        //Debug.setBarcode(this.getViewModel(), 'barcode_check');
-
         this.columns = {
             defaults: {
                 menuDisabled: true,
@@ -105,8 +93,7 @@ Ext.define('Office.view.card.GridCardV', {
                 {
                     text: 'id',
                     dataIndex: 'id',
-                    //itemId: 'id',
-                    width: 70,
+                    width: 120,
                     defaults: {
                         enableKeyEvents: true,
                         margin: 2
@@ -126,8 +113,7 @@ Ext.define('Office.view.card.GridCardV', {
                 {
                     text: 'Фамилия',
                     dataIndex: 'lastname',
-                    //itemId: 'lastname',
-                    width: 130,
+                    width: 170,
                     defaults: {
                         enableKeyEvents: true,
                         margin: 2
@@ -139,8 +125,7 @@ Ext.define('Office.view.card.GridCardV', {
                 {
                     text: 'Имя',
                     dataIndex: 'firstname',
-                    //itemId: 'firstname',
-                    width: 130,
+                    width: 170,
                     defaults: {
                         enableKeyEvents: true,
                         margin: 2
@@ -160,28 +145,26 @@ Ext.define('Office.view.card.GridCardV', {
                 {
                     text: 'Отчество',
                     dataIndex: 'patronymic_name',
-                    //itemId: 'patronymic_name',
-                    width: 130
+                    width: 170
                 },
                 {
                     text: 'Паспорт',
                     dataIndex: 'passport_number',
-                    //itemId: 'passport_number',
-                    width: 100,
+                    width: 120,
                     defaults: {
                         enableKeyEvents: true,
                         margin: 2
                     },
                     // * серия и номер отдельно
-                    renderer: function (val, w, rec) {
-                        if (val && val.length == 10) {
-                            var passer = val.substr(0, 4),
-                                pasnum = val.substr(-6, 6);
-                            return passer + ' ' + pasnum;
-                        } else {
-                            return val;
-                        }
-                    },
+                    //renderer: function (val, w, rec) {
+                    //    if (val && val.length == 10) {
+                    //        var passer = val.substr(0, 4),
+                    //            pasnum = val.substr(-6, 6);
+                    //        return passer + ' ' + pasnum;
+                    //    } else {
+                    //        return val;
+                    //    }
+                    //},
                     items: [
                         {
                             xtype: 'textfield',
@@ -197,7 +180,6 @@ Ext.define('Office.view.card.GridCardV', {
                 {
                     text: 'Штрих-код',
                     dataIndex: 'barcode',
-                    //itemId: 'barcode',
                     width: 100,
                     layout: {
                         type: 'vbox',
@@ -222,13 +204,11 @@ Ext.define('Office.view.card.GridCardV', {
                 {
                     text: 'Выдана',
                     dataIndex: 'binding_datetime',
-                    //itemId: 'binding_datetime',
-                    width: 160
+                    width: 170
                 },
                 {
                     text: 'Статус<br>карты',
                     dataIndex: 'card_status',
-                    //itemId: 'card_status',
                     width: 70,
                     renderer: function (val, meta, rec) {
                         meta.align = 'center';

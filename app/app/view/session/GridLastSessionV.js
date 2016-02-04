@@ -9,7 +9,7 @@ Ext.define('Office.view.session.GridLastSessionV', {
     viewModel: {
         type: 'gridlastsession'
     },
-    //columnLines: true,
+    columnLines: true,
     autoScroll: true,
     title: 'Данные по предыдущим сменам',
     frame: true,
@@ -17,8 +17,6 @@ Ext.define('Office.view.session.GridLastSessionV', {
     viewConfig: {
         stripeRows: true
     },
-    /*glyph: Glyphs.get('card'),
-    cls: 'gridcard',*/
     bind: '{lastsession}',
     listeners: {
         //cellclick: 'onCellclick',
@@ -45,8 +43,7 @@ Ext.define('Office.view.session.GridLastSessionV', {
                 {
                     text: '№',
                     dataIndex: 'number',
-                    //itemId: 'id',
-                    width: 80,
+                    width: 65,
                     renderer: function (val) {
                         return val; // * чтобы денежный формат не применялся
                     }
@@ -54,7 +51,7 @@ Ext.define('Office.view.session.GridLastSessionV', {
                 {
                     text: 'Начата',
                     dataIndex: 'actual_open_datetime',
-                    width: 150,
+                    width: 140,
                     renderer: function (val) {
                         return val; // * чтобы денежный формат не применялся
                     }
@@ -62,7 +59,7 @@ Ext.define('Office.view.session.GridLastSessionV', {
                 {
                     text: 'Завершена',
                     dataIndex: 'actual_close_datetime',
-                    width: 150,
+                    width: 140,
                     renderer: function (val) {
                         return val; // * чтобы денежный формат не применялся
                     }
@@ -70,56 +67,47 @@ Ext.define('Office.view.session.GridLastSessionV', {
                 {
                     text: 'К началу<br>смены',
                     dataIndex: 'sum_at_open_time',
-                    //itemId: 'sum_at_open_time',
-                    width: 130
+                    width: 105
                 },
                 {
                     text: 'Принято',
                     dataIndex: 'in_cashflow',
-                    //itemId: 'in_cashflow',
                     width: 90
                 },
                 {
                     text: 'Выплачено',
                     dataIndex: 'out_cashflow',
-                    //itemId: 'out_cashflow',
-                    width: 90
+                    width: 95
                 },
                 {
                     text: 'Возвращено',
                     dataIndex: 'returned',
-                    //itemId: 'returned',
-                    width: 90
+                    width: 105
                 },
                 {
                     text: 'Внесено',
                     dataIndex: 'input_cash_mov',
-                    //itemId: 'input_cash_mov',
                     width: 90
                 },
                 {
                     text: 'Изъято',
                     dataIndex: 'output_cash_mov',
-                    //itemId: 'output_cash_mov',
-                    width: 90
+                    width: 105
                 },
                 {
                     text: 'Баланс',
                     dataIndex: 'balance',
-                    //itemId: 'balance',
-                    width: 90
+                    width: 105
                 },
                 {
                     text: 'Итого',
                     dataIndex: 'total',
-                    //itemId: 'total',
-                    width: 90
+                    width: 105
                 },
                 {
                     text: 'На конец<br>смены',
                     dataIndex: 'sum_at_close_time',
-                    //itemId: 'sum_at_close_time',
-                    width: 90
+                    width: 105
                 },
                 {
                     xtype: 'actioncolumn',
@@ -181,8 +169,6 @@ Ext.define('Office.view.session.GridLastSessionV', {
                 }
             ]
         }
-
-
 
         this.tools = [
             {

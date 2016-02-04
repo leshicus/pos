@@ -4,79 +4,45 @@ Ext.define('Office.view.fill.FillC', {
         'Office.view.timeline.GridSearchV',
         'Office.view.fill.BasketF',
         'Office.view.fill.MonitorF',
-        'Office.view.fill.coeff.MarketsHtml',
+        //'Office.view.fill.coeff.MarketsHtml',
         //'Office.view.fill.WsF',
         'Office.view.fill.FastInputF',
         'Office.view.timeline.FormUserSearchV'
     ],
     alias: 'controller.fill',
-    listen: {
-        component: {
-            '#': {},
-            //'#main tool[type=refresh]': {
-            //    click: function (button, e, panel) {
-            //        var activeTab = BasketF.getActiveTabIndexEvent(),
-            //            grid = Ext.ComponentQuery.query('grideventlive')[activeTab] /*|| Ext.ComponentQuery.query('grideventrats')[0]*/,
-            //            combocheck = grid.down('#cbSport'),
-            //            filterEvent = grid.down('#filterEvent');
-            //        if (combocheck) {
-            //            var comboSport = combocheck.down('combo');
-            //            comboSport.reset();
-            //        }
-            //        if (filterEvent)
-            //            filterEvent.reset();
-            //
-            //        //storeRawData.clearFilter();
-            //
-            //        //vm.set('line_version', null);
-            //
-            //        //grid.mask('Загружаем...');
-            //        //
-            //        //Ext.defer(function () {
-            //        //    vm.getStore('rawdata').load({
-            //        //        callback: function () {
-            //        //            grid.unmask();
-            //        //            //todo тут нужно как-то по-умному делать, веб-сокеты может переподписывать
-            //        //        }
-            //        //    });
-            //        //}, 10);
-            //    }
-            //},
-            // * Скрыть/Раскрыть Экспрессы
-            '#main tool[type=maximize]': {
-                click: function (button, e, panel) {
-                    var tabpanel = panel.down('tabpanel'),
-                        tree = tabpanel.getActiveTab();
-                    Util.treeCollapse(button, e, tree);
-                }
-            }
-        },
-        store: {}
-    },
 
     // * рендер grideventlive
-    onRender: function (grid) {
+    onGridEventRender: function (grid) {
         // * задание на обновление коэффициентов
-        var intParam = 5;
-        TaskF.startTaskClearEventStore(grid,intParam);
+        var interval = 10;
+        TaskF.startTaskClearEventStore(grid, interval);
 
         if (grid.getItemId() == 'live'
             || grid.getItemId() == 'rats') {
-            TaskF.taskSecondsStart(grid);
+            TaskF.taskSecondsStart(grid.getItemId());
         }
+
+        //Ext.defer(function () {
+        //    if ((grid.getItemId() == 'line' || grid.getItemId() == 'live')
+        //        && BasketF.isActiveEventTab(grid)
+        //        && grid.store.count() == 0) {
+        //        var fill = this.getView(),
+        //            west = fill.down('panel[region=west]');
+        //        // * окончание маски в GridEventLiveC::setLiveCountProperty
+        //
+        //        west.getEl().mask('Загрузка матчей...');
+        //    }
+        //}, 200, this);
     },
 
     // * рендер fill
     onFillRender: function (fill) {
-        WsF.startLoadWS();
-//TaskF.taskTimerStart(fill);
-        FillF.getDayExpressData();
-
+        var menumain = Ext.ComponentQuery.query('menumain')[0];
         // * выделим вкладку в событиях (линия или лайв), если есть указание в локальном хранилище
         Ext.defer(function () { // * localStorage.getItem: Cannot read property 'getItem' of null
-            var //vm = fill.getViewModel(),
-            //localStorage = vm.getStore('localStorage'),
-                localStorage = Ext.util.LocalStorage.get('newpos'),
+            menumain.getController().setLiveCountProperty();
+
+            var localStorage = Ext.util.LocalStorage.get('newpos'),
                 activeEventTab = parseInt(localStorage.getItem('activeEventTab')),
                 tabpanel = fill.down('#eventstab');
 
@@ -88,54 +54,58 @@ Ext.define('Office.view.fill.FillC', {
 
             tabpanel.setActiveItem(activeEventTab);
 
-            // * фокус на Быстрый ввод игрока
-            //var fastInputGambler = fill.down('#fastInputGambler');
-            //if (fastInputGambler)
-            //    fastInputGambler.focus();
-        }, 100, this);
+            // * для того, чтобы ставки, сделанные из Виртуальных заявок и Принятых появились
+            BasketF.fillBasketFromLocal(null, 0);
 
-        // * окончание в ApplyChangedData::loadMatchdataData
-        //Ext.defer(function(){
-        //    fill.down('panel[region=west]').getEl().mask('Загрузка событий...');
-        //},200,this);
+            var center = fill.down('container[region=center]');
+            center._initWidth = center.getWidth();
+        }, 100, this);
     },
 
-    // * переключение табов Линия/Лайв/Экспресс дня
+    // * смена вкладок в Событиях: Линия/Лайв/Экспресс дня
     onEventTabChange: function (tabpanel, newCard, oldCard) {
         FillF.resetCenterArea();
-        FillF.clearBasketSumAndSystem();
 
-        //if (newCard.getItemId() == 'rats')
-        //Ext.defer(function(){
-        //    newCard.setSelection(0);
-        //},10,this);
-        //
-        //else
-        newCard.setSelection(null); // * при открытии вкладки, снимаем выделение в таблице событий- чтоб не путало
-
-        //if (newCard != oldCard) {
-        var fill = Ext.ComponentQuery.query('#main')[0],
+        var fill = Ext.ComponentQuery.query('fill')[0],
             vm = fill.getViewModel();
 
-        // * очистка купона
-        var storeBasket = vm.getStore('basket'),
-            basket_count = vm.get('basket_count');
+        // * будем очищать купон и заполнять его из локального хр., если переключаем вкладки с line/live на rats или de
+        if (((oldCard.getItemId() == 'line' || oldCard.getItemId() == 'live')
+            && (!newCard.getItemId() == 'line' || !newCard.getItemId() == 'live' ))
+            || (oldCard.getItemId() != 'line' && oldCard.getItemId() != 'live')
+            || (newCard.getItemId() != 'line' && newCard.getItemId() != 'live')) {
 
-        storeBasket.suspendEvent('clear');// * чтобы ивент clear в basket не сработал
-        storeBasket.removeAll();
-        Ext.defer(function () {
+            // * очистка купона
+            FillF.clearBasketSum();
+            FillF.clearSystem();
+
+            Ext.defer(function () {
+                BasketF.clearBetSeries();
+            }, 10, this);
+
+            var storeBasket = vm.getStore('basket'),
+                basket_count = vm.get('basket_count');
+
+            storeBasket.suspendEvent('clear');// * чтобы ивент clear в basket не сработал
+            storeBasket.removeAll();
             storeBasket.resumeEvent('clear');
+
+            BasketF.refreshBasketGrids();
+
+            vm.set('basket_count', 0);
+
+            // * заполнение купона из localstorage
+            BasketF.fillBasketFromLocal(newCard, 0);
+        }
+
+        Ext.defer(function () {
+            oldCard.setSelection(null); // * при открытии вкладки, снимаем выделение в таблице событий- чтоб не путало
+            newCard.setSelection(null); // * при открытии вкладки, снимаем выделение в таблице событий- чтоб не путало
+            if (!oldCard || !newCard)
+                console.info(oldCard, newCard);
         }, 10, this);
 
-        BasketF.refreshBasketGrids();
-
-        vm.set('basket_count', 0);
-
-        // * заполнение купона из localstorage
-        BasketF.fillBasketFromLocal(newCard, 0);
-
         // * сохраним активную вкладку в локальное хранилище
-        //var localStorage = vm.getStore('localStorage');
         var localStorage = Ext.util.LocalStorage.get('newpos');
         localStorage.setItem('activeEventTab', BasketF.getActiveTabIndexEvent());
 
@@ -144,23 +114,17 @@ Ext.define('Office.view.fill.FillC', {
         vm.set('activeTabEventId', activeTabEventId);
         newCard.getViewModel().set('activeTabEventId', activeTabEventId);
 
-        // * для Экспресса дня переключим вкладку на Экспресс
+        // * для Экспресса дня переключим вкладку в купоне сразу на Экспресс
         var tabpanelBet = fill.down('#tabpanelBet');
         if (BasketF.isDayExpress()) {// * Экспресс дня
             // * для Экспресса дня запускаем показ кэфов отсюда, сразу при нажатии на вкладку
             MarketsHtml.dayExpressClick(newCard);
 
-            // * можно выбрать только один исход для каждого события
-            // * переключаем вкладку на экспресс
             Ext.defer(function () {
-                tabpanelBet.setActiveItem(1);
+                // * можно выбрать только один исход для каждого события
+                if (FillF.checkCanSwitchTab())
+                    tabpanelBet.setActiveItem(1);
             }, 100, this);
-        } else {
-            // * переключаем вкладку на одиночные
-            //Ext.defer(function () {
-            //    console.info(2);
-            //    tabpanelBet.setActiveItem(0);
-            //}, 100, this);
         }
 
         // * для Крыс добавим gridrat- список забегов
@@ -178,18 +142,19 @@ Ext.define('Office.view.fill.FillC', {
         var fastInputGambler = fill.down('#fastInputGambler');
         if (fastInputGambler)
             fastInputGambler.focus();
-        //}
     },
 
 // * смена вкладок в купоне
     onBetTabChange: function (tabpanel, n, o) {
-        var fill = Ext.ComponentQuery.query('#main')[0],
+        var fill = Ext.ComponentQuery.query('fill')[0],
             activeTabIndex = BasketF.getActiveTabIndex(),
             gridbasketsingle = fill.down('gridbasketsingle'),
             checkBetSeries = gridbasketsingle.down('#checkBetSeries'),
             betResult = gridbasketsingle.down('#betResult'),
             gridbasketexpress = fill.down('gridbasketexpress'),
-            arrGrid = tabpanel.query('gridpanel');
+            amount = gridbasketexpress.down('#amount'),
+            arrGrid = tabpanel.query('gridpanel'),
+            activeTabEvent = BasketF.getActiveTabEventId();
 
         // * делаем чтобы значения обновились в гриде, а то если в одной вкладке добавить ставку, то во второй этого не видно
         BasketF.refreshBasketGrids();
@@ -203,17 +168,8 @@ Ext.define('Office.view.fill.FillC', {
             // * обновим грид с итогами
             BasketF.getMaxMin();
 
-            // * автофокус на Ставке в Итогах
-            Ext.defer(function () {
-                var gridBasketSum = tabpanel.getActiveTab().down('#gridBasketSum');
-                if (gridBasketSum) {
-                    var editor = gridBasketSum.getPlugin('cellEditorId');
-                    editor.startEditByPosition({
-                        row: 0,
-                        column: 2
-                    });
-                }
-            }, 100, this);
+            if (activeTabEvent != 'dayexpress' && activeTabEvent != 'dayexpressDC')
+                amount.focus();
         }
 
         // * отправим ставки на монитор игрока
@@ -222,19 +178,19 @@ Ext.define('Office.view.fill.FillC', {
 
 // * изменение в купоне
     onBasketChange: function (storeBasket, rec, oper, modifiedFieldName) {
-        var fill = Ext.ComponentQuery.query('#main')[0],
+        var fill = Ext.ComponentQuery.query('fill')[0],
             vm = fill.getViewModel(),
-        //storeBasket = vm.getStore('basket'),
             menumain = Ext.ComponentQuery.query('menumain')[0],
             vmMenumain = menumain.getViewModel(),
-            storeBasketLocal = vmMenumain.getStore('basket_localstorage');
+            storeBasketLocal = vmMenumain.getStore('basket_localstorage'),
+            gridbasketexpress = fill.down('gridbasketexpress');
 
         vm.set('basket_count', storeBasket.count());
 
-        if (/*modifiedFieldName == 'amount' || */!modifiedFieldName) {// * !modifiedFieldName- добавление/удаление, modifiedFieldName == 'amount'- изменение суммы
+        if (!modifiedFieldName) {// * !modifiedFieldName- добавление/удаление, modifiedFieldName == 'amount'- изменение суммы
             // * для формулы, которая определяет нужно ли показывать некоторые поля, в зависимости от количества записей в сторе
-            var gridbasketexpress = fill.down('gridbasketexpress'),
-                comboSystem = gridbasketexpress.down('#system'),
+
+            var comboSystem = gridbasketexpress.down('#system'),
                 vmExpress = gridbasketexpress.getViewModel(),
                 storeSystem = vmExpress.getStore('system'),
                 arrRec = [];
@@ -243,19 +199,18 @@ Ext.define('Office.view.fill.FillC', {
             var tabpanel = Ext.ComponentQuery.query('#eventstab')[0];
             if (tabpanel)
                 var grideventlive = tabpanel.getActiveTab();
-            //else
-            //    grideventlive = Ext.ComponentQuery.query('grideventlive')[0] || Ext.ComponentQuery.query('grideventrats')[0];
 
             if (grideventlive) {
                 if (BasketF.isDayExpress()) { // * для Экспресса дня нужно щелкать не по записи в гриде, а по вкладке
                     MarketsHtml.dayExpressClick(grideventlive);
                 } else { // * щелкаем по строке грида grideventlive
                     var selection = grideventlive.getSelectionModel().getSelection()[0];
-                    if (selection) {
+                    if (selection && BasketF.isActiveEventTab(grideventlive)) {
                         Ext.defer(function () {// * чтобы колонки cont_ успевали создаться, а то почему-то не успевают
-                            grideventlive.fireEventArgs('itemclick', [{}, selection]);
+                            grideventlive.getController().showCoefs(selection);
+                            // grideventlive.fireEventArgs('itemclick', [{}, selection]);
                         }, 10, this);
-                    } else {// * бывает выделение пропадает (разрыв связи с WS)- нужно очистить центральную область
+                    } else if (!selection) {// * бывает выделение пропадает (разрыв связи с WS)- нужно очистить центральную область
                         FillF.resetCenterArea();
                     }
 
@@ -264,15 +219,16 @@ Ext.define('Office.view.fill.FillC', {
                         cnt = storeBasket.count(),
                         tabpanelBet = fill.down('#tabpanelBet');
 
-                    //Ext.defer(function () {
-                    if (cnt <= 1 && activeTabIndexBasket == 1) { // * переключим таб на Одиночные
+                    if (cnt <= 1 && activeTabIndexBasket == 1 && FillF.checkCanSwitchTab()) { // * переключим таб на Одиночные
                         tabpanelBet.setActiveItem(0);
                     }
-                    // }, 300, this);
 
                     // * system
-                    storeSystem.removeAll();
-                    comboSystem.reset();
+                    if (cnt < 3 && storeSystem.count()) {
+                        storeSystem.removeAll();
+                        comboSystem.reset();
+                        vmExpress.set('system_count', null);
+                    }
 
                     // * если больше 2 ставок, то показать комбик Системы
                     if (cnt > 2) {
@@ -281,8 +237,9 @@ Ext.define('Office.view.fill.FillC', {
                                 arrRec.push([i, 'Экспресс', 0]);
                             } else {
                                 // * число вариантов системы
-                                var value = Util.factorial(cnt) / (Util.factorial(i) * Util.factorial(cnt - i)),
+                                var value = BasketF.countSystemValue(i, cnt),
                                     txt = 'Система ' + i + ' из ' + cnt + ' (вариантов: ' + value + ')';
+
                                 arrRec.push([i, txt, value]);
                             }
                         }
@@ -298,14 +255,14 @@ Ext.define('Office.view.fill.FillC', {
                         }, 100, this);
                     }
 
-                    if (cnt == 2 && activeTabIndexBasket == 0) {
+                    if (cnt == 2 && activeTabIndexBasket == 0 && FillF.checkCanSwitchTab()) {
                         Ext.defer(function () {
                             tabpanelBet.setActiveItem(1);  // * todo тут плохо работает, если перейти на Таймлайн, а потом вернуться, то вкладка Экспресс выделяется, а маска не пропадает
                         }, 100, this);
                     }
                 }
             }
-//console.info('refreshBasketGrids');
+
             Ext.defer(function () {// * нужно, а то какая-то петля образуется и refreshBasketGrids много раз вызывается
                 BasketF.refreshBasketGrids();
             }, 100, this);
@@ -319,10 +276,10 @@ Ext.define('Office.view.fill.FillC', {
                 storeBasket.remove(rec);
 
             // * сохраним Итоговую ставку экспресса и выбранную систему в локальное хранилище
-            var gridbasketexpress = Ext.ComponentQuery.query('gridbasketexpress')[0],
-                vmSum = gridbasketexpress.getViewModel(),
+            var vmSum = gridbasketexpress.getViewModel(),
                 storeBasketSum = vmSum.getStore('basketSum');
             data.multi_value = storeBasketSum.getAt(0).get('amount');
+            data.system_value = vmSum.get('system_value');
             data.system_value = vmSum.get('system_value');
 
             // * найдем в локальном сторе требуемую ставку и поменяем параметры
@@ -338,7 +295,6 @@ Ext.define('Office.view.fill.FillC', {
             }, this);
         }
 
-
         FillF.actualPrizeAndBetResult();
 
         // * отправим ставки на монитор игрока
@@ -347,26 +303,61 @@ Ext.define('Office.view.fill.FillC', {
 
     clickEventRefresh: function () {
         var activeTab = BasketF.getActiveTabIndexEvent(),
+            grid = Ext.ComponentQuery.query('grideventlive')[activeTab],
+            activeTabId = BasketF.getActiveTabEventId(),
+            menumain = Ext.ComponentQuery.query('menumain')[0],
+            vm = menumain.getViewModel(),
+            storeEvent = vm.getStore(grid.getItemId()),
+            store_chained = grid.getViewModel().getStore('eventstore_chained'),
+            channel;
+
+        if (activeTabId == 'line')
+            channel = 'prematch';
+
+        if (activeTabId == 'live' || activeTabId == 'rats')
+            channel = 'inplay';
+
+        if (channel == 'inplay' || channel == 'prematch') {
+            if (activeTabId != 'rats') {
+                storeEvent.removeAll();
+            }
+
+            MatchdataTransport.reconnect(channel);
+        } else {
+            FillF.getDayExpressData();
+        }
+    },
+
+    clickEventCancel: function () {
+        var activeTab = BasketF.getActiveTabIndexEvent(),
             grid = Ext.ComponentQuery.query('grideventlive')[activeTab] /*|| Ext.ComponentQuery.query('grideventrats')[0]*/,
+            store = grid.getViewModel().getStore('eventstore_chained'),
             combocheck = grid.down('#cbSport'),
             filterEvent = grid.down('#filterEvent'),
             filterDate = grid.down('#filterDate'),
             filterTime = grid.down('#filterTime');
+
+        grid.getViewModel().set('filters', null);
+        store.clearFilter();
+
         if (combocheck) {
             var comboSport = combocheck.down('combo');
             comboSport.reset();
         }
-        if (filterEvent)
+        if (filterEvent) {
             filterEvent.reset();
-        if (filterDate)
-             filterDate.reset();
-        if (filterTime)
-            filterTime.reset();
+        }
+        if (filterDate) {
+            filterDate.setValue(null);
+        }
+        if (filterTime) {
+            filterTime.setValue(null);
+        }
     },
 
     // * срабатывает при деактивации вкладки
     onGrideventliveDisable: function (tab) {
-        var fill = Ext.ComponentQuery.query('#main')[0],
+        var fill = Ext.ComponentQuery.query('fill')[0],
             eventstab = fill.down('#eventstab');
         if (tab.getItemId() == 'dayexpress' || tab.getItemId() == 'dayexpressDC')
             eventstab.setActiveItem(0);
@@ -381,7 +372,7 @@ Ext.define('Office.view.fill.FillC', {
     // * нажали на фильтр кэфов (Основные, Форы...)
     eventTypeClick: function (btn) {
         var id = btn._id,
-            fill = Ext.ComponentQuery.query('#main')[0],
+            fill = Ext.ComponentQuery.query('fill')[0],
             tabEvent = fill.down('tabpanel'),
             activeTab = tabEvent.getActiveTab(),
             rec = activeTab.selection;
@@ -392,136 +383,181 @@ Ext.define('Office.view.fill.FillC', {
 // * ПОСТАВИТЬ
     clickMakeBet: function () {
         // * проверим, что указан игрок
-        var fill = Ext.ComponentQuery.query('#main')[0],
+        var fill = Ext.ComponentQuery.query('fill')[0],
             vmFill = fill.getViewModel(),
             selectedGamer = vmFill.get('selectedGamer'),
             menumain = Ext.ComponentQuery.query('menumain')[0],
             globals = menumain.getViewModel().get('globals'),
-            activeTabIndex = BasketF.getActiveTabIndex(),
             storeBasket = vmFill.getStore('basket');
 
-        // * проверки Экспресса дня
-        if (!FillF.checkConstants(activeTabIndex, storeBasket))
+
+        // * проверки соответствию глобальным настройкам системы
+        if (!FillF.checkConstants(storeBasket))
             return false;
 
         // * Наличие игрока: если стоят настройки Вести налоговый учет или Вести учет игроков, то выбор игрока обязателен
         if (!selectedGamer && globals.keepRecordsOfPlayers) {
-            Util.erMes('Не указан игрок');
+            Util.erMes('Не указан игрок', function (btn) {
+                // * переведем фокус на поле ввода игрока
+                var fastInputGambler = fill.down('#fastInputGambler');
+                if (btn == 'ok' && fastInputGambler) {
+                    fastInputGambler.focus();
+                }
+            });
             MonitorF.sendErrorToMonitor('Заполните паспортные данные игрока, анонимные ставки запрещены');
             return false;
         } else if (!selectedGamer && globals.use_ndfl) {
             Util.erMes('Не указан ТЛ');
             MonitorF.sendErrorToMonitor('Заполните паспортные данные игрока, анонимные ставки запрещены');
-            return null;
+            return false;
         }
 
         // * проверим, что нет нулевых ставок
-        if (!FillF.checkNotNull(activeTabIndex, storeBasket))
+        if (!FillF.checkNotNull(storeBasket))
             return false;
 
-        // * проверим, что для Крыс до окончания осталось не менее 6 секунд
-
-
         function makeBet() {
-            var fill = Ext.ComponentQuery.query('#main')[0],
+            var fill = Ext.ComponentQuery.query('fill')[0],
                 vmFill = fill.getViewModel(),
                 store = vmFill.getStore('basket'),
                 activeTabIndexEvent = BasketF.getActiveTabIndexEvent(),
                 gridevent = fill.query('grideventlive')[activeTabIndexEvent];
 
             // * удалим просроченные (кф=0) ставки
-            BasketF.cleanBasketStore();
+            BasketF.clearClosedBets();
 
-            if (gridevent
-                && (gridevent.getItemId() == 'live'
-                    /*  || gridevent.getItemId() == 'dayexpress'
-                     || gridevent.getItemId() == 'dayexpressDC'*/)) {
-                BasketF.getMaxMin('BasketF.basketQueue("place")');
-            } else
-                BasketF.getMaxMin('BasketF.basketPrerequest()');
+            //if (gridevent
+            //    && (gridevent.getItemId() == 'live'
+            //        /*  || gridevent.getItemId() == 'dayexpress'
+            //         || gridevent.getItemId() == 'dayexpressDC'*/)) {
+            //    BasketF.getMaxMin('BasketF.basketQueue("place")');
+            //} else
+            //    BasketF.getMaxMin('BasketF.basketPrerequest()');
+            BasketF.getMaxMin('BasketF.basketQueue("place")');
         };
 
-        function callbackFn() {
-            var confirm = Util.getGlobalConst("CONFIRMATION_SLIP_OUTLET_CARD");
-
-            // * если у клиента есть карта и стоит настройка подтверждать ставку картой клиента, то делаем ставку после проверки кода карты
-            if (selectedGamer && selectedGamer.found_by_barcode && confirm != 'false') {
-                FayeClient.sendCommand({command: 'need_card_scan'}); // * todo как сделать callback?
-                FillF.checkCard(makeBet);
-            } else {
-                makeBet();
-            }
-        };
-        // * обновим данные по константам системы
-        Setup.getGlobalProp(callbackFn);
+        // * если у клиента есть карта и стоит настройка подтверждать ставку картой клиента, то делаем ставку после проверки кода карты
+        var confirm = Util.getGlobalConst("CONFIRMATION_SLIP_OUTLET_CARD");
+        if (selectedGamer && selectedGamer.found_by_barcode && confirm != 'false') {
+            FayeClient.sendCommand({command: 'need_card_scan'}); // * todo как сделать callback?
+            FillF.checkCard(makeBet);
+        } else {
+            makeBet();
+        }
     },
 
     onEnterFastInput: function (field, e) {
         if (e.getKey() == e.ENTER) {
             BasketF.addFastInput(field);
+            field.reset();
         }
     },
 
     onEnterFastInputGambler: function (field, e) {
+        var _this = this;
         if (e.getKey() == e.ENTER && field.getValue()) {
-            // * отправим поисковый запрос на сервер (поиск игрока)
-            var userToken = Ext.util.Cookies.get('betzet_token'),
-                _this = this;
+            Ext.defer(function () { // * задержка, т.к. vm за сканером не успевает
+                // * отправим поисковый запрос на сервер (поиск игрока)
+                var userToken = Ext.util.Cookies.get('betzet_token');
 
-            Ext.Ajax.request({
-                url: Ext.util.Format.format(Server.getSearch(), userToken, field.getValue()),
-                success: function (resp) {
-                    var res = Gui.JSONDecodeSafe(resp.responseText);
+                var fill = Ext.ComponentQuery.query('fill')[0],
+                    east = fill.down('panel[region=east]');
+                east.getEl().mask('Загрузка игроков...');
 
-                    if (res.status == 'success') {
-                        var rows = res.response;
-                        if (rows.length == 0) {
-                            // * ругнемся
-                            Util.erMes('Игрок не найден');
-                        } else if (rows.length == 1) {
-                            // * примем- сохраним во viewmodel
-                            FillF.saveGamerToViewModel(rows[0]);
+                Ext.Ajax.request({
+                    url: Ext.util.Format.format(Server.getSearch(), userToken, field.getValue()),
+                    success: function (resp) {
+                        east.getEl().unmask();
+
+                        var res = Gui.JSONDecodeSafe(resp.responseText);
+
+                        if (res.status == 'success') {
+                            var rows = res.response;
+                            if (rows.length == 0) {
+                                // * ругнемся
+                                Util.erMes('Игрок не найден');
+                            } else if (rows.length == 1) {
+                                // * примем- сохраним во viewmodel
+                                if (FormCardF.isAllowedPlayer(rows[0])) {
+                                    FillF.validateGamerAndSave(rows[0]);
+                                } else {
+                                    FormCardF.sayNotAllowedPlayer(rows[0]);
+                                }
+                            } else {
+                                // * покажем в гриде
+                                _this.clickUser(null, null, rows);
+                            }
                         } else {
-                            // * покажем в гриде
-                            _this.clickUser(null, null, rows);
+                            var message = res.message;
+                            if (message == 'PLAYER_NOT_FOUND')
+                                Util.erMes('Игрок не найден');
+                            else
+                                Util.erMes('Ошибка: ' + res.message);
                         }
-                    } else {
-                        var message = res.message;
-                        if (message == 'PLAYER_NOT_FOUND')
-                            Util.erMes('Игрок не найден');
-                        else
-                            Util.erMes('Ошибка: ' + res.message);
-                    }
-                },
-                failure: Util.fatalError,
-                method: 'POST'
-            });
+                    },
+                    failure: function () {
+                        east.getEl().unmask();
+                        Util.warnMes(Util.ERROR_500);
+                    },
+                    method: 'POST'
+                });
+            }, 100, this);
+
         }
     },
 
 // * перед переключением вкладок проверим, что одинары принадлежат разным событиям
     onBeforeBetTabChange: function () {
-        var fill = Ext.ComponentQuery.query('#main')[0],
+        var fill = Ext.ComponentQuery.query('fill')[0],
             activeTabIndex = BasketF.getActiveTabIndex(),
             vmFill = fill.getViewModel(),
             storeBasket = vmFill.getStore('basket'),
             arrEventId = Ext.Array.pluck(Ext.Array.pluck(storeBasket.getRange(), 'data'), 'event_id');
+        //
+        //// * проверим, что ставки принадлежат разным турнирам, иначе на Экспресс не переключаем
+        //if ((activeTabIndex == 0
+        //    && (storeBasket.count() < 2 || Util.hasDuplicates(arrEventId))
+        //    && !BasketF.isDayExpress())
+        //    || (activeTabIndex == 1
+        //    && BasketF.isDayExpress())) {
+        //
+        //    //Util.warnMes('Переключение купона невозможно. Присутствуют одинары, поставленные на одно событие.');
+        //    return false;
+        //}
+        if (FillF.checkCanSwitchTab())
+            return true;
+        else {
+            if (activeTabIndex == 1
+                && BasketF.isDayExpress()) {
 
-        // * проверим, что ставки принадлежат разным турнирам, иначе на Экспресс не переключаем
-        if ((activeTabIndex == 0
-            && (storeBasket.count() < 2 || Util.hasDuplicates(arrEventId))
-            && !BasketF.isDayExpress())
-            || (activeTabIndex == 1
-            && BasketF.isDayExpress())) {
+                Ext.defer(function () { // * иначе сообщение моргает в центре экрана, почему-то
+                    Util.warnMes('Переключение купона невозможно. Для ЭД возвожно создать только экспресс.');
+                }, 10, this);
+            } else if (activeTabIndex == 0
+                && (Util.hasDuplicates(arrEventId))
+                && !BasketF.isDayExpress()) { // * срабатывает и когда заполнение происходит из лок.хран.
+
+                Ext.defer(function () {
+                    Util.warnMes('Переключение купона невозможно. Присутствуют одинары, поставленные на одно событие.');
+                }, 10, this);
+            } else if (activeTabIndex == 0
+                && (storeBasket.count() < 2)
+                && !BasketF.isDayExpress()) {
+
+                Ext.defer(function () {
+                    Util.warnMes('Переключение купона невозможно. В купоне должно быть больше одной ставки.');
+                }, 10, this);
+            }
+
             return false;
         }
     },
 
+
 // * кнопка "Очистить все" в купоне
     clickClearBet: function () {
-        var fill = Ext.ComponentQuery.query('#main')[0],
+        var fill = Ext.ComponentQuery.query('fill')[0],
             vm = fill.getViewModel(),
-            localStorage = Ext.util.LocalStorage.get('newpos'),
             storeBasket = vm.getStore('basket'),
             fastInput = fill.down('#fastInput'),
             fastInputGambler = fill.down('#fastInputGambler'),
@@ -531,12 +567,11 @@ Ext.define('Office.view.fill.FillC', {
         storeBasket.removeAll();
 
         // * обнуляем стор итогов экспресса (нельзя делать removeAll)
-        FillF.clearBasketSumAndSystem();
+        FillF.clearBasketSum();
+        FillF.clearSystem();
 
         // * очищаем что связано с выбранным игроком/таймлайном
-        localStorage.removeItem('selectedGamer');
-        localStorage.removeItem('balance');
-        localStorage.removeItem('timeline_id');
+        Setup.clearLocalStorage();
 
         vm.set('basket_count', 0);
         vm.set('selectedGamer', '');
@@ -565,7 +600,8 @@ Ext.define('Office.view.fill.FillC', {
     onFastInputAfterrender: function (component) {
         var tip = Ext.create('Ext.tip.ToolTip', {
             target: component.id,
-            html: 'Быстрый ввод ставок в формате <№_турнира номер_исхода сумма, и т.д.>,<br>например: 51122 1 500,51122 2 300,51122 5 100'
+            html: '<u>Формат:</u> №_Матча №_Исхода Сумма, №_Матча №_Исхода Сумма, ...<br><u>Пример:</u> 51122 1 500, 51122 2 300'
+            //html: 'Быстрый ввод ставок в формате "номерМатча номерИсхода сумма, и т.д.",<br>например: 51122 1 500,51122 2 300,51122 5 100'
         });
     },
 
@@ -573,8 +609,10 @@ Ext.define('Office.view.fill.FillC', {
     cancelBet: function (btn) {
         var win = btn.up('panel'),
             vm = win.getViewModel(),
+            fill = Ext.ComponentQuery.query('fill')[0],
             key = vm.get('key');
 
+        fill.getEl().unmask();
         win.close();
 
         BasketF.basketQueue('remove', key);
@@ -583,50 +621,56 @@ Ext.define('Office.view.fill.FillC', {
 
     // * кнопка Выбрать игрока в купоне
     clickUser: function (button, e, records) {
-        var window = Ext.create('Ext.Window', {
-            width: 1130,
-            height: 550,
-            autoScroll: true,
-            title: 'Поиск игроков',
-            defaultFocus: "term",
-            constrain: true,
-            itemId: 'windowSearch',
-            modal: true,
-            layout: {
-                type: 'hbox',
-                align: 'stretch'
-            },
-            items: [
-                {
-                    xtype: 'formusersearch'
-                }
-            ]
-        });
+        var window = Ext.ComponentQuery.query('#windowSearch')[0];
+        if (!window)
+            window = Ext.create('Ext.Window', {
+                width: 1130,
+                height: 550,
+                autoScroll: true,
+                closeAction: 'destroy',
+                title: 'Поиск игроков',
+                defaultFocus: "term",
+                constrain: true,
+                itemId: 'windowSearch',
+                modal: true,
+                layout: {
+                    type: 'hbox',
+                    align: 'stretch'
+                },
+                items: [
+                    {
+                        xtype: 'formusersearch'
+                    }
+                ]
+            });
         window.show();
 
+        var gridsearch = window.down('gridsearch');
         // * если окно открывается в результате вызова через Быстрый ввод игрока, когда результат- несколько записей
         if (records) {
-            var gridsearch = window.down('gridsearch');
             Ext.defer(function () {
                 gridsearch.store.loadData(records);
             }, 100, this);
         }
 
         // * переопределение ф-ий в gridsearch::controller на те, что описаны в данном контроллере
-        var gridsearch = window.down('gridsearch');
         gridsearch.getController().onCellDblclick = this.onCellDblclick;
         gridsearch.getController().loadSearchTimelineGambler = FillF.loadSearchTimelineGambler;
     },
 
     // * двойной щелчок по ячейке в Поиске игроков- выбрали игрока
-    onCellDblclick: function (button, td, cellIndex, rec, tr, rowIndex) {
+    onCellDblclick: function (button, td, cellIndex, record, tr, rowIndex) {
         var win = button.up('window'),
             grid = win.down('gridsearch'),
             selected = grid.selection;
 
-        FillF.saveGamerToViewModel(selected);
+        if (FormCardF.isAllowedPlayer(record)) {
+            FillF.validateGamerAndSave(selected);
 
-        win.close();
+            win.close();
+        } else {
+            FormCardF.sayNotAllowedPlayer(record);
+        }
     },
 
     // * кнопка Отмена в Поиске игроков
@@ -638,7 +682,7 @@ Ext.define('Office.view.fill.FillC', {
     // * кнопка Выбрать таймлайн в купоне
     clickTimeline: function (button) {
         var window = Ext.create('Ext.Window', {
-            width: 320,
+            width: 360,
             height: 125,
             autoScroll: true,
             title: 'Введите штрихкод ТЛ (отсканируйте чек)',
@@ -656,6 +700,7 @@ Ext.define('Office.view.fill.FillC', {
                     emptyText: '№ ТЛ',
                     itemId: 'timelineId',
                     controller: this,
+                    allowBlank: false,
                     _fireEventOnEnter: true,
                     margin: 2,
                     listeners: {
@@ -663,7 +708,8 @@ Ext.define('Office.view.fill.FillC', {
                             if (e.getKey() == e.ENTER) {
                                 FillF.getTimelinePlayer(field.getValue());
                             }
-                        }
+                        },
+                        afterrender: Util.validate
                     }
                 },
                 {
@@ -681,6 +727,7 @@ Ext.define('Office.view.fill.FillC', {
         var menumain = Ext.ComponentQuery.query('menumain')[0],
             vmMenumain = menumain.getViewModel(),
             storeBasketLocal = vmMenumain.getStore('basket_localstorage');
+
         storeBasketLocal.each(function (item) {
             if (item) {
                 var query = item.get('query');
@@ -729,13 +776,22 @@ Ext.define('Office.view.fill.FillC', {
             storeBasketLocal.add({query: data});
         }
 
-        // * обновим свойство type (single/multi) и multi_value у записей купона
+        // * фокус на поле Ставка для Одинаров
+        Ext.defer(function () {
+            var gridbasketsingle = Ext.ComponentQuery.query('gridbasketsingle')[0],
+                row = gridbasketsingle.getView().getRow(index);
 
+            if (row)
+                var input = row.getElementsByTagName('input')[0];
+
+            if (input)
+                input.focus();
+        }, 500, this);
     },
 
     onDestroy: function (fill) {
-        if (WS)
-            WS.UnsubscribeAll();
+        //if (WS)
+        //    WS.UnsubscribeAll();
     },
 
 });

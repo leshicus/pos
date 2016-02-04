@@ -50,7 +50,7 @@ Ext.define('Office.view.accept.GridAcceptM', {
             autoLoad: false,
             // autoLoad: {start: 0, limit: Util.ITEMS_PER_PAGE},
             listeners: {
-                load: 'showBalance',
+                //load: 'showBalance',
                 // * этот beforeload для: если быстро щелкнуть на Обовить, то одни и те же данные загружаются несколько раз
                 beforeload: function (store, operation, eOpts) {
                     if(store.isLoading()) return false;
@@ -255,7 +255,6 @@ Ext.define('Office.view.accept.GridAcceptM', {
             storeId: 'result',
             proxy: {
                 type: 'ajax',
-                //url: Ext.util.Format.format(Server.getFilterSlipState(), '{token}'),
                 url: Server.getUrl({
                     class: 'Pos_Filters_Slipstate',
                     token: '{token}',
@@ -306,17 +305,7 @@ Ext.define('Office.view.accept.GridAcceptM', {
                 ['0', "предматч"],
                 ['1', "лайв"],
             ]
-        },
-        //basket_localstorage: {
-        //    fields: ['id', 'query'],
-        //    extend: 'Ext.data.Model',
-        //    autoLoad: true,
-        //    autoSync: true,
-        //    proxy: {
-        //        type: 'localstorage',
-        //        id: 'newpos_basket'
-        //    }
-        //}
+        }
     },
     // * формулы берут из модели значение
     formulas: {

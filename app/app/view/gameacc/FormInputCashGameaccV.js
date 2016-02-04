@@ -34,7 +34,7 @@ Ext.define('Office.view.gameacc.FormInputCashGameaccV', {
                 allowBlank:false,
                 //msgTarget:'side',
                 bind:{
-                    value:'{theClient.mobile_phone}'
+                    value:'{mobile_phone}'
                 }
             },
             {

@@ -86,7 +86,14 @@
             {"title": "2-1", "name": "coeff_EXACT_SCORE_TENNIS_3_2_1"},
             {"title": "3-0", "name": "coeff_EXACT_SCORE_TENNIS_3_3_0"},
             {"title": "3-1", "name": "coeff_EXACT_SCORE_TENNIS_3_3_1"},
-            {"title": "3-2", "name": "coeff_EXACT_SCORE_TENNIS_3_3_2"}
+            {"title": "3-2", "name": "coeff_EXACT_SCORE_TENNIS_3_3_2"},
+
+            {"title": "1-0", "name": "coeff_EXACT_SCORE_TENNIS_1_0"},
+            {"title": "2-0", "name": "coeff_EXACT_SCORE_TENNIS_2_0"},
+            {"title": "2-1", "name": "coeff_EXACT_SCORE_TENNIS_2_1"},
+            {"title": "3-0", "name": "coeff_EXACT_SCORE_TENNIS_3_0"},
+            {"title": "3-1", "name": "coeff_EXACT_SCORE_TENNIS_3_1"},
+            {"title": "3-2", "name": "coeff_EXACT_SCORE_TENNIS_3_2"}
         ]
         },
 //      {"title": t('markets.draw'), "rows": [
@@ -102,7 +109,14 @@
             {"title": "0-3", "name": "coeff_EXACT_SCORE_TENNIS_3_0_3"},
             {"title": "1-2", "name": "coeff_EXACT_SCORE_TENNIS_3_1_2"},
             {"title": "1-3", "name": "coeff_EXACT_SCORE_TENNIS_3_1_3"},
-            {"title": "2-3", "name": "coeff_EXACT_SCORE_TENNIS_3_2_3"}
+            {"title": "2-3", "name": "coeff_EXACT_SCORE_TENNIS_3_2_3"},
+
+            {"title": "0-1", "name": "coeff_EXACT_SCORE_TENNIS_0_1"},
+            {"title": "0-2", "name": "coeff_EXACT_SCORE_TENNIS_0_2"},
+            {"title": "0-3", "name": "coeff_EXACT_SCORE_TENNIS_0_3"},
+            {"title": "1-2", "name": "coeff_EXACT_SCORE_TENNIS_1_2"},
+            {"title": "1-3", "name": "coeff_EXACT_SCORE_TENNIS_1_3"},
+            {"title": "2-3", "name": "coeff_EXACT_SCORE_TENNIS_2_3"}
         ]
         }
     ]

@@ -8,30 +8,26 @@ Ext.define('Office.view.fill.FillV', {
         'Office.view.fill.basket.GridBasketSingleV',
         'Office.view.fill.basket.GridBasketExpressV',
         'Office.view.rat.GridRatV',
+        'Office.view.menumain.MenuMainM',
         'Ext.tab.Panel',
         'Ext.form.Label'
     ],
     xtype: 'fill',
     controller: 'fill',
-    //reference: 'fill',
     viewModel: {
         type: 'fill'
     },
-    itemId: 'main',
+    itemId: 'fill',
     layout: 'border',
     flex: 1,
     listeners: {
         render: 'onFillRender',
-        //beforerender: 'onFillBeforeRender',
-        // afterrender: 'onFillRender'
         destroy: 'onDestroy'
     },
     initComponent: function () {
         Util.initClassParams({
             scope: this,
             params: [
-                //'filters.cbSport',
-                //'filters.filterEvent',
                 'locale'
             ]
         });
@@ -47,7 +43,6 @@ Ext.define('Office.view.fill.FillV', {
                     {
                         xtype: 'segmentedbutton',
                         cls: 'eventtypes',
-
                         defaults: {
                             scale: 'medium',
                             handler: 'eventTypeClick'
@@ -68,12 +63,9 @@ Ext.define('Office.view.fill.FillV', {
         this.items = [
             {
                 region: 'west',
-                width: 360,
+                width: 370,
                 title: 'События',
-                //bind:{
-                //    title: 'События ' + '{timer}',
-                //},
-                collapsible: true,
+                collapsible: false,
                 collapsed: false,
                 split: true,
                 frame: true,
@@ -89,47 +81,59 @@ Ext.define('Office.view.fill.FillV', {
                     {
                         xtype: 'tabpanel',
                         flex: 1,
-                        //activeTab: null,
                         itemId: 'eventstab',
                         cls: 'eventstab',
                         //deferredRender:false, // * чтобы все содержимое вкладок рендерились сразу, а не в момент клика по вкладке
-                        defaults:{
+                        defaults: {
                             xtype: 'grideventlive',
-                            flex: 1,
                             cls: 'gridgroupheader'
                         },
                         items: [
                             {
                                 itemId: 'line',
-                                title: 'Линия'
+                                title: 'Линия',
+                                trailingBufferZone: 5,  // Keep 5 rows rendered in the table behind scroll
+                                leadingBufferZone: 5, // * !!! эти параметры работают только здесь, а не в прототипе !!!
+                                bind: {
+                                    title: 'Линия' + '{getCountLine}'
+                                }
                             },
                             {
                                 itemId: 'live',
-                                title: 'Лайв'
+                                title: 'Лайв',
+                                bufferedRenderer: false,
+                                bind: {
+                                    title: 'Лайв' + '{getCountLive}'
+                                }
                             },
                             {
                                 itemId: 'rats',
-                                glyph: Glyphs.get('paw'),
+                                bufferedRenderer: false,
+                                features: Ext.emptyFn(),
                                 title: 'Крысы'
                             },
                             {
                                 itemId: 'dayexpress',
+                                bufferedRenderer: false,
+                                features: Ext.emptyFn(),
                                 title: 'ЭД 5ка',
-                                bind:{
-                                    disabled:'{!dayexpress_Loaded}'
+                                bind: {
+                                    disabled: '{!dayexpress_Loaded}'
                                 },
-                                listeners:{
-                                    disable:'onGrideventliveDisable'
+                                listeners: {
+                                    disable: 'onGrideventliveDisable'
                                 }
                             },
                             {
                                 itemId: 'dayexpressDC',
+                                bufferedRenderer: false,
+                                features: Ext.emptyFn(),
                                 title: 'ЭД ДШ',
-                                bind:{
-                                    disabled:'{!dayexpressDC_Loaded}'
+                                bind: {
+                                    disabled: '{!dayexpressDC_Loaded}'
                                 },
-                                listeners:{
-                                    disable:'onGrideventliveDisable'
+                                listeners: {
+                                    disable: 'onGrideventliveDisable'
                                 }
                             }
                         ],
@@ -139,14 +143,15 @@ Ext.define('Office.view.fill.FillV', {
                     }
                 ],
                 tools: [
-                    /* {
-                     type: 'maximize',
-                     tooltip: 'Скрыть/Раскрыть экспрессы'
-                     },*/
+                    {
+                        type: 'refresh',
+                        tooltip: 'Обновить события',
+                        handler: 'clickEventRefresh'
+                    },
                     {
                         type: 'cancel',
                         tooltip: 'Удалить фильтры',
-                        handler:'clickEventRefresh'
+                        handler: 'clickEventCancel'
                     }
                 ]
             },
@@ -155,7 +160,7 @@ Ext.define('Office.view.fill.FillV', {
                 xtype: 'panel',
                 itemId: 'centerArea',
                 bind: {
-                    title: '{title}'
+                    title: '<span style="color: #4CAE73;font-size: 20px;line-height: 20px;padding:1px;">{title}</span>'
                 },
                 autoScroll: true,
                 frame: true,
@@ -177,24 +182,13 @@ Ext.define('Office.view.fill.FillV', {
                         items: [toolbarMainLine, toolbarEventTypes]
                     }
                 ],
-                bbar: []
-                //    {
-                //        xtype: 'gridrat',
-                //        margin: 5,
-                //       // itemId:'gridrat',
-                //        flex: 1,
-                //        height: 300,
-                //        //bind:{
-                //        //    hidden:'{!showGridrat}'
-                //        //}
-                //    }
-                //]
+                bbar:[]
             },
             {
                 region: 'east',
-                width: 300,
+                width: 260,
                 title: 'Купон',
-                itemId:'eastRegion',
+                itemId: 'eastRegion',
                 collapsible: true,
                 collapsed: false,
                 split: true,
@@ -209,7 +203,6 @@ Ext.define('Office.view.fill.FillV', {
                 },
                 items: [
                     {
-
                         layout: {
                             type: 'vbox',
                             align: 'stretch'
@@ -226,8 +219,8 @@ Ext.define('Office.view.fill.FillV', {
                                     specialkey: 'onEnterFastInput',
                                     afterrender: 'onFastInputAfterrender'
                                 },
-                                bind:{
-                                    disabled:'{disableFastInputField}'
+                                bind: {
+                                    disabled: '{disableFastInputField}'
                                 }
                             },
                             {
@@ -269,75 +262,35 @@ Ext.define('Office.view.fill.FillV', {
                                         }
                                     }
                                 ]
-                            },
-                            //{
-                            //    layout: {
-                            //        type: 'hbox'
-                            //    },
-                            //    items: [
-                            //        {
-                            //            xtype: 'textfield',
-                            //            emptyText: 'Быстрый ввод таймлайн',
-                            //            flex: 1,
-                            //            enableKeyEvents: true,
-                            //            //_fireEventOnEnter: true,
-                            //            //selectOnFocus: true,
-                            //            itemId: 'fastInputTL',
-                            //            listeners: {
-                            //                specialkey: 'onEnterFastInputTL'
-                            //            },
-                            //            bind: {
-                            //                hidden: '{!showButtonBusketSearchTimeline}'
-                            //            }
-                            //        },
-                            //        {
-                            //            xtype: 'button',
-                            //            tooltip: 'Выбрать таймлайн',
-                            //            text: 'ТЛ',
-                            //            //margin: '0 2 0 2',
-                            //            //glyph: Glyphs.get('list_1'),
-                            //            handler: 'onClickTimeline',
-                            //            bind: {
-                            //                hidden: '{!showButtonBusketSearchTimeline}'
-                            //            }
-                            //        }
-                            //    ]
-                            //}
-
-
+                            }
                         ]
                     },
                     {
                         xtype: 'tabpanel',
                         flex: 1,
-                        //activeTab: 0,
                         itemId: 'tabpanelBet',
                         cls: 'baskettab',
                         items: [
                             {
                                 xtype: 'gridbasketsingle',
                                 flex: 1,
-                                minHeight:100,
-                                glyph: Glyphs.get('file'),
+                                minHeight: 100,
                                 itemId: 'single',
-                                //title: 'Одиночные',
                                 cls: 'basket-grid',
+                                bufferedRenderer: false,
                                 bind: {
-                                    //disabled: '{showTabSingle}',
-                                    title: 'Одиночные'+'{getCountSingle}'
+                                    title: 'Одиночные' + '{getCountSingle}'
                                 }
                             },
                             {
                                 xtype: 'gridbasketexpress',
                                 flex: 1,
-                                minHeight:100,
-                                glyph: Glyphs.get('files'),
+                                minHeight: 100,
                                 itemId: 'express',
                                 cls: 'basket-grid',
-                                //title: 'Экспресс',
+                                leadingBufferZone: 3,
                                 bind: {
-                                    //disabled: '{showTabExpress}',
-                                    title: 'Экспресс'+'{getCountExpress}'
+                                    title: 'Экспресс' + '{getCountExpress}'
                                 }
                             }
                         ],
@@ -348,8 +301,6 @@ Ext.define('Office.view.fill.FillV', {
                     },
                     {
                         xtype: 'container',
-                        //flex: 1,
-                        //padding:'5 0 0 0',
                         layout: 'anchor',
                         items: [
                             {
@@ -366,7 +317,7 @@ Ext.define('Office.view.fill.FillV', {
                             },
                             {
                                 xtype: 'button',
-                                text: 'Очистить все',
+                                text: 'Очистить',
                                 scale: 'medium',
                                 anchor: '50%',
                                 margin: '0 0 0 2',

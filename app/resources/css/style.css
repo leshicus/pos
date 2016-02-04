@@ -38,33 +38,13 @@
     content: '' !important;
 }
 
-/*.x-grid-row-alt {
-    background-color: #ff0000 !important; // red
-}
-
-.x-grid-item-alt {
-    background-color: #bbffbb !important; // red
-}*/
-
-/* замочек заблокированной карты */
-/*.icon-lock-4 {
-    font-family: FontAwesome;
-    color: crimson;
-    margin-left: 14px;
-    font-size: 120%;
-}*/
-
-/*.text-align-right {
-    text-align: right !important;
-}*/
-
 /* для комбика, чтобы не переносился текст в ячейке */
 .nowrap {
     white-space: nowrap !important;
 }
 
 .checkfield-align {
-    vertical-align: -2px;
+    vertical-align: -2px !important;
 }
 
 /* замена иконок дерева */
@@ -84,7 +64,7 @@
 
 /* ячейки заблокированных Клубных карт */
 .blocked-card-row {
-    opacity: 0.5 !important;
+    opacity: 0.5 ;
 }
 /*
 .changed-event-row {
@@ -92,7 +72,7 @@
 }*/
 
 /* класс для скрытия записи таблицы */
-.x-hide-display { display: none;}
+.x-hide-display { display: none !important;}
 
 @import url(http://fonts.googleapis.com/css?family=Roboto+Condensed&subset=cyrillic-ext,latin);
 
@@ -101,12 +81,6 @@
     font-size: 15px !important;
 }
 
-/* ячейки Крыс */
-/*
-.first-rats-row {
-    background-color: #58CD87;
+.x-form-invalid-field-default {
+    background-color: rgba(215, 0, 0, 0.1) !important;
 }
-
-.second-rats-row {
-    background-color: #64BDFC;
-}*/

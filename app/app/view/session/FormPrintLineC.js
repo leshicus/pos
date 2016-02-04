@@ -71,10 +71,11 @@ Ext.define('Office.view.session.FormPrintLineC', {
             endDate = formprintline.down('#end');
         sportCombo.reset();
         tournamentCombo.reset();
+        formprintline.getViewModel().getStore('tournament').removeAll();
         beginDate.reset();
         endDate.reset();
     },
-    reloadTournamentCombo: function() {
+    reloadTournamentCombo: function () {
         var formprintline = Ext.ComponentQuery.query('formprintline')[0],
             sportCombo = formprintline.down('#cbSport'),
             tournamentCombo = formprintline.down('#cbTournament');
@@ -83,14 +84,14 @@ Ext.define('Office.view.session.FormPrintLineC', {
             vmMenumain = menumain.getViewModel();
 
         var proxy = tournamentCombo.getStore().getProxy();
-        proxy.url =  Server.getUrl({
-                    class: 'Pos_Filters_Tournament',
-                    token: vmMenumain.get('token'),
-                    params: {
-                        sport_id: sportCombo.getValue(),
-                        mode:0,
-                    }
-                });
+        proxy.url = Server.getUrl({
+            class: 'Pos_Filters_Tournament',
+            token: vmMenumain.get('token'),
+            params: {
+                sport_id: sportCombo.getValue(),
+                mode: 0
+            }
+        });
 
         tournamentCombo.getStore().setProxy(proxy);
         tournamentCombo.getStore().reload();

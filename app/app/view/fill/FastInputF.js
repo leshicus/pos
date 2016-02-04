@@ -51,58 +51,34 @@ Ext.define('Office.view.fill.FastInputF', {
         7: {
             outcome_id: 1483,
             outcome_name: 'coeff_FT_TOTAL_2_TG'
-            /*method: 'get_total_outcome_name'
-             addition: 'G'
-             value: 1.5*/
         },
         8: {
             outcome_id: 1484,
             outcome_name: 'coeff_FT_TOTAL_2_TL'
-            /*method: 'get_total_outcome_name'
-             addition: 'L'
-             value: 1.5*/
-        },
+         },
         9: {
             outcome_id: 193,
             outcome_name: 'coeff_FT_TG'
-            /*method: 'get_total_outcome_name'
-             addition: 'G'
-             value: 2.5*/
         },
         10: {
             outcome_id: 194,
             outcome_name: 'coeff_FT_TL'
-            /* method: 'get_total_outcome_name'
-             addition: 'L'
-             value: 2.5*/
         },
         11: {
             outcome_id: 1492,
-            outcome_name: 'coeff_FT_TOTAL_5_TG',
-            /* method: 'get_total_outcome_name'
-             addition: 'G'
-             value: 3.5*/
+            outcome_name: 'coeff_FT_TOTAL_5_TG'
         },
         12: {
             outcome_id: 1493,
-            outcome_name: 'coeff_FT_TOTAL_5_TL',
-            /* method: 'get_total_outcome_name'
-             addition: 'L'
-             value: 3.5*/
+            outcome_name: 'coeff_FT_TOTAL_5_TL'
         },
         13: {
             outcome_id: 1498,
-            outcome_name: 'coeff_FT_TOTAL_7_TG',
-            /*method: 'get_total_outcome_name'
-             addition: 'G'
-             value: 4.5*/
+            outcome_name: 'coeff_FT_TOTAL_7_TG'
         },
         14: {
             outcome_id: 1499,
-            outcome_name: 'coeff_FT_TOTAL_7_TL',
-            /*method: 'get_total_outcome_name'
-             addition: 'L'
-             value: 4.5*/
+            outcome_name: 'coeff_FT_TOTAL_7_TL'
         },
         15: {
             outcome_id: 2055,

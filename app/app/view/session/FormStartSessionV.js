@@ -18,13 +18,10 @@ Ext.define('Office.view.session.FormStartSessionV', {
         labelWidth: 150,
         margin: 5
     },
+    listeners: {
+        afterrender: 'onAfterRender'
+    },
     initComponent: function () {
-        //var vm = this.getViewModel(),
-        //    menumain = Ext.ComponentQuery.query('menumain')[0],
-        //    vmMenumain = menumain.getViewModel();
-        //
-        //vm.set('theSession', vmMenumain.getData().theSession);
-
         this.items = [
             {
                 xtype: 'datefield',
@@ -38,11 +35,25 @@ Ext.define('Office.view.session.FormStartSessionV', {
                 fieldLabel: 'ФИО кассира',
                 xtype: 'textfield',
                 itemId: 'operator_fullname',
-                allowBlank:false,
-                //msgTarget:'side',
-                validator: this.getController().onOperatorFullnam,
-                bind:{
-                    disabled:'{!showOperatorFio}'
+                allowBlank: false,
+                validator: function (val) {
+                    //val = val.trim(); // * удаление пробелов по краям
+                    //val = val.replace(/\s+/g, " "); // * удаление сдвоенных пробелов
+                    //if (val.split(' ').length >= 3)
+                    //    return true;
+                    //else
+                    //    return 'ФИО должно состоять не менее чем из трех слов';
+                    var pp = /^[a-zA-Zа-яА-Я.]+ [a-zA-Zа-яА-Я.]+ [a-zA-Zа-яА-Я.]+$/;
+                    if (val.match(pp)) {
+                        return true;
+                    } else
+                        return 'ФИО должно состоять из трех слов';
+                },
+                bind: {
+                    disabled: '{!showOperatorFio}'
+                },
+                listeners: {
+                    specialkey: 'onEnter'
                 }
             },
             {

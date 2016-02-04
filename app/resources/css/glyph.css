@@ -273,34 +273,34 @@
 }
 
 /* гриды и панели */
-.gridcard .x-title-glyph {
-    color: #FF8D8D !important;
-    position: relative;
-}
+/*.gridcard .x-title-glyph {*/
+    /*color: #FF8D8D !important;*/
+    /*position: relative;*/
+/*}*/
 
-.gridcard .x-panel-header-title-default-framed > .x-title-text-default-framed {
-    padding-left: 6px !important;
-}
+/*.gridcard .x-panel-header-title-default-framed > .x-title-text-default-framed {*/
+    /*padding-left: 6px !important;*/
+/*}*/
 .glyphWithPadding .x-panel-header-title-default-framed > .x-title-text-default-framed {
     padding-left: 6px !important;
 }
-.gridtimeline .x-title-glyph {
-    color: #2BA13E !important;
-    position: relative;
-}
+/*.gridtimeline .x-title-glyph {*/
+    /*color: #2BA13E !important;*/
+    /*position: relative;*/
+/*}*/
 
-.gridtimeline .x-panel-header-title-default-framed > .x-title-text-default-framed {
-    padding-left: 6px !important;
-}
+/*.gridtimeline .x-panel-header-title-default-framed > .x-title-text-default-framed {*/
+    /*padding-left: 6px !important;*/
+/*}*/
 
-.gridpay .x-title-glyph {
-    color: #46C43C !important;
-    position: relative;
-}
+/*.gridpay .x-title-glyph {*/
+    /*color: #46C43C !important;*/
+    /*position: relative;*/
+/*}*/
 
-.gridpay .x-panel-header-title-default-framed > .x-title-text-default-framed {
-    padding-left: 6px !important;
-}
+/*.gridpay .x-panel-header-title-default-framed > .x-title-text-default-framed {*/
+    /*padding-left: 6px !important;*/
+/*}*/
 
 /* пункты меню */
 .list_bet .x-menu-item-glyph {
@@ -308,7 +308,7 @@
 }
 
 .pdf .x-menu-item-glyph {
-    color: #ff686d;
+    color: #ff686d !important;
 }
 
 .group .x-menu-item-glyph {
@@ -316,8 +316,8 @@
 }
 
 .menutopleft .x-menu-item-glyph {
-    color: rgb(2, 97, 105);
-    line-height: 18px;
+    color: rgb(2, 97, 105) !important;
+    line-height: 18px !important;
 }
 /*заголовок Авторизации цвет глифа*/
 .loginkey .x-window-header-title-default > .x-title-icon-wrap-default > .x-title-glyph {
@@ -333,6 +333,9 @@
 /* иконка на кнопке Редактировать */
 .glyph_edit .x-btn-icon-el-default-small.x-btn-glyph {
     color: #3386C2 !important;
+    font-size: 30px !important;
+    margin-left: -7px !important;
+    margin-top: -2px !important;
 }
 
 /* Кнопки тулбара */
@@ -385,5 +388,5 @@
 
 /* иконки в табах */
 .x-tab-icon-el-default.x-tab-glyph{
-    opacity: 1;
+    opacity: 1 !important;
 }

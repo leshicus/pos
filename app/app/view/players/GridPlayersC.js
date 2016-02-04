@@ -36,7 +36,6 @@ Ext.define('Office.view.players.GridPlayersC', {
         }
     },
     onAddPlayer: function () {
-
         Ext.defer(function () {
             var formaddplayer = Ext.create('Office.view.players.FormAddPlayerV', {
                     viewModel: {
@@ -64,77 +63,6 @@ Ext.define('Office.view.players.GridPlayersC', {
                 });
             win.show();
         }, 10);
-        /*
-            var win = new Ext.Window({
-                            id: 'addUserWindow',
-                            height: 125,
-                            width: 290,
-                            modal: true,
-                            layout: 'fit',
-                            title: '<?php echo Language::getCaption(Language::ID_NEW_PLAYER); ?>',
-                            items: [{
-                                xtype: 'panel',
-                                layout: 'vbox',
-                                bodyStyle: 'background-color: #d4e1f2; padding: 4px;',
-                                items: [{
-                                    xtype: 'panel',
-                                    layout: 'form',
-                                    labelWidth: 80,
-                                    bodyStyle: 'padding: 2px; background-color: #d4e1f2;',
-                                    border: false,
-                                    autoWidth: true,
-                                    items: [{
-                                        xtype: 'textfield',
-                                        id: 'officeClientNameField',
-                                        fieldLabel: '<?php echo Language::getCaption(Language::ID_PLAYERS_NAME); ?>',
-                                        width: 180,
-                                        enableKeyEvents: true,
-                                        listeners:
-                                        {
-                                            afterrender: function (field) {
-                                                field.focus(false, 200);
-                                            },
-                                            keydown: function(o, event)
-                                            {
-                                                var keyCode = event.which;
-                                                if (keyCode == undefined)
-                                                {
-                                                    keyCode = event.keyCode;
-                                                }
-                                                if (keyCode == 13)
-                                                {
-                                                    addOfficeClient();
-                                                }
-                                            }
-                                        }
-                                    }
-                                    ]
-                                }]
-                            }],
-                            plain: true,
-                            border: false,
-                            resizable: false,
-                            draggable: false,
-                            closable: false,
-                            buttonAlign: 'center',
-                            autoScroll: true,
-                            buttons: [
-
-                                {
-                                    text: '<?php echo Language::getCaption(Language::ID_OK); ?>',
-                                    handler: addOfficeClient
-                                },
-                                {
-                                    text: '<?php echo Language::getCaption(Language::ID_CANCEL); ?>',
-                                    handler : function() {
-                                        Ext.Msg.hide();
-                                        win.close();
-                                    }
-                                }
-                            ]
-                        });
-                        win.show();
-        */
     },
     onDeletePlayer: function () {
         var grid = Ext.ComponentQuery.query('gridplayers')[0],
@@ -177,33 +105,5 @@ Ext.define('Office.view.players.GridPlayersC', {
 
                 });
             }
-        /*var node = Ext.getCmp('im-tree').getSelectionModel().getSelectedNode();
-                        Ext.Msg.confirm('<?php echo Language::getCaption(Language::ID_CONFIRMATION); ?>', '<?php echo Language::getCaption(Language::ID_QUESTION_DELETE_PLAYER); ?> «' + node.text + '»?', function(btn) {
-                            if (btn == 'yes')
-                            {
-                                Ext.Ajax.request({
-                                    url: getOfficeClientsDataUrl(),
-                                    params: {
-                                        xaction: 'destroy',
-                                        office_client_id: node.attributes.office_client_id
-                                    },
-                                    method: 'POST',
-                                    failure: function(resp, o) {
-                                        Ext.Msg.alert('<?php echo Language::getCaption(Language::ID_ERROR); ?>', '<?php echo Language::getCaption(Language::ID_ERROR_DELETE_PLAYER); ?>');
-                                    },
-                                    success: function(resp, o) {
-                                        var response = Ext.util.JSON.decode(resp.responseText);
-                                        if (typeof(response.success) != 'undefined' && response.success)
-                                        {
-                                            refreshOfficeClientsListInBasket();
-                                        }
-                                        else
-                                        {
-                                            Ext.Msg.alert('<?php echo Language::getCaption(Language::ID_ERROR); ?>', response.errorText);
-                                        }
-                                    }
-                                });
-                            }
-                        }, this);*/
     }
 });

@@ -54,7 +54,7 @@
      * The file path to this application's front HTML document. This is relative
      * to this app.json file.
      */
-    "indexHtmlPath": "index.html",
+    "indexHtmlPath": "index.php",
 
     /**
      * The absolute URL to this application in development environment, i.e: the URL to run
@@ -178,7 +178,7 @@
          * List of items in the CACHE MANIFEST section
          */
         "cache": [
-            "index.html"
+            "index.php"
         ],
         /**
          * List of items in the NETWORK section
@@ -226,6 +226,11 @@
     "production": {
         "loader": {
             "cache": "${build.timestamp}"
+        }
+    },
+    "output": {
+        "page": {
+            "path": "index.php"
         }
     }
 

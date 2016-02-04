@@ -30,19 +30,12 @@ Ext.define('Office.view.card.contextmenu.MenuCardC', {
                                 try {
                                     var mes = Ext.decode(response.responseText);
                                     if (mes.success) {
-                                        Util.toast('Успех', 'Карта заблокирована');
+                                        Util.sucMes('Карта заблокирована');
                                         Ext.Msg.confirm('Новая карта', textNew, function (button) {
                                             if (button == 'yes') {
-                                                selection.set('card_status',0);
-                                                /*grid.store.reload({
-                                                    callback: function (opt, success, response) {
-                                                        console.info(grid);
-                                                        grid.setSelection(selection);
-                                                        grid.fireEvent('celldblclick', grid);
-                                                    }
-                                                });*/
+                                                selection.set('card_status', 0);
                                                 grid.fireEvent('celldblclick', grid);
-                                            }else{
+                                            } else {
                                                 grid.store.reload();
                                             }
                                         }, this);

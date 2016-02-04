@@ -50,18 +50,11 @@ Ext.define('Office.view.pay.GridPayC', {
                                             if (typeof pattern[key] == 'string') { // * не нужно брать стор pay, который сюда зачем-то попадает
                                                 var param = pattern[key],
                                                     value = objIn[key],
-                                                    objParams = {},
-                                                    result,
-                                                    score;
+                                                    objParams = {};
+                                                    //result,
+                                                    //score;
                                                 // * сформируем значения произвольных полей (типа _fio, _gambler)
                                                 switch (key) {
-                                                    /*case '_slip':
-                                                     if (arrEvent && arrEvent.length > 0) {
-                                                     value = objIn['slip_id'] || arrEvent[0]['slip_id'];
-                                                     } else {
-                                                     value = objIn['slip_id'];
-                                                     }
-                                                     break;*/
                                                     case '_status':
                                                         var status = objIn['status'],
                                                             storeStatusbets = vm.getStore('statusbets'),
@@ -128,8 +121,8 @@ Ext.define('Office.view.pay.GridPayC', {
                                                     objParams = {
                                                         param: param,
                                                         value: value,
-                                                        result: result,
-                                                        score: score
+                                                        result: '',
+                                                        score: ''
                                                     };
                                                     resultArr.push(objParams);
                                                 }
@@ -138,10 +131,6 @@ Ext.define('Office.view.pay.GridPayC', {
                                         if (resultArr.length > 0) {
                                             store.loadData(resultArr);
                                         }
-                                        //} else {    // * выплата на предъявителя (use_ndfl = false)
-                                        //Util.erMes(objData.message || ' Нет данных о клиенте');
-
-                                        // }
                                     } else {
                                         Util.erMes(objData.message || ' Нет данных по ставке');
                                     }
@@ -164,7 +153,27 @@ Ext.define('Office.view.pay.GridPayC', {
 
     onEnter: function (field, e) {
         if (e.getKey() == e.ENTER && field.getValue()) {
-            PayF.getSlipList(field);
+            var _this = this;
+            Ext.defer(function () {// * задержка, т.к. vm за сканером не успевает
+                var gridpay = Ext.ComponentQuery.query('gridpay')[0],
+                    vm = gridpay.getViewModel(),
+                    slipRawValue = vm.get('slipRawValue'),
+                    slipInfo = vm.get('slipInfo');
+
+                if (slipInfo && slipInfo.slip_id && slipRawValue.indexOf(slipInfo.slip_id) > -1) { // * second click on Enter, but slip has been already found
+                    var buttonPayWithPrint = gridpay.down('#buttonPayWithPrint'),
+                        buttonPayWithoutPrint = gridpay.down('#buttonPayWithoutPrint');
+                    if (!buttonPayWithPrint.isDisabled()) {
+                        _this.onButtonMakeBill();
+                    } else if (!buttonPayWithoutPrint.isDisabled()) {
+                        _this.onButtonMake();
+                    } else {
+                        Util.warnMes('Выплата не возможна');
+                    }
+                } else { // * search slip
+                    PayF.getSlipList(field);
+                }
+            }, 100, this);
         }
 
         if (e.getKey() == e.DELETE) {
@@ -180,9 +189,9 @@ Ext.define('Office.view.pay.GridPayC', {
     },
 
     onPayLoad: function (store, records) {
-      var gridpay=Ext.ComponentQuery.query('gridpay')[0],
-          vm = gridpay.getViewModel();
-        vm.set('is_win',records[0].get('is_win'));
+        var gridpay = Ext.ComponentQuery.query('gridpay')[0],
+            vm = gridpay.getViewModel();
+        vm.set('is_win', records[0].get('is_win'));
         vm.set('slipInfo', records[0].get('rows'));
         PayF.sendPaysToMonitor();
     },
@@ -219,8 +228,6 @@ Ext.define('Office.view.pay.GridPayC', {
                     class: 'Pos_Pageprinter_Print',
                     params: {
                         slipId: slipId,
-                        login: Ext.util.Cookies.get('betzet_login'),
-                        token: Ext.util.Cookies.get('betzet_token'),
                         code: code
                     }
                 };
@@ -229,8 +236,11 @@ Ext.define('Office.view.pay.GridPayC', {
         }
     },
 
-    focusSlipId: function (field) {
-        field.focus();
+    focusSlipId: function (grid) {
+        var field = grid.down('#slipId');
+        Ext.defer(function () {
+            field.focus();
+        }, 10, this);
     }
 
 });

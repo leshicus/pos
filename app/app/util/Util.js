@@ -1,14 +1,13 @@
 Ext.define('Office.util.Util', {
     singleton: true,
     alternateClassName: ['Util'],
-    role: 0,
     dateFormatDot: 'd.m.Y H:i',
     dateFormatText: 'd F Y H:i:s',
     dateFormatHyphen: 'Y-m-d H:i:s',
     dateFormatHyphenShort: 'Y-m-d',
     pageSize: 25,
     pageSizeCombo: 10,
-    extModel: 'extModel',
+    //extModel: 'extModel',
     ALL: "Все", // * потом перевести
     maskText: 'Загрузка...',
     arrAuthFail: Array('authorization failed', 'Access denied'),
@@ -16,19 +15,18 @@ Ext.define('Office.util.Util', {
     COEFF_ASK_INTERVAL: 5, // * секунд
     sessionAskInterval: 60, // * секунд
     //widthResponsive: 1560, // * ширина экрана для срабатывания responsive (разные типы меню)
-    widthResponsive: 1400, // * ширина экрана для срабатывания responsive (разные типы меню)
+    widthResponsive: 1380, // * ширина экрана для срабатывания responsive (разные типы меню)
     //dateFormat:'d.m.Y H:i:s',
     //pathJsonResult: '1' || '.result.slipstatefilter.types',
     // pathJsonResult: 'command_1.result.slipstatefilter.types',
     BET_SOURCE_ID: 3, // * источник данных: касса
     ITEMS_PER_PAGE: 50,// * число записей на странице
-    AUTO_DESTROY_ON_REMOVE: false,
+    AUTO_DESTROY_ON_REMOVE: true,
     BETTING_CLOSED: 'BETTING_CLOSED',
     CLOSED_OR_CHANGED_COEFFICIENTS: 'CLOSED_OR_CHANGED_COEFFICIENTS',
     COEFFICIENT_CHANGED: 'COEFFICIENT_CHANGED',
     WRONG_CASH_OR_CLUB: 'WRONG_CASH_OR_CLUB',
-    ERROR_500: 'Ошибка 500',
-    RATS_TIME_TO_STOP_BETTING:6,// * для Крыс, время до начала забега, когда запрещено делать ставки
+    ERROR_500: 'Ошибка доступа к серверу, код 500',
 
     // * инициализация параметров класса (фильтров), которые будут в дальнейшем передаваться в запросе
     initClassParams: function (obj) {
@@ -57,6 +55,45 @@ Ext.define('Office.util.Util', {
                     vm.set(item, null);
             });
         }
+    },
+
+    // * валидация поля, чтобы сразу красный фон появлялся для ошибочных полей
+    validate: function (field) {
+        if (field && typeof field.getForm == 'function') {
+            var form = field.getForm();
+            form.isValid();
+        } else if (field && typeof field.isValid == 'function')
+            field.isValid();
+    },
+
+    // * определение ф-ии window.requestAnimationFrame в зависимости от используемого браузера
+    setupRequestAnimationFrame: function () {
+        (function () {
+            var lastTime = 0;
+            var vendors = ['ms', 'moz', 'webkit', 'o'];
+            for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+                window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
+                window.cancelAnimationFrame = window[vendors[x] + 'CancelAnimationFrame']
+                || window[vendors[x] + 'CancelRequestAnimationFrame'];
+            }
+
+            if (!window.requestAnimationFrame)
+                window.requestAnimationFrame = function (callback, element) {
+                    var currTime = new Date().getTime();
+                    var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+                    var id = window.setTimeout(function () {
+                            callback(currTime + timeToCall);
+                        },
+                        timeToCall);
+                    lastTime = currTime + timeToCall;
+                    return id;
+                };
+
+            if (!window.cancelAnimationFrame)
+                window.cancelAnimationFrame = function (id) {
+                    clearTimeout(id);
+                };
+        }());
     },
 
     getGlobalConst: function (descr) {
@@ -91,6 +128,7 @@ Ext.define('Office.util.Util', {
     },
 
     // * клонировать объект  (да, объект так просто не скопировать используя '=')
+    // * и этот метод для простых объектов- для store не подойдет, т.к. оно имеет ссылку на самого себя
     cloneObject: function (obj) {
         if (obj)
             return JSON.parse(JSON.stringify(obj));
@@ -111,7 +149,7 @@ Ext.define('Office.util.Util', {
         return false;
     },
     fatalError: function () {
-        Util.erMes(this.ERROR_500);
+        Util.warnMes(Util.ERROR_500);
     },
     blockChromeContextMenu: function (view, record, item, index, e) {
         if (view.getSelectionModel().getCurrentPosition()) { // * бывает и не определено иногда
@@ -141,17 +179,7 @@ Ext.define('Office.util.Util', {
      }
      },*/
 
-    // * поиск свойства объекта по номеру
-    getObjectItemByNum: function (object, num) {
-        var cnt = 0;
-        for (prop in object) {
-            if (!object.hasOwnProperty(prop)) continue;
-            if (cnt == num)
-                return object[prop];
-            cnt++;
-        }
-        return null;
-    },
+
 
     // * добавляет ведущий 0, до десятых, если нужно
     leadZero: function (val) {
@@ -216,68 +244,30 @@ Ext.define('Office.util.Util', {
         });
     },
 
-
-    // function to create an XMLHttpClient in a cross-browser manner
-    createXMLHTTPRequest: function () {
-        var xmlhttp;
-
-        try {
-            // Mozilla / Safari / IE7
-            xmlhttp = new XMLHttpRequest();
-        } catch (e) {
-            // IE
-            var XMLHTTP_IDS = new Array('MSXML2.XMLHTTP.5.0',
-                'MSXML2.XMLHTTP.4.0',
-                'MSXML2.XMLHTTP.3.0',
-                'MSXML2.XMLHTTP',
-                'Microsoft.XMLHTTP');
-            var success = false;
-            for (var i = 0; i < XMLHTTP_IDS.length && !success; i++) {
-                try {
-                    xmlhttp = new ActiveXObject(XMLHTTP_IDS[i]);
-                    success = true;
-                } catch (e) {
-                }
-            }
-            if (!success) {
-                throw new Error('Unable to create XMLHttpRequest.');
-            }
-        }
-
-        return xmlhttp;
-    },
-
-    // * загрузка файла и применение к нему функции
-    loadFile: function (src, ondone) {
-        var client = this.createXMLHTTPRequest();
-        client.onreadystatechange = function () {
-            if (this.readyState == 4 && this.status == 200) {
-                var txt = this.responseText;
-                ondone(txt);
-            }
-        };
-        client.open('GET', src);
-        client.send();
-    },
-
-    colorText: function (color, text) {
-        //return '<b><font color="'+color+'">' + text + '</font></b>';
-        return '<font color="' + color + '">' + text + '</font>';
+    colorText: function (color, text, bold) {
+        if (bold)
+            return '<font color="' + color + '"><b>' + text + '</b></font>';
+        else
+            return '<font color="' + color + '">' + text + '</font>';
     },
 
     sizeText: function (size, text) {
-        //return '<b><font color="'+color+'">' + text + '</font></b>';
         return '<font size="' + size + '">' + text + '</font>';
     },
 
-    toast: function (title, msg) {
+    toast: function (title, msg, id) {
         Ext.toast({
             html: msg,
+            glyph: Glyphs.get('warning'),
             title: title,
             autoCloseDelay: 4000,
             slideInDuration: 500,
             width: 300,
-            align: 't'
+            align: 't',
+            //cls:'my-warn-toast',
+            //closable:false
+            //animateTarget: id || null,
+            //anchorAlign:'error str'
         });
     },
 
@@ -285,22 +275,44 @@ Ext.define('Office.util.Util', {
         Ext.toast({
             html: msg,
             glyph: Glyphs.get('warning'),
-            title: 'Предупреждение',
-            titleAlign: 'center',
+            title: 'Внимание',
+            titleAlign: 'left',
             autoCloseDelay: 4000,
             slideInDuration: 500,
             width: 300,
-            align: 't'
+            align: 't',
+            cls: 'my-warn-toast'
         });
     },
 
-    erMes: function (msg, fn) {
+    sucMes: function (msg) {
+        Ext.toast({
+            html: msg,
+            glyph: Glyphs.get('warning'),
+            title: 'Успех',
+            titleAlign: 'left',
+            autoCloseDelay: 4000,
+            slideInDuration: 500,
+            width: 300,
+            align: 't',
+            cls: 'my-suc-toast'
+        });
+    },
+
+    erMes: function (msg, fn, id) {
         Ext.Msg.alert({
             title: 'Ошибка',
             msg: msg,
             buttons: Ext.MessageBox.OK,
             icon: Ext.MessageBox.ERROR,
-            fn: fn
+            fn: fn,
+            animateTarget: id || null,
+            listeners: {
+                // * Фокусировка на кнопке Ок
+                beforeRender: function (obj) {
+                    obj.defaultFocus = this.down('#yes');
+                }
+            }
         });
     },
     okMes: function (msg) {
@@ -319,36 +331,6 @@ Ext.define('Office.util.Util', {
             icon: Ext.MessageBox.INFO
         });
     },
-
-    //// * сделать заполненные поля не редактируемыми
-    //setNotEditable: function (form) {
-    //    var objFields = form.getForm().getValues(),
-    //        field = '',
-    //        editableResidentFlag = false; // * признак, давать ли редактировать признак Резидент
-    //    Ext.Object.each(objFields, function (key, val) {
-    //        var id = '#' + key;
-    //        field = form.down(id);
-    //        if (field && val && key != 'barcode') {
-    //            field.setReadOnly(true);
-    //
-    //            if (key == 'address') {
-    //                // * скрыть кнопку КЛАДР
-    //                var buttonKladr = form.down('#buttonKladr');
-    //                buttonKladr.disable();
-    //            }
-    //        } else {
-    //            if (key != 'barcode')
-    //                editableResidentFlag = true;
-    //            field.setReadOnly(false);
-    //        }
-    //        // * признак Резидент нужно давать редактировать, если есть хоть одно другое редактируемое поле
-    //        if (editableResidentFlag) {
-    //            form.down('#is_resident').setReadOnly(false);
-    //        }
-    //
-    //        field.suspendEvent('specialkey');
-    //    });
-    //},
 
     // * скрыть/раскрыть дерево
     treeCollapse: function (button, e, tree) {
@@ -375,8 +357,8 @@ Ext.define('Office.util.Util', {
                 }, 10, this);
             }
         }
-
     },
+
     getButtonsSaveCancel: function (param) {
         var param = param || {};
         return [
@@ -397,9 +379,9 @@ Ext.define('Office.util.Util', {
                 scope: param.scope || this,
                 handler: 'onClickCancel' // * эту функцию нужно определять в конкретном контроллере
             }
-
         ];
     },
+
     getButtonCancel: function (param) {
         var param = param || {};
         return [
@@ -411,9 +393,9 @@ Ext.define('Office.util.Util', {
                 scope: param.scope || this,
                 handler: 'onClickCancel' // * эту функцию нужно определять в конкретном контроллере
             }
-
         ];
     },
+
     // * нажатие Ок кнопки по нажатие ENTER
     pressOkButton: function (field) {
         var window = field.up('window'),
@@ -429,15 +411,12 @@ Ext.define('Office.util.Util', {
             return record ? record.get(combo.displayField) : combo.valueNotFoundText;
         }
     },
-    // * цвет поля 1 места в гриде крыс
-    //renderRat: function (value, metaData, record, rowIndex, colIndex, store, view) {
-    //    metaData.tdCls = record.get("firstcolor");
-    //    /*      metaData.style += 'border-top-left-radius: 4px;' +
-    //     'border-top-right-radius: 4px;' +
-    //     'border-bottom-right-radius: 4px;' +
-    //     'border-bottom-left-radius: 4px;"};';*/
-    //    return value;
-    //},
+
+    wrapTextInGrid: function (value, metaData) {
+        metaData.style = 'white-space:normal !important;';
+        return value;
+    },
+
     // * цвет ячеек таблицы Принятые
     renderResult: function (value, metadata) {
         if (value) {
@@ -448,13 +427,12 @@ Ext.define('Office.util.Util', {
             if (value == "в игре") metadata.tdCls = 'bg-gray';
             if (value == "полупроигрыш") metadata.tdCls = 'bg-red-lt';
             if (value == "полувыигрыш") metadata.tdCls = 'bg-green-lt';
-            if (value == "ожидает подтверждения") metadata.tdCls = 'bg-';
-            if (value == "отклонена") metadata.tdCls = 'bg-';
-            if (value == "удалена в кассе") metadata.tdCls = 'bg-';
-            if (value == "просрочен срок выплаты") metadata.tdCls = 'bg-';
+            if (value == "ожидает подтверждения") metadata.tdCls = 'background: rgb(255, 255, 255);';
+            if (value == "отклонена") metadata.tdCls = 'background: rgb(255, 255, 255);';
+            if (value == "удалена в кассе") metadata.tdCls = 'background: rgb(255, 255, 255);';
+            if (value == "просрочен срок выплаты") metadata.tdCls = 'background: rgb(255, 255, 255);';
             if (value == "выкуплена") metadata.tdCls = 'bg-violet';
             if (value == "возврат") metadata.tdCls = 'bg-violet-dark';
-            //TODO посмотреть остальные цвета
         }
         return value || "";
     },
@@ -536,12 +514,7 @@ Ext.define('Office.util.Util', {
         if (!failureFn)
             failureFn = function () {
             };
-        //maskText = maskText || 'Загрузка...';
-        //if (!component)
-        //    component = Ext.getBody();
-        //if (component) {
-        //    component.mask(maskText);
-        //}
+
         // * отложенный вызов функции, чтобы маска успевала поставиться
         Ext.defer(function () {
             store.load({
@@ -558,19 +531,7 @@ Ext.define('Office.util.Util', {
                 },
                 scope: scope || this
             });
-            /*} catch (e) {
-             //component.unmask();
-             console.info('Ошибка запроса к серверу');
-             Util.toast('Ошибка', 'Ошибка запроса к серверу');
-             } finally {
-             component.unmask();
-             }*/
         }, 10, this);
-        //Ext.defer(function () {
-        //    console.info(component);
-        //    if (component != null && component.isMasked)
-        //        component.unmask();
-        //}, 30000);
     },
 
     // * получить тип компoнента из его id
@@ -589,12 +550,14 @@ Ext.define('Office.util.Util', {
         } else
             return 'hz';
     },
+
     // * аналог nvl из sql
     nvl: function (value1, value2) {
         if (value1 == null || value1 == [])
             return value2;
         return value1;
     },
+
     // * подсчет элементов в массиве
     count: function (array) {
         var cnt = 0;
@@ -607,9 +570,22 @@ Ext.define('Office.util.Util', {
         }
         return cnt;
     },
+
 // * преобразование даты в удобочитаемый формат
     reverseDate: function (x) {
         return ((x < 10 ? '0' : '') + x)
+    },
+
+// * поиск свойства объекта по номеру
+    getObjectItemByNum: function (object, num) {
+        var cnt = 0;
+        for (prop in object) {
+            if (!object.hasOwnProperty(prop)) continue;
+            if (cnt == num)
+                return object[prop];
+            cnt++;
+        }
+        return null;
     },
 
     // * поиск значения объекта в массиве объектов по ключу
@@ -619,16 +595,17 @@ Ext.define('Office.util.Util', {
                 return source[i];
             }
         }
-        throw "Couldn't find object with id: " + id;
+        //throw "Couldn't find object with id: " + id;
     },
+
     findByKey: function (source, key, id) {
         for (var i = 0; i < source.length; i++) {
             if (source[i][key] === id) {
                 return source[i];
             }
         }
-        throw "Couldn't find object with id: " + id;
     },
+
     // * не точный поиск внутри свойств объекта по ключу
     findByKeyLike: function (source, key) {
         var out = 0;
@@ -656,7 +633,6 @@ Ext.define('Office.util.Util', {
         }
 
         return out;
-        //throw "Couldn't find object with key: " + key;
     },
 
     // * раскрывает/скрывает полное содержимое ячейки грида, если оно не помещается. Можно по двойному нажатию на ячейку.
@@ -669,6 +645,7 @@ Ext.define('Office.util.Util', {
             td.innerHTML = td.innerHTML.replace(noWrapString, wrapString);
         }
     },
+
     // * проверка, что элемент присутствует в массиве
     in_array: function (str, arr, strict) {	// Checks if a value exists in an array
         // +   original by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
@@ -682,6 +659,7 @@ Ext.define('Office.util.Util', {
         }
         return found;
     },
+
     // * не стргий поиск в массиве, сравнение типа sql оператора like (indexOf)
     in_array_like: function (str, arr, strict) {	// Checks if a value exists in an array
         // +   original by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
@@ -695,6 +673,7 @@ Ext.define('Office.util.Util', {
         }
         return found;
     },
+
     in_array_object: function (obj, arr) {	// Checks if a value exists in an array
         // +   original by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
         var found = false, key;
@@ -707,6 +686,7 @@ Ext.define('Office.util.Util', {
         }
         return found;
     },
+
     // * проверка, что элемент является массивом
     is_array: function (someVar) {
         if (Object.prototype.toString.call(someVar) === '[object Array]') {
@@ -714,14 +694,6 @@ Ext.define('Office.util.Util', {
         }
     },
 
-    // * удаление из массива определенного элемента
-    //arrayRemove: function () {
-    //    var array = [2, 5, 9];
-    //    var index = array.indexOf(5);
-    //    if (index > -1) {
-    //        array.splice(index, 1);
-    //    }
-    //},
     // * подсчет итога по заданному полю стора
     getSummary: function (store, field) {
         var sum = 0;
@@ -876,53 +848,7 @@ Ext.define('Office.util.Util', {
         var temp = cvt_hex(H0) + cvt_hex(H1) + cvt_hex(H2) + cvt_hex(H3) + cvt_hex(H4);
         return temp.toLowerCase();
     },
-    // * прервать выполнение скрипта
-    exit: function (status) {
-        // http://kevin.vanzonneveld.net
-        // +   original by: Brett Zamir (http://brettz9.blogspot.com)
-        // +      input by: Paul
-        // +   bugfixed by: Hyam Singer (http://www.impact-computing.com/)
-        // +   improved by: Philip Peterson
-        // +   bugfixed by: Brett Zamir (http://brettz9.blogspot.com)
-        // %        note 1: Should be considered expirimental. Please comment on this function.
-        // *     example 1: exit();
-        // *     returns 1: null
 
-        var i;
-
-        if (typeof status === 'string') {
-            alert(status);
-        }
-
-        window.addEventListener('error', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }, false);
-
-        var handlers = [
-            'copy', 'cut', 'paste',
-            'beforeunload', 'blur', 'change', 'click', 'contextmenu', 'dblclick', 'focus', 'keydown', 'keypress', 'keyup', 'mousedown', 'mousemove', 'mouseout', 'mouseover', 'mouseup', 'resize', 'scroll',
-            'DOMNodeInserted', 'DOMNodeRemoved', 'DOMNodeRemovedFromDocument', 'DOMNodeInsertedIntoDocument', 'DOMAttrModified', 'DOMCharacterDataModified', 'DOMElementNameChanged', 'DOMAttributeNameChanged', 'DOMActivate', 'DOMFocusIn', 'DOMFocusOut', 'online', 'offline', 'textInput',
-            'abort', 'close', 'dragdrop', 'load', 'paint', 'reset', 'select', 'submit', 'unload'
-        ];
-
-        function stopPropagation(e) {
-            e.stopPropagation();
-            // e.preventDefault(); // Stop for the form controls, etc., too?
-        }
-
-        for (i = 0; i < handlers.length; i++) {
-            window.addEventListener(handlers[i], function (e) {
-                stopPropagation(e);
-            }, true);
-        }
-
-        if (window.stop) {
-            window.stop();
-        }
-
-        throw '';
-    }
 
 
 });

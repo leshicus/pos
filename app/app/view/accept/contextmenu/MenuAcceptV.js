@@ -8,8 +8,16 @@ Ext.define('Office.view.accept.contextmenu.MenuAcceptV', {
     itemId: 'menuaccept',
     //plain: true,
     border: false,
-    defaults:{
-        disabled:true
+    defaults: {
+        disabled: true
+    },
+    listeners: {
+        // * чтобы меню разрушалось каждый раз при закрытии. closeAction:'destroy' не работает
+        hide: function (menu, opt) {
+            Ext.defer(function () {
+                Ext.destroy(menu);
+            }, 500, this);
+        }
     },
     initComponent: function () {
         this.items = [

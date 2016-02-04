@@ -2213,6 +2213,7 @@
                 var messages = Faye.map(envelopes, function (e) {
                     return e.message
                 });
+                //console.info(socket,messages);
                 socket.send(Faye.toJSON(messages));
             }, this);
             this.connect();

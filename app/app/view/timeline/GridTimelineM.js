@@ -26,22 +26,26 @@ Ext.define('Office.view.timeline.GridTimelineM', {
             autoLoad: false,
             listeners: {
                 // * почему-то store.load callback только здесь отлавливается, а не в Util.storeLoad
-                load: function(store, records, success, eOpts) {
+                load: function (store, records, success, eOpts) {
                     if (!success) {
-                       var gridtimeline= Ext.ComponentQuery.query('gridtimeline')[0];
+                        var gridtimeline = Ext.ComponentQuery.query('gridtimeline')[0];
                         gridtimeline.getController().resetAllButTerm();
                     }
                 }
             }
-        }
+        },
 
-        //timelinetype: {
-        //    fields: ['id', 'name'],
-        //    data: [
-        //        ['5', "Sport"],
-        //        ['6', "Game"],
-        //    ]
-        //}
+        // * стор для хранения предыдущих поисков ТЛ
+        search: {
+            fields: ['id', 'query'],
+            extend: 'Ext.data.Model',
+            autoLoad: true,
+            autoSync: true,
+            proxy: {
+                type: 'localstorage',
+                id: 'newpos_timeline_search'
+            }
+        }
     },
     formulas: {
         get_fio: function (get) {
@@ -50,15 +54,15 @@ Ext.define('Office.view.timeline.GridTimelineM', {
                 phone = get('phone'),
                 resident = get('resident'),
                 out = '';
-            if (fio){
-                out += ', ' + fio;
+            if (fio) {
+                out += 'ФИО ' + fio;
                 //out += ', ФИО: ' + fio;
                 if (passport)
-                    out += ', ' + passport;
-                    //out += ', паспорт: ' + passport;
+                    out += ', паспорт ' + passport;
+                //out += ', паспорт: ' + passport;
                 if (phone)
-                    out += ', ' + phone;
-                    //out += ', телефон: ' + phone;
+                    out += ', тел. ' + phone;
+                //out += ', телефон: ' + phone;
                 if (resident)
                     out += ', ' + resident;
             }

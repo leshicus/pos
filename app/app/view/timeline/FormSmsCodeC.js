@@ -54,28 +54,30 @@ Ext.define('Office.view.timeline.FormSmsCodeC', {
                     params: {
                         slipId: slipId,
                         code: code,
-                        user_id: Ext.util.Cookies.get('userId') || '',
-                        username: Ext.util.Cookies.get('betzet_login') || '',
-                        token: Server.getToken(),
-                        secondTime: false,
                         printStake: true
                     }
-                },
-                doAction = function () {
-                    // * напечатаем чек
-                    window.open(Server.getUrl(objUrlXaction), '_blank');
-                    // * закроем окно таймлайн
-                    var windowTimeline = Ext.ComponentQuery.query('#windowSearch')[0],
-                        gridtimeline = Ext.ComponentQuery.query('gridtimeline')[0],
-                        fieldSearch = gridtimeline.down('#term'),
-                        phone = gridtimeline.getViewModel().getData().thePhone.smsCodeSentTo;
-                    if (windowTimeline)
-                        windowTimeline.close();
-                    // * обновим список таймлан
-                    gridtimeline.getViewModel().set('filters.term', phone);
-                    //gridtimeline.store.rejectChanges(); // * они нам не нужны- все равно обновлять
-                    gridtimeline.getController().searchTimeline();
                 };
+
+            function doAction() {
+                // * напечатаем чек
+                window.open(Server.getUrl(objUrlXaction), '_blank');
+
+                // * закроем окно таймлайн
+                var windowTimeline = Ext.ComponentQuery.query('#windowSearch')[0],
+                    gridtimeline = Ext.ComponentQuery.query('gridtimeline')[0],
+                    fieldSearch = gridtimeline.down('#term'),
+                    phone = gridtimeline.getViewModel().getData().thePhone.smsCodeSentTo;
+
+                if (windowTimeline)
+                    windowTimeline.close();
+
+                // * обновим список таймлан
+                gridtimeline.getViewModel().set('filters.term', phone);
+
+                Ext.defer(function(){
+                    gridtimeline.getController().searchTimeline();
+                },100,this);
+            };
         }
         objUrlCheckSms.params['slipId'] = slipId;
 
@@ -86,6 +88,8 @@ Ext.define('Office.view.timeline.FormSmsCodeC', {
             } else {
                 Util.erMes('Не передан номер таймлайн');
             }
+        }else{
+            Util.erMes(Config.STR_FORM_ERROR);
         }
     },
 
@@ -109,10 +113,11 @@ Ext.define('Office.view.timeline.FormSmsCodeC', {
                             //windowWithdraw.close();
 
                             // * обновим список таймлайн
-                            var gridTimeline = Ext.ComponentQuery.query('gridtimeline')[0],
-                                fieldSearch = gridTimeline.down('#term'),
-                                mainController = Office.app.getController('Main');
-                            mainController.onAddFilterVm(fieldSearch, null, null, null, true, gridTimeline.store, gridTimeline);
+                            var gridTimeline = Ext.ComponentQuery.query('gridtimeline')[0];
+                                //fieldSearch = gridTimeline.down('#term'),
+                                //mainController = Office.app.getController('Main');
+                            gridTimeline.store.reload();
+                            //mainController.onAddFilterVm(fieldSearch, null, null, null, true, gridTimeline.store, gridTimeline);
                         } else {
                             Util.erMes('Не верный ответ от сервера');
                         }
@@ -171,7 +176,7 @@ Ext.define('Office.view.timeline.FormSmsCodeC', {
         }, 10);
 
         // * удалим таймлайн из базы данных
-        if(slipId){
+        if (slipId) {
             var objUrlCancel = {
                 class: 'Pos_Timeline_Canceltimeline',
                 params: {

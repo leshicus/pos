@@ -15,6 +15,7 @@ Ext.define('Office.view.login.WindowLoginV', {
         autoShow: true,
         width: 350,
         closable: false,
+        closeAction: 'destroy',
         locales: {
             title: "windowlogin.title"
         },
@@ -29,16 +30,10 @@ Ext.define('Office.view.login.WindowLoginV', {
         glyph: 'xf084@FontAwesome',
         cls: 'loginkey',
         //defaultButton: 'username',
-        listeners:{
-          afterrender:'onAfterRender'
+        listeners: {
+            afterrender: 'onAfterRender'
         },
         initComponent: function () {
-            Setup.clearCookies();
-
-            //var vm = this.getViewModel();
-            //vm.set('username', Debug.defaultUserName); // * удалить
-            //vm.set('password', Debug.defaultUserPassword); // * удалить
-
             this.title = Ux.locale.Manager.get("windowlogin.title", '?');
             this.items = [
                 {
@@ -50,9 +45,9 @@ Ext.define('Office.view.login.WindowLoginV', {
                         xtype: 'textfield',
                         allowBlank: false,
                         enableKeyEvents: true,
-                        anchor: '100%',
-                       // msgTarget: 'side', // * чтобы убрать глюк со сбиванием фокуса с поля всплывающей подсказкой
-                     },
+                        anchor: '100%'
+                        // msgTarget: 'side', // * чтобы убрать глюк со сбиванием фокуса с поля всплывающей подсказкой
+                    },
                     layout: 'anchor',
                     items: [
                         {
@@ -61,28 +56,29 @@ Ext.define('Office.view.login.WindowLoginV', {
                             editable: false,
                             allowBlank: false,
                             valueField: 'abbr',
-                            displayfield: 'text',
+                            displayField: 'text',
                             store: this._languageStore,
                             value: this._language,
                             fieldLabel: Ux.locale.Manager.get("windowlogin.formfield.language"),
                             locales: {
                                 fieldLabel: "windowlogin.formfield.language"
+                            },
+                            listeners:{
+                                change:'onChangeLocale'
                             }
                         },
                         {
                             bind: '{username}',
                             itemId: 'username',
-
-                            selectOnFocus:true,
+                            selectOnFocus: true,
                             fieldLabel: Ux.locale.Manager.get("windowlogin.formfield.username"),
                             locales: {
                                 fieldLabel: "windowlogin.formfield.username"
                             },
-                            listeners:{
-                                //render: 'usernameClickEvent',
+                            listeners: {
                                 keypress: 'onKeyPress',
                                 change: 'onChangeUsername',
-                                scope:'controller'
+                                scope: 'controller'
                             }
                         },
                         {
@@ -94,17 +90,17 @@ Ext.define('Office.view.login.WindowLoginV', {
                             locales: {
                                 fieldLabel: "windowlogin.formfield.password"
                             },
-                            listeners:{
+                            listeners: {
                                 render: 'passwordClickEvent',
                                 keypress: 'onKeyPress',
-                                scope:'controller'
+                                scope: 'controller'
                             }
                         },
                         {
                             xtype: 'button',
                             scale: 'medium',
                             anchor: '100%',
-                           // margin: '15 0 0 180',
+                            // margin: '15 0 0 180',
                             margin: '15 0 0 135',
                             glyph: Glyphs.get('signin'),
                             formBind: true, // * enable|disable depends on form validation
@@ -125,7 +121,10 @@ Ext.define('Office.view.login.WindowLoginV', {
                         //    text: 'grid'
                         //}
 
-                    ]
+                    ],
+                    listeners: {
+                        afterrender: Util.validate
+                    }
                 }
             ]
             //this.tools = [

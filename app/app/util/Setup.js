@@ -32,10 +32,10 @@ Ext.define('Office.util.Setup', {
                     me.failApp(response);
                 },
                 successParams = function (response) {
-                    var o,
-                        days = 7,
-                        expiresDate = new Date();
-                    expiresDate.setTime(expiresDate.getTime() + (days * 24 * 60 * 60 * 1000));
+                    var o;
+                    //days = 7,
+                    //expiresDate = new Date();
+                    //expiresDate.setTime(expiresDate.getTime() + (days * 24 * 60 * 60 * 1000));
                     if (response.responseText) {
                         Ext.util.Cookies.set('betzet_login', params.username);
                         try {
@@ -46,7 +46,7 @@ Ext.define('Office.util.Setup', {
                             return;
                         }
                         if (o.success !== true) {
-                            Util.toast('Внимание', 'Ошибка авторизации');
+                            Util.warnMes('Ошибка авторизации');
                             me.failApp(o);
                         } else {
                             Ext.util.Cookies.set('betzet_token', o.token);
@@ -67,12 +67,17 @@ Ext.define('Office.util.Setup', {
 
             Ext.apply(me, {
                 init: function () {
-                    Ext.Ajax.request({
-                        url: me.url,
-                        success: success,
-                        failure: failure,
-                        method: 'POST'
-                    });
+                    var betzet_token = Ext.util.Cookies.get('betzet_token');
+                    if (Server.LOGIN_FROM_COOKIE && betzet_token) {
+                        me.startApp();
+                    } else {
+                        Ext.Ajax.request({
+                            url: me.url,
+                            success: success,
+                            failure: failure,
+                            method: 'POST'
+                        });
+                    }
                 },
                 sendParams: function () {
                     Ext.Ajax.request({
@@ -97,6 +102,9 @@ Ext.define('Office.util.Setup', {
                     me.sendParams();
                 },
                 logout: function () {
+                    Setup.clearCookies();
+                    Setup.clearTimelineSearchStore();
+
                     window.location.reload(true);
                 }
             });
@@ -125,6 +133,23 @@ Ext.define('Office.util.Setup', {
             Ext.util.Cookies.clear('officePagesProperty');
         },
 
+        clearTimelineSearchStore: function () {
+            var localStorageTimelineSearch = Ext.util.LocalStorage.get('newpos_timeline_search');
+            if (localStorageTimelineSearch) {
+                delete window.localStorage.newpos_timeline_search; // * удаляю запись newpos_basket
+                localStorageTimelineSearch.clear();
+            }
+        },
+
+// * очищаем что связано с выбранным игроком/таймлайном
+        clearLocalStorage: function () {
+            var localStorage = Ext.util.LocalStorage.get('newpos');
+
+            localStorage.removeItem('selectedGamer');
+            localStorage.removeItem('balance');
+            localStorage.removeItem('timeline_id');
+        },
+
         showMenumain: function (globals, constants) {
             // * главное меню
             var menumain = Ext.ComponentQuery.query('menumain')[0];
@@ -147,6 +172,17 @@ Ext.define('Office.util.Setup', {
             }
 
             TaskF.taskSessionStart();
+
+            MatchdataTransport.init();
+            Ext.defer(function () {
+                if (!MatchdataTransport.websocketClient.socketUpdater.transport.connected) {
+                    MatchdataTransport.start();
+                    // * периодическое полное обновление сторов событий
+                    //TaskF.taskEventReload();
+                }
+            }, 100, this);
+
+            FillF.getDayExpressData();
         },
 
         // * получить глобальные константы системы
@@ -168,11 +204,11 @@ Ext.define('Office.util.Setup', {
                             if (callbackFn)
                                 callbackFn();
                         } else {
-                            Util.toast('Ошибка', 'Не удалось получить глобальные настройки системы');
+                            Util.warnMes('Не удалось получить глобальные настройки системы');
                             _this.failApp(response);
                         }
                     } else {
-                        Util.toast('Ошибка', 'Не удалось получить глобальные настройки системы');
+                        Util.warnMes('Не удалось получить глобальные настройки системы');
                         _this.failApp(response);
                     }
                 },
@@ -182,8 +218,8 @@ Ext.define('Office.util.Setup', {
             });
         },
 
-        //todo объединить c  getGlobalCons
-        // * получить глобальные параметры системы
+//todo объединить c  getGlobalCons
+// * получить глобальные параметры системы
         getGlobalProp: function (callbackFn) {
             // * запросим глобальные параметры системы
             var _this = this,
@@ -199,11 +235,11 @@ Ext.define('Office.util.Setup', {
                         if (o.success) {
                             _this.getGlobalCons(o.rows, callbackFn);
                         } else {
-                            Util.toast('Ошибка', 'Не удалось получить глобальные настройки системы');
+                            Util.warnMes('Не удалось получить глобальные настройки системы');
                             _this.failApp(response);
                         }
                     } else {
-                        Util.toast('Ошибка', 'Не удалось получить глобальные настройки системы');
+                        Util.warnMes('Не удалось получить глобальные настройки системы');
                         _this.failApp(response);
                     }
                 },
@@ -213,7 +249,7 @@ Ext.define('Office.util.Setup', {
             });
         },
 
-        // * успешная авторизация
+// * успешная авторизация
         startApp: function () {
             this.getGlobalProp();
 
@@ -221,13 +257,27 @@ Ext.define('Office.util.Setup', {
             FayeClient.init();
 
             FayeClient.sendCommand({command: 'hide_modal'});
+
+            // * очистим локальное хранилище от прежних купонов
+            BasketF.clearLocalStorageBasket();
+            // * очищаем что связано с выбранным игроком/таймлайном
+            Setup.clearLocalStorage();
         },
 
-        // * провал авторизации
+// * провал авторизации
         failApp: function (o) {
             var E = Ext.Error;
 
             if (Ext.isObject(o)) {
+                function createWindowLogin() {
+                    var win = Ext.create({
+                        xtype: 'windowlogin',
+                        _language: Ux.locale.Manager.getLanguage(),
+                        _languageStore: Ux.locale.Manager.getAvailable()
+                    });
+                    return win;
+                }
+
                 if (o.errors) {
                     Ext.Msg.show({
                         title: 'Error',
@@ -235,20 +285,12 @@ Ext.define('Office.util.Setup', {
                         icon: Ext.Msg.ERROR,
                         buttons: Ext.Msg.OK,
                         fn: function () {
-                            Ext.create({
-                                xtype: 'windowlogin',
-                                _language: Ux.locale.Manager.getLanguage(),
-                                _languageStore: Ux.locale.Manager.getAvailable()
-                            });
+                            createWindowLogin();
                         }
                     });
                 } else {
                     // * пользователь еще не зарегистрирован, нужно показать ему окно регистрации
-                    var win = Ext.create({
-                        xtype: 'windowlogin',
-                        _language: Ux.locale.Manager.getLanguage(),
-                        _languageStore: Ux.locale.Manager.getAvailable()
-                    });
+                    var win = createWindowLogin();
                     //Debug.setLoginFields(win);
                 }
             } else {
@@ -270,4 +312,5 @@ Ext.define('Office.util.Setup', {
             logout: me.logout
         });
     }
-);
+)
+;

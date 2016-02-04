@@ -1,0 +1,62 @@
+{
+  "windowlogin": {
+    "title": "Authorization",
+    "formfield": {
+      "language": "Language/Язык",
+      "username": "User name",
+      "password": "Password"
+    },
+    "button": {
+      "login": "Login"
+    }
+  },
+  "menumain": {
+    "session": "Sessions",
+    "fill": "Events",
+    "timeline": "Timeline",
+    "accept": "Slips",
+    "card": "Outlet cards",
+    "card2": "Outlet<br>cards",
+    "pay": "Payments",
+    "rat": "Rats",
+    "ratbets": "Rats-bets",
+    "gameacc": "Game accounts",
+    "gameacc2": "Game<br>accounts",
+    "panels": "Panels",
+    "virtual": "Virtual bids",
+    "virtual2": "Virtual<br>bids",
+    "coords": "Announcement matches for Slots",
+    "coords2": "Announcement matches<br>for Slots",
+    "scheduleforgamefield": "Schedule for the game on the field",
+    "scheduleforgamefield2": "Schedule for the<br>game on the field",
+    "players": "Players",
+    "printline": "Print line",
+    "printline2": "Print<br>line",
+    "chat": "Chat",
+    "info": "Info",
+    "exit": "Exit"
+  },
+  "gridevent": {
+    "columns": {
+      "num": "№",
+      "datecom": "Совершена",
+      "client": "Клиент",
+      "gambler": "Игрок",
+      "datecalc": "Рассчитана",
+      "bettype": "Тип ставки",
+      "host": "Хозяин",
+      "guest": "Гость",
+      "outcome": "Исход",
+      "sum": "Сумма",
+      "coeff": "Коэфф.",
+      "statid": "Статус",
+      "total": "Итог",
+      "datepay": "Выплачена"
+    },
+    "tools": {
+      "refresh": "Обновить",
+      "gear": "Настройка",
+      "close": "Удалить фильтры"
+    }
+  }
+}

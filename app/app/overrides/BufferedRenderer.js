@@ -18,5 +18,21 @@ Ext.define('Office.overrides.BufferedRenderer', {
                 delete me.rowHeight;
             }
         }
-    }
+    },
+    //refreshView: function(startIndex) {
+    //    var me = this,
+    //        rows = me.view.all,
+    //        store = me.store,
+    //        maxIndex = (store.isBufferedStore ? store.getTotalCount() : store.getCount()) - 1,
+    //        endIndex;
+    //
+    //    startIndex = Math.max(0, Math.min(startIndex == null ? rows.startIndex : startIndex, maxIndex - (me.viewSize - me.leadingBufferZone) + 1));
+    //
+    //    endIndex = Math.min(startIndex + me.viewSize - 1, maxIndex);
+    //
+    //    store.getRange(startIndex, endIndex, {
+    //        callback: me.doRefreshView,
+    //        scope: me
+    //    });
+    //}
 });

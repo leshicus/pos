@@ -42,7 +42,7 @@ Ext.define('Office.view.gameacc.FormInputCashGameaccC', {
                         if (response.responseText) {
                             var o = Ext.decode(response.responseText);
                             if (o.success) {
-                                Util.toast('Успех', 'Внесение прошло успешно');
+                                Util.sucMes('Внесение прошло успешно');
                                 vmGridgameacc.getStore('gameacc').reload();
                                 var gridgameaction = Ext.ComponentQuery.query('gridgameaction')[0];
                                 gridgameaction.getViewModel().getStore('gameaction').reload();
@@ -116,6 +116,8 @@ Ext.define('Office.view.gameacc.FormInputCashGameaccC', {
                     }
                 });
             }
+        }else{
+            Util.erMes(Config.STR_FORM_ERROR);
         }
     },
     onClickCancel: function (button) {
@@ -132,6 +134,7 @@ Ext.define('Office.view.gameacc.FormInputCashGameaccC', {
     },
 
     onAfterRender: function (form) {
+        Util.validate(form);
         // * если телефон есть- фокусируемся на сумме, если нет- на телефоне
         var phone = form.down('#name'),
             amount = form.down('#amount'),

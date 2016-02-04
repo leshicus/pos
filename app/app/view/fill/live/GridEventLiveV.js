@@ -2,9 +2,7 @@ Ext.define('Office.view.fill.live.GridEventLiveV', {
     extend: 'Ext.grid.Panel',
     requires: [
         'Office.view.fill.live.GridEventLiveM',
-        'Office.view.fill.live.GridEventLiveC',
-        // 'Ext.grid.feature.Grouping',
-
+        'Office.view.fill.live.GridEventLiveC'
     ],
     xtype: 'grideventlive',
     controller: 'grideventlive',
@@ -12,78 +10,58 @@ Ext.define('Office.view.fill.live.GridEventLiveV', {
         type: 'grideventlive'
     },
     columnLines: true,
-    autoScroll: true,
     frame: true,
     border: true,
     reserveScrollbar: true,
     hideHeaders: true,
     viewConfig: {
         preserveScrollOnRefresh: true,
-        //getRowClass: function (record, index, rowParams, store) { // * класс для строки грида
-        //    if (record.get('_fantom')){
-        //        if(index == 0)
-        //            return 'first-rats-row';
-        //        if(index == 1)
-        //            return 'second-rats-row';
-        //    }
-        //},
         listeners: {
-            // * сохранение скролбара коэффициентов после обновления. По-другому сделать не получалось.
-            // * правда скролбар дергается
-            /*   beforeselect: 'beforeselectView',
-             select: 'selectView',*/
-            'beforerefresh': function(cmp) {
-                //console.info(cmp.grid.getPlugins());
-                //console.info(cmp.grid.getPlugin('bufferedrenderer'));
-
-                //cmp.grid.getPlugin('bufferedrenderer').bodyTop = 0;
-                cmp.grid.getPlugins()[0].bodyTop = 0;
+            'beforerefresh': function (cmp) {
+                if(cmp.grid.getPlugins())
+                cmp.grid.getPlugins()[0].bodyTop = 0;// * чтобы отступы не появлялись - работает ли это?
             },
             scope: 'controller'
         }
     },
-    features: [{
-        ftype: 'grouping',
-        id:'groupFeatureId',
-        // groupHeaderTpl: '{name}',
-        // * сортировка по sport_id
-        groupHeaderTpl: [
-            '<span style="justify-content: space-between;display: flex;flex-direction: row;">' +
-            '<div>{children:this.getName}</div>' +
-            '<div><span role="button" style="float: right;" data-qtip="' + '{children:this.getSportName}' + '"><img src="resources/image/sports/' + '{children:this.getSport}' + '.png"></span></div>' +
-            '</span>',
-            {
-                getSport: function (name) {
-                    return name[0].data.sport_slug;
-                },
-                getSportName: function (name) {
-                    return UtilMarkets.getSportName(name[0].data);
-                },
-                getName: function (name) {
-                    return name[0].data.tournament_name;
+    config:{
+        type:'' // * чтобы был сеттер: setType, чтобы можно было байндить это свойство
+    },
+    features: [
+        {
+            ftype: 'grouping',
+            id: 'groupFeatureId',
+            // * сортировка по sport_id
+            groupHeaderTpl: [
+                '<span role="button" style="float: left;margin-top: -4px;padding-right: 5px;" data-qtip="' + '{children:this.getSportName}' + '"><img src="resources/image/sports/' + '{children:this.getSport}' + '.png"></span>'+
+                '<span style="justify-content: space-between;display: flex;flex-direction: row;">' +
+                '<div>{children:this.getName}</div>' +
+                '<div><span style="font-weight:300;">{children:this.getSportName}</span></div>' +
+                '</span>',
+                {
+                    getSport: function (name) {
+                        return name[0].data.sport_slug;
+                    },
+                    getSportName: function (name) {
+                        return UtilMarkets.getSportName(name[0].data);
+                    },
+                    getName: function (name) {
+                        return name[0].data.tournament_name;
+                    }
                 }
-            }
-        ],
-        collapsible: false
-    }],
+            ],
+            collapsible: false
+        }
+    ],
     bind: {
-        // store: '{eventstore}'
         store: '{eventstore_chained}'
     },
     listeners: {
-        //select: 'onSelect', // * вызывается дважды, поэтому использую itemclick
-        // * select & selectionchange вызываются дважды из-за bind selection
-        selectionchange: { // * вызывается дважды- баг
-            fn: 'onSelectionChange'
-        },
+        added: 'onAdded',
         itemclick: 'onSelect',
         afterrender: 'onRender',
-
-        // destroy:'onDestroy',
         scope: 'controller'
     },
-    flex: 1,
-
     initComponent: function () {
         Util.initClassParams({
             scope: this,
@@ -108,6 +86,7 @@ Ext.define('Office.view.fill.live.GridEventLiveV', {
         }
 
         vm.set('locale', Ux.locale.Manager.getCurrentLocale()['abbr']);
+        vm.set('type', this.getItemId());
 
         this.bbar = [
             {
@@ -117,27 +96,45 @@ Ext.define('Office.view.fill.live.GridEventLiveV', {
                     value: '{line_version}'
                 }
             }
-        ]
+        ];
+
+        //var combocheck = Ext.create('Office.view.common.ComboCheckV',{
+        //    emptyText: 'Спорт',
+        //    itemId: 'cbSport',
+        //    editable: false,
+        //    queryMode: 'local',
+        //    width: 110,
+        //    displayField: 'name',
+        //    valueField: 'id',
+        //    padding: '5 0 0 0',
+        //    _checkField: 'checked',
+        //    _bind: {
+        //        store: '{sport_chained}',
+        //        value: '{filters.cbSport}',
+        //        disabled: '{disableFastInputField}'
+        //    },
+        //    _func: function (combo, n) {
+        //        me.controller.onAddFilter(combo, n);
+        //    }
+        //});
 
         this.tbar = [
             {
                 xtype: 'combocheck',
                 emptyText: 'Спорт',
-                //emptyText: '\uF0b0 Вид спорта',
                 itemId: 'cbSport',
                 editable: false,
                 queryMode: 'local',
                 width: 110,
                 displayField: 'name',
                 valueField: 'id',
-                padding:'5 0 0 0',
+                padding: '5 0 0 0',
                 _checkField: 'checked',
                 _bind: {
-                    store: '{sport_chained}',
+                    store: '{sportsslug}',
                     value: '{filters.cbSport}',
-                    disabled:'{disableFastInputField}'
+                    disabled: '{disableFastInputField}'
                 },
-               // flex: 1,
                 _func: function (combo, n) {
                     me.controller.onAddFilter(combo, n);
                 }
@@ -149,16 +146,12 @@ Ext.define('Office.view.fill.live.GridEventLiveV', {
                 enableKeyEvents: true,
                 itemId: 'filterEvent',
                 listeners: {
-                    keydown: 'onKeydown',
-                    change: 'onKeydown'
-                },
-                style: {
-                    top: '0!important' // * убирает какой-то непонятный отступ сверху для текстового поля
+                    specialkey: 'onEnter'
                 },
                 bind: {
                     value: '{filters.filterEvent}',
-                    disabled:'{disableFastInputField}'
-                },
+                    disabled: '{disableFastInputField}'
+                }
                 //triggers: {// * значек лупы
                 //    one: {
                 //        cls: 'x-form-search-trigger'
@@ -173,15 +166,12 @@ Ext.define('Office.view.fill.live.GridEventLiveV', {
                 enableKeyEvents: true,
                 itemId: 'filterDate',
                 listeners: {
-                   // keydown: 'onKeydown',
-                    change: 'onKeydown'
-                },
-                style: {
-                    top: '0!important' // * убирает какой-то непонятный отступ сверху для текстового поля
+                    change: 'onAddFilter',
+                    afterrender: 'onFilterDateTip'
                 },
                 bind: {
                     value: '{filters.filterDate}',
-                    disabled:'{disableFastInputField}'
+                    disabled: '{disableFastInputField}'
                 }
             },
             {
@@ -190,18 +180,15 @@ Ext.define('Office.view.fill.live.GridEventLiveV', {
                 width: 75,
                 format: 'H:i',
                 enableKeyEvents: true,
-                editable:false,
+                editable: false,
                 itemId: 'filterTime',
                 listeners: {
-                    // keydown: 'onKeydown',
-                    change: 'onKeydown'
-                },
-                style: {
-                    top: '0!important' // * убирает какой-то непонятный отступ сверху для текстового поля
+                    change: 'onAddFilter',
+                    afterrender: 'onFilterTimeTip'
                 },
                 bind: {
                     value: '{filters.filterTime}',
-                    disabled:'{disableFastInputField}'
+                    disabled: '{disableFastInputField}'
                 }
             }
         ]
@@ -225,13 +212,6 @@ Ext.define('Office.view.fill.live.GridEventLiveV', {
                 }
             ]
         }
-
-        /*       this.tools = [
-         {
-         type: 'refresh',
-         tooltip: 'Обновить'
-         }
-         ]*/
 
         this.callParent();
     }
